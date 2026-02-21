@@ -12,21 +12,9 @@ import {
 } from '@/components/ui/dialog';
 
 const SHORTENER_SERVICES = [
-  {
-    name: 'TinyURL',
-    buildUrl: (url: string) => `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`,
-    label: 'TinyURL',
-  },
-  {
-    name: 'is.gd',
-    buildUrl: (url: string) => `https://is.gd/create.php?format=simple&url=${encodeURIComponent(url)}`,
-    label: 'is.gd',
-  },
-  {
-    name: 'reurl.cc',
-    buildUrl: (url: string) => `https://reurl.cc/shortener?url=${encodeURIComponent(url)}`,
-    label: 'reurl.cc',
-  },
+  { name: 'reurl.cc', url: 'https://reurl.cc/main/tw', label: 'reurl.cc' },
+  { name: 'myppt.cc', url: 'https://myppt.cc/', label: 'myppt.cc' },
+  { name: 'ppt.cc', url: 'https://ppt.cc/', label: 'ppt.cc' },
 ] as const;
 
 interface ShortenerDialogProps {
@@ -113,7 +101,7 @@ export function ShortenerDialog({ open, onOpenChange, shareUrl }: ShortenerDialo
             {SHORTENER_SERVICES.map((service) => (
               <a
                 key={service.name}
-                href={service.buildUrl(shareUrl)}
+                href={service.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-between w-full p-3 rounded-lg border hover:bg-accent transition-colors"

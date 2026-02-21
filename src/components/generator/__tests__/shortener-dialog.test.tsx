@@ -52,9 +52,9 @@ describe('ShortenerDialog', () => {
       render(<ShortenerDialog {...defaultProps} />);
       const links = screen.getAllByRole('link');
       const shortenerLinks = links.filter(
-        (link) => link.getAttribute('href')?.includes('tinyurl') ||
-                  link.getAttribute('href')?.includes('is.gd') ||
-                  link.getAttribute('href')?.includes('reurl')
+        (link) => link.getAttribute('href')?.includes('reurl') ||
+                  link.getAttribute('href')?.includes('myppt') ||
+                  link.getAttribute('href')?.includes('ppt.cc')
       );
       expect(shortenerLinks).toHaveLength(3);
     });
@@ -63,9 +63,9 @@ describe('ShortenerDialog', () => {
       render(<ShortenerDialog {...defaultProps} />);
       const links = screen.getAllByRole('link');
       const shortenerLinks = links.filter(
-        (link) => link.getAttribute('href')?.includes('tinyurl') ||
-                  link.getAttribute('href')?.includes('is.gd') ||
-                  link.getAttribute('href')?.includes('reurl')
+        (link) => link.getAttribute('href')?.includes('reurl') ||
+                  link.getAttribute('href')?.includes('myppt') ||
+                  link.getAttribute('href')?.includes('ppt.cc')
       );
       shortenerLinks.forEach((link) => {
         expect(link).toHaveAttribute('target', '_blank');
