@@ -1,0 +1,75 @@
+[
+  {
+    "id": "netflix-share",
+    "title": "Netflix 合租",
+    "emoji": "🎬",
+    "description": "Premium 方案四人均分",
+    "mode": "pay",
+    "author": {
+      "name": "PayMe Team"
+    },
+    "defaultValues": {
+      "title": "Netflix 2026 Q1",
+      "amount": 390,
+      "pax": 4
+    }
+  },
+  {
+    "id": "spotify-family",
+    "title": "Spotify Family",
+    "emoji": "🎵",
+    "description": "家庭方案六人均分",
+    "mode": "pay",
+    "author": {
+      "name": "Music Lover"
+    },
+    "defaultValues": {
+      "title": "Spotify Family 2026",
+      "amount": 268,
+      "pax": 6
+    }
+  },
+  {
+    "id": "badminton-court",
+    "title": "羽球團零打",
+    "emoji": "🏸",
+    "description": "含場地費與球費計算",
+    "mode": "pay",
+    "author": {
+      "name": "羽球小隊長"
+    },
+    "defaultValues": {
+      "title": "週二羽球團",
+      "amount": 1200,
+      "pax": 6
+    }
+  },
+  {
+    "id": "office-lunch",
+    "title": "辦公室訂餐",
+    "emoji": "🍱",
+    "description": "自動產生含服務費的清單",
+    "mode": "bill",
+    "author": {
+      "name": "Admin"
+    },
+    "defaultValues": {
+      "title": "週五午餐",
+      "taxRate": 0
+    }
+  },
+  {
+    "id": "ktv-party",
+    "title": "KTV 歡唱",
+    "emoji": "🎤",
+    "description": "包含包廂費與餐點",
+    "mode": "bill",
+    "author": {
+      "name": "Party King"
+    },
+    "defaultValues": {
+      "title": "錢櫃 Party",
+      "taxRate": 10
+    }
+  }
+]

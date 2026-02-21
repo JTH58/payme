@@ -1,0 +1,16 @@
+name = "payme"
+compatibility_date = "2024-02-07"
+pages_build_output_dir = "out"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[[d1_databases]]
+binding = "DB"
+database_name = "payme-db"
+database_id = "<your-d1-database-id>"
+
+[[kv_namespaces]]
+binding = "RATE_KV"
+id = "<your-kv-namespace-id>"

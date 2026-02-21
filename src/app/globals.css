@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 基礎色調：深色卻不全黑，帶有科技感的藍灰 */
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+
+    /* 玻璃卡片背景色：極低透明度的白 */
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+ 
+    --popover: 224 71% 4%;
+    --popover-foreground: 215 20.2% 65.1%;
+ 
+    /* 主色調：清新的藍紫色，像 iOS 的預設桌布色調 */
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    /* 邊框與輸入框：極淡的線條 */
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+ 
+    --radius: 1rem; /* iOS 風格的大圓角 */
+  }
+ 
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    /* ... (保持一致，我們預設做成深色模式更有質感) ... */
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* 加入背景流動光暈 */
+    background: radial-gradient(circle at 50% 0%, #1a2c4e 0%, #020617 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* 核心樣式：毛玻璃面板 */
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl;
+  }
+  
+  /* 互動元素：更強的玻璃質感 */
+  .glass-input {
+    @apply bg-black/20 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:border-white/40 transition-all duration-300;
+  }
+
+  .glass-button {
+    @apply bg-white/10 hover:bg-white/20 active:scale-[0.98] transition-all duration-200 border border-white/10 text-white font-medium backdrop-blur-md;
+  }
+
+  /* Shimmer 骨架屏效果 */
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(255, 255, 255, 0.12) 50%,
+      rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+
+  /* 解密進度條 — 不確定進度動畫 */
+  @keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+  }
+  .animate-indeterminate {
+    animation: indeterminate 1.5s ease-in-out infinite;
+    width: 40%;
+  }
+}
