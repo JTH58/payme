@@ -80,10 +80,11 @@ export function useTrustShield(): TrustResult {
 
         if (cancelled) return;
 
-        if (data.status === 'verified' || data.status === 'unknown') {
-          setStatus(data.status);
-          writeCache(sha!, data.status);
+        if (data.status === 'verified') {
+          setStatus('verified');
+          writeCache(sha!, 'verified');
         } else {
+          // Don't cache 'unknown' — allow re-check on next visit
           setStatus('unknown');
         }
       } catch {

@@ -75,7 +75,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       return jsonResponse({ status: 'verified' });
     }
 
-    // 404 or 422 — commit not found
+    // 403 = rate limited — don't cache, let client retry later
+    if (res.status === 403) {
+      return jsonResponse({ status: 'error', reason: 'rate_limited' });
+    }
+
+    // 404 or 422 — commit genuinely not found
     await env.RATE_KV.put(kvKey, 'unknown', { expirationTtl: KV_TTL });
     return jsonResponse({ status: 'unknown' });
   } catch {
