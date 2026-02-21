@@ -72,7 +72,7 @@ export function BankDetail({ bank }: BankDetailProps) {
 
       {/* Report Issue */}
       <a
-        href={`https://github.com/tinghao/tw-qr-code-maker/issues/new?title=${encodeURIComponent(`[${bank.code}] ${bank.shortName} 問題回報`)}`}
+        href={`https://github.com/JTH58/payme/issues/new?title=${encodeURIComponent(`[${bank.code}] ${bank.shortName} 問題回報`)}`}
         target="_blank"
         rel="noopener noreferrer"
         className="text-white/40 hover:text-white/70 transition-colors text-xs"

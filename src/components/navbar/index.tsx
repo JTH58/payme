@@ -96,7 +96,7 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
               <span>Threads</span>
             </a>
             <a
-              href="https://github.com/tinghao/tw-qr-code-maker"
+              href="https://github.com/JTH58/payme"
               target="_blank"
               rel="noopener noreferrer"
               className={cn(NAV_LINK_CLASS, "flex items-center gap-2")}
@@ -152,7 +152,7 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
               Threads
             </a>
             <a
-              href="https://github.com/tinghao/tw-qr-code-maker"
+              href="https://github.com/JTH58/payme"
               target="_blank"
               rel="noopener noreferrer"
               className={MOBILE_LINK_CLASS}

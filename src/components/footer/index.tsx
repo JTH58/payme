@@ -39,7 +39,7 @@ export function Footer({ className, onFeedbackClick }: FooterProps) {
             防詐資訊
           </Link>
           <a
-            href="https://github.com/tinghao/tw-qr-code-maker"
+            href="https://github.com/JTH58/payme"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub 開源專案 (在新視窗開啟)"
