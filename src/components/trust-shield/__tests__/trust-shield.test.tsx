@@ -10,7 +10,7 @@ const mockUseTrustShield = hook.useTrustShield as jest.MockedFunction<typeof hoo
 describe('TrustShield', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.NEXT_PUBLIC_GITHUB_REPO = 'JTH58/payme-tw';
+    process.env.NEXT_PUBLIC_GITHUB_REPO = 'JTH58/payme';
   });
 
   it('should render checking state', () => {
@@ -56,7 +56,7 @@ describe('TrustShield', () => {
     expect(screen.getByText('建構時間: 2026-01-01T00:00:00Z')).toBeInTheDocument();
     expect(screen.getByText('查看原始碼 →')).toHaveAttribute(
       'href',
-      'https://github.com/JTH58/payme-tw/commit/abc1234def5678'
+      'https://github.com/JTH58/payme/commit/abc1234def5678'
     );
   });
 

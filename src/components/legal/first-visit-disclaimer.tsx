@@ -45,7 +45,7 @@ export function FirstVisitDisclaimer() {
               </div>
               <div>
                 <DialogTitle className="text-lg font-semibold text-white tracking-tight">安全使用協議</DialogTitle>
-                <p className="text-xs text-blue-200/60">Protocol: PUBLIC_TWQR_V1</p>
+                <p className="text-xs text-blue-200/60">Protocol: PAYME_TW_V1</p>
               </div>
            </div>
         </div>
@@ -63,7 +63,7 @@ export function FirstVisitDisclaimer() {
                  <div className="space-y-1">
                    <h4 className="text-sm font-medium text-amber-500">非官方工具聲明</h4>
                    <p className="text-xs text-amber-200/70 leading-relaxed">
-                     本專案與任何銀行或支付機構無關。僅依據財金公司 TWQR 公開規格進行編碼。
+                     本專案與任何銀行或支付機構無關。僅依據TWQR 公開規格進行編碼。
                    </p>
                  </div>
                </div>
@@ -82,7 +82,7 @@ export function FirstVisitDisclaimer() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-slate-400">
                     <strong className="text-slate-200 block mb-0.5">使用者責任</strong>
-                    轉帳前請務必核對 App 顯示的<span className="text-white">戶名與金額</span>，我們不對交易糾紛負責。
+                    轉帳前請務必核對<span className="text-white">戶名與金額</span>，我們不對交易糾紛負責。
                   </div>
                </div>
             </div>

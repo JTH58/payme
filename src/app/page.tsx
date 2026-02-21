@@ -112,10 +112,8 @@ function HomeContent() {
         )}
       >
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-white/5 rounded-2xl animate-bounce backdrop-blur-md border border-white/10 flex items-center justify-center">
-            <div className="w-8 h-8 bg-blue-500/50 rounded-full blur-lg"></div>
-          </div>
-          <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">Initializing PayMe</p>
+          <img src="/icon-192.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} />
+          <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">Loading PayMe.tw</p>
         </div>
       </div>
 
@@ -258,7 +256,7 @@ export default function Home() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">Initializing PayMe</p>
+        <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">Loading PayMe.tw</p>
       </div>
     }>
       <HomeContent />

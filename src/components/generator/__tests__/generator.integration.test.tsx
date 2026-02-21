@@ -960,20 +960,20 @@ describe('Generator Integration Tests', () => {
       render(<Generator />);
       await waitForTemplateGallery();
 
-      // 套用 bill 模板 (辦公室訂餐)
-      await user.click(screen.getByText('辦公室訂餐'));
+      // 套用 pay 模板 (Spotify Family)
+      await user.click(screen.getByText('Spotify Family'));
       await waitFor(() => {
         expect(screen.getByText('TEMPLATE BY')).toBeInTheDocument();
-        expect(screen.getByText('Admin')).toBeInTheDocument();
+        expect(screen.getByText('PayMe Team')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // 等待 BillForm 載入完成
-      const titleInput = await waitFor(
-        () => screen.getByPlaceholderText('例如：週五燒肉局'),
+      // 修改金額讓 dirty detection 觸發
+      const amountInput = await waitFor(
+        () => screen.getByPlaceholderText('0'),
         { timeout: 3000 }
       );
-      await user.clear(titleInput);
-      await user.type(titleInput, '週三午餐');
+      await user.clear(amountInput);
+      await user.type(amountInput, '300');
 
       // badge 應永久消失
       await waitFor(() => {
@@ -981,9 +981,9 @@ describe('Generator Integration Tests', () => {
       });
 
       // 即使切到其他模式再切回來，badge 仍不會出現
-      await user.click(screen.getByText('收款'));
-      await waitFor(() => expect(screen.queryByText('TEMPLATE BY')).not.toBeInTheDocument(), { timeout: 3000 });
       await user.click(screen.getByText('分帳'));
+      await waitFor(() => expect(screen.queryByText('TEMPLATE BY')).not.toBeInTheDocument(), { timeout: 3000 });
+      await user.click(screen.getByText('收款'));
       await waitFor(() => {
         expect(screen.queryByText('TEMPLATE BY')).not.toBeInTheDocument();
       }, { timeout: 3000 });
