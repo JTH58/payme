@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "PayMe.tw",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-simple.png",
         width: 1200,
         height: 630,
         alt: "PayMe.tw Preview",
