@@ -26,6 +26,12 @@ describe('Navbar', () => {
     expect(banksLinks[0].closest('a')).toHaveAttribute('href', '/banks');
   });
 
+  it('should have a link to /features (功能特色)', () => {
+    render(<Navbar />);
+    const featuresLinks = screen.getAllByText(/功能特色/);
+    expect(featuresLinks[0].closest('a')).toHaveAttribute('href', '/features');
+  });
+
   it('should have a link to /safety (防詐資訊)', () => {
     render(<Navbar />);
     const safetyLinks = screen.getAllByText(/防詐資訊/);

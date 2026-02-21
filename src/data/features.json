@@ -1,0 +1,122 @@
+{
+  "hero": {
+    "title": "功能特色",
+    "subtitle": "免費、開源、保護隱私的台灣通用收款碼產生器"
+  },
+  "highlights": [
+    {
+      "id": "privacy",
+      "icon": "EyeOff",
+      "iconColor": "text-green-400",
+      "title": "隱私優先",
+      "description": "所有資料在您的瀏覽器本地運算，絕不回傳伺服器。帳號資訊僅存在您的裝置中，關閉頁面即消失。"
+    },
+    {
+      "id": "fast",
+      "icon": "Zap",
+      "iconColor": "text-yellow-400",
+      "title": "極速產生",
+      "description": "選擇銀行、輸入帳號，一秒產生收款 QR Code。無需註冊、無需登入，開啟即用。"
+    },
+    {
+      "id": "banks",
+      "icon": "Building2",
+      "iconColor": "text-blue-400",
+      "title": "全台支援",
+      "description": "支援全台 266 間金融機構，涵蓋銀行、郵局、信用合作社、農漁會等，符合 TWQR 標準掃碼轉帳。"
+    },
+    {
+      "id": "opensource",
+      "icon": "Code",
+      "iconColor": "text-purple-400",
+      "title": "開源透明",
+      "description": "完整原始碼公開於 GitHub，任何人皆可審閱程式邏輯。沒有隱藏功能、沒有後門、沒有追蹤。"
+    },
+    {
+      "id": "pwa",
+      "icon": "WifiOff",
+      "iconColor": "text-cyan-400",
+      "title": "PWA 離線使用",
+      "description": "安裝為 PWA 後可離線使用，不需網路也能產生收款碼。像原生 App 一樣釘選在桌面。"
+    },
+    {
+      "id": "share",
+      "icon": "Share2",
+      "iconColor": "text-orange-400",
+      "title": "安全分享",
+      "description": "產生的收款連結可設定密碼保護，透過 AES-GCM 加密確保收款資訊安全傳遞。"
+    },
+    {
+      "id": "split",
+      "icon": "Calculator",
+      "iconColor": "text-pink-400",
+      "title": "分帳功能",
+      "description": "內建分帳計算器，輸入品項與人數自動均分，每人金額一目了然，方便聚餐、合資使用。"
+    }
+  ],
+  "tutorial": {
+    "title": "四步驟開始收款",
+    "subtitle": "不需要註冊帳號，打開網頁就能立即使用",
+    "steps": [
+      {
+        "step": 1,
+        "title": "選擇銀行",
+        "description": "從 266 間金融機構中搜尋並選擇您的收款銀行，支援模糊搜尋。",
+        "icon": "Building2"
+      },
+      {
+        "step": 2,
+        "title": "輸入帳號",
+        "description": "輸入您的銀行帳號，系統會自動驗證格式是否正確。",
+        "icon": "CreditCard"
+      },
+      {
+        "step": 3,
+        "title": "設定金額",
+        "description": "輸入收款金額（選填），也可使用分帳功能計算每人應付金額。",
+        "icon": "DollarSign"
+      },
+      {
+        "step": 4,
+        "title": "產生分享",
+        "description": "一鍵產生 QR Code，可下載圖片、複製連結或直接分享給付款人。",
+        "icon": "QrCode"
+      }
+    ]
+  },
+  "faq": {
+    "title": "常見問題",
+    "items": [
+      {
+        "question": "PayMe.tw 是免費的嗎？",
+        "answer": "是的，PayMe.tw 完全免費使用，無任何隱藏收費。這是一個開源專案，原始碼公開於 GitHub，任何人都可以免費使用所有功能。"
+      },
+      {
+        "question": "我的帳號資料會被儲存嗎？",
+        "answer": "不會。所有資料（銀行帳號、金額等）僅在您的瀏覽器本地處理，絕不傳送到任何伺服器。關閉頁面後資料即消失，除非您主動使用本地備份功能。"
+      },
+      {
+        "question": "支援哪些銀行？",
+        "answer": "PayMe.tw 支援全台 266 間金融機構，包含所有主要銀行、郵局、信用合作社及農漁會。所有支援的機構皆符合台灣 TWQR 掃碼轉帳標準。"
+      },
+      {
+        "question": "對方需要安裝 App 才能付款嗎？",
+        "answer": "付款方只需使用任何支援 TWQR 的銀行 App 掃描 QR Code 即可轉帳，不需要額外安裝任何 App。目前大多數台灣的銀行 App 都支援此功能。"
+      },
+      {
+        "question": "可以離線使用嗎？",
+        "answer": "可以。將 PayMe.tw 安裝為 PWA（漸進式網頁應用程式）後，即可在沒有網路的情況下產生收款 QR Code。適合在收訊不佳的環境使用。"
+      },
+      {
+        "question": "收款連結的密碼保護如何運作？",
+        "answer": "密碼保護使用 AES-GCM 加密演算法，您的收款資訊會在瀏覽器端加密後才產生連結。只有知道密碼的人才能解密查看收款資訊，即使連結外洩也無法被第三方讀取。"
+      }
+    ]
+  },
+  "cta": {
+    "title": "立即產生收款碼",
+    "description": "免註冊、免下載，打開即用。支援全台 266 間金融機構。",
+    "buttonText": "開始使用",
+    "buttonHref": "/"
+  }
+}
