@@ -78,14 +78,14 @@ export function PwaShield() {
               尚未安裝
             </div>
             <p className="text-white/50 leading-relaxed">
-              將 PayMe 加入主畫面，獲得離線保護與更快的啟動體驗。
+              將 PayMe.TW 加入主畫面，獲得離線保護與更快的啟動體驗。
             </p>
             {canPromptInstall ? (
               <button
                 onClick={promptInstall}
                 className="w-full mt-1 px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors font-medium"
               >
-                安裝 PayMe
+                安裝 PayMe.TW
               </button>
             ) : (
               <InstallGuide platform={platform} />

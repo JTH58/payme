@@ -54,7 +54,7 @@ export const APP_ROUTES: Record<string, RouteConfig> = {
       const title = decodeURIComponent(params[SEG.TITLE] || '');
       const pax = params[SEG.PAX] ? ` (${params[SEG.PAX]}人分攤)` : '';
       return {
-        title: title ? `${title}${pax} - 收款通知` : 'PayMe 收款',
+        title: title ? `${title}${pax} - 收款通知` : 'PayMe.TW 收款',
         description: pax
           ? '自動計算每人應付金額，支援服務費設定。'
           : '點擊連結查看詳細金額並進行轉帳。',
@@ -77,7 +77,7 @@ export const APP_ROUTES: Record<string, RouteConfig> = {
     metaGenerator: (params) => {
       const title = decodeURIComponent(params[SEG.TITLE] || '詳細帳單');
       return {
-        title: `${title} - PayMe 分帳`,
+        title: `${title} - PayMe.TW 分帳`,
         description: '點擊連結查看帳單細項，認領屬於您的消費項目。',
         image: '/og-bill.png',
       };

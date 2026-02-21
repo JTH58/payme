@@ -42,7 +42,7 @@ describe('PwaShield', () => {
     await user.click(screen.getByLabelText('PWA 安裝狀態'));
 
     expect(screen.getByText('尚未安裝')).toBeInTheDocument();
-    expect(screen.getByText(/將 PayMe 加入主畫面/)).toBeInTheDocument();
+    expect(screen.getByText(/將 PayMe.TW 加入主畫面/)).toBeInTheDocument();
   });
 
   it('should show install button when canPromptInstall is true', async () => {
@@ -53,7 +53,7 @@ describe('PwaShield', () => {
     render(<PwaShield />);
     await user.click(screen.getByLabelText('PWA 安裝狀態'));
 
-    const installBtn = screen.getByText('安裝 PayMe');
+    const installBtn = screen.getByText('安裝 PayMe.TW');
     expect(installBtn).toBeInTheDocument();
 
     await user.click(installBtn);
@@ -78,7 +78,7 @@ describe('PwaShield', () => {
     render(<PwaShield />);
     await user.click(screen.getByLabelText('PWA 安裝狀態'));
 
-    expect(screen.queryByText('安裝 PayMe')).not.toBeInTheDocument();
+    expect(screen.queryByText('安裝 PayMe.TW')).not.toBeInTheDocument();
   });
 
   // --- Platform-specific install guide tests ---
@@ -136,7 +136,7 @@ describe('PwaShield', () => {
     render(<PwaShield />);
     await user.click(screen.getByLabelText('PWA 安裝狀態'));
 
-    expect(screen.getByText('安裝 PayMe')).toBeInTheDocument();
+    expect(screen.getByText('安裝 PayMe.TW')).toBeInTheDocument();
     expect(screen.queryByText(/點選網址列右側安裝圖示/)).not.toBeInTheDocument();
     expect(screen.queryByText(/點選底部分享按鈕/)).not.toBeInTheDocument();
     expect(screen.queryByText(/點選右上角選單/)).not.toBeInTheDocument();

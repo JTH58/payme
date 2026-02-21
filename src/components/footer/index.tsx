@@ -61,8 +61,9 @@ export function Footer({ className, onFeedbackClick }: FooterProps) {
           )}
         </nav>
 
-        <div className="text-center text-xs text-white/20 pt-2">
+        <div className="text-center text-xs text-white/20 pt-2 space-y-1">
           <p>© 2026 PayMe.tw • 非官方工具，請先小額測試 • Designed for Taiwan</p>
+          <p>本站與香港上海滙豐銀行（HSBC）及其「PayMe」服務無任何關聯。</p>
         </div>
 
         <div className="flex justify-center pt-1">

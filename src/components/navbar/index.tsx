@@ -66,7 +66,7 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
           <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg shadow-blue-500/10">
             <Image
               src="/logo.png"
-              alt="PayMe Logo"
+              alt="PayMe.TW Logo"
               fill
               className="object-cover"
             />
