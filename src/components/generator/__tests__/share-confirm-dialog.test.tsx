@@ -27,6 +27,7 @@ describe('ShareConfirmDialog', () => {
     shareText: '銀行：822 中國信託\n帳號：123456789012\n金額：500 元',
     shareUrl: 'https://payme.tw/pay/test#/?data=0abc123',
     passwordHint: '',
+    shortenerMode: 'simple' as const,
     onConfirmShare: jest.fn(),
   };
 
@@ -131,7 +132,7 @@ describe('ShareConfirmDialog', () => {
       fireEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(mockCreateShortLink).toHaveBeenCalledWith(defaultProps.shareUrl);
+        expect(mockCreateShortLink).toHaveBeenCalledWith(defaultProps.shareUrl, 'simple');
         expect(onConfirmShare).toHaveBeenCalledWith('https://s.payme.tw/abc#Xy1z');
       });
     });

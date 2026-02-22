@@ -25,7 +25,7 @@ describe('shortener-api', () => {
         json: async () => ({ shortCode: 'abc123' }),
       });
 
-      const result = await createShortLink('https://payme.tw/pay/test');
+      const result = await createShortLink('https://payme.tw/pay/test', 'simple');
       expect(result).toBe('https://s.payme.tw/abc123#Ab1x');
     });
 
@@ -35,7 +35,7 @@ describe('shortener-api', () => {
         json: async () => ({ shortCode: 'xyz' }),
       });
 
-      await createShortLink('https://payme.tw/pay/test');
+      await createShortLink('https://payme.tw/pay/test', 'simple');
 
       expect(mockFetch).toHaveBeenCalledWith(
         'https://s.payme.tw/api/shorten',
@@ -45,6 +45,7 @@ describe('shortener-api', () => {
           body: JSON.stringify({
             ciphertext: 'mock-ciphertext',
             serverKey: 'mock-server-key',
+            mode: 'simple',
           }),
         })
       );
@@ -58,7 +59,7 @@ describe('shortener-api', () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 403 });
 
       try {
-        await createShortLink('https://payme.tw');
+        await createShortLink('https://payme.tw', 'simple');
         fail('should have thrown');
       } catch (err) {
         expect(err).toBeInstanceOf(ShortenerError);
@@ -69,20 +70,20 @@ describe('shortener-api', () => {
     test('429 錯誤應拋出 ShortenerError 並提示頻率限制', async () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 429 });
 
-      await expect(createShortLink('https://payme.tw')).rejects.toThrow(/頻繁/);
+      await expect(createShortLink('https://payme.tw', 'simple')).rejects.toThrow(/頻繁/);
     });
 
     test('400 錯誤應拋出 ShortenerError', async () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 400 });
 
-      await expect(createShortLink('https://payme.tw')).rejects.toThrow(/格式錯誤/);
+      await expect(createShortLink('https://payme.tw', 'simple')).rejects.toThrow(/格式錯誤/);
     });
 
     test('網路錯誤應拋出 ShortenerError 並提示網路問題', async () => {
       mockFetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       try {
-        await createShortLink('https://payme.tw');
+        await createShortLink('https://payme.tw', 'simple');
         fail('should have thrown');
       } catch (err) {
         expect(err).toBeInstanceOf(ShortenerError);
@@ -94,7 +95,7 @@ describe('shortener-api', () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
       try {
-        await createShortLink('https://payme.tw');
+        await createShortLink('https://payme.tw', 'simple');
       } catch (err) {
         expect(err).toBeInstanceOf(ShortenerError);
         expect((err as ShortenerError).statusCode).toBe(500);

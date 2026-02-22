@@ -1142,6 +1142,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         shareText={shareTextPreview}
         shareUrl={pendingShareUrlRef.current}
         passwordHint={(isPasswordEnabled && sharePassword.trim()) ? '🔒 此連結需要密碼才能查看' : ''}
+        shortenerMode={mode === 'bill' ? 'bill' : 'simple'}
         onConfirmShare={handleConfirmShare}
       />
 

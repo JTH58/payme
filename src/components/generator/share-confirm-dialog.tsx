@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { createShortLink } from '@/lib/shortener-api';
+import { createShortLink, type ShortenerMode } from '@/lib/shortener-api';
 
 interface ShareConfirmDialogProps {
   open: boolean;
@@ -21,6 +21,7 @@ interface ShareConfirmDialogProps {
   shareText: string;
   shareUrl: string;
   passwordHint: string;
+  shortenerMode: ShortenerMode;
   onConfirmShare: (finalUrl: string) => void;
 }
 
@@ -30,6 +31,7 @@ export function ShareConfirmDialog({
   shareText,
   shareUrl,
   passwordHint,
+  shortenerMode,
   onConfirmShare,
 }: ShareConfirmDialogProps) {
   const [useShortUrl, setUseShortUrl] = useState(false);
@@ -58,7 +60,7 @@ export function ShareConfirmDialog({
     setIsLoading(true);
     setError(null);
     try {
-      const shortUrl = await createShortLink(shareUrl);
+      const shortUrl = await createShortLink(shareUrl, shortenerMode);
       onConfirmShare(shortUrl);
       handleOpenChange(false);
     } catch (err) {

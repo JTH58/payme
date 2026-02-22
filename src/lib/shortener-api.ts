@@ -17,7 +17,9 @@ export class ShortenerError extends Error {
  * 2. POST /api/shorten → { shortCode }
  * 3. 回傳 https://s.payme.tw/{shortCode}#{clientKey}
  */
-export async function createShortLink(url: string): Promise<string> {
+export type ShortenerMode = 'simple' | 'bill';
+
+export async function createShortLink(url: string, mode: ShortenerMode): Promise<string> {
   const { ciphertext, serverKey, clientKey } = await encryptForShortener(url);
 
   let res: Response;
@@ -25,7 +27,7 @@ export async function createShortLink(url: string): Promise<string> {
     res = await fetch(`${SHORTENER_API_URL}/api/shorten`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ciphertext, serverKey }),
+      body: JSON.stringify({ ciphertext, serverKey, mode }),
     });
   } catch {
     throw new ShortenerError('網路連線失敗，請檢查網路後重試');
