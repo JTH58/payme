@@ -27,10 +27,15 @@ jest.mock('html-to-image', () => ({
   toPng: (...args: unknown[]) => toPngMock(...args),
 }));
 
-// 2c. Mock ShortenerDialog (避免 Dialog portal 在整合測試中的複雜性)
-jest.mock('../shortener-dialog', () => ({
-  ShortenerDialog: ({ open, shareUrl }: { open: boolean; shareUrl: string }) =>
-    open ? <div data-testid="shortener-dialog" data-url={shareUrl}>ShortenerDialog</div> : null,
+// 2c. Mock ShareConfirmDialog (避免 Dialog portal 在整合測試中的複雜性)
+jest.mock('../share-confirm-dialog', () => ({
+  ShareConfirmDialog: ({ open, shareUrl, onConfirmShare }: { open: boolean; shareUrl: string; onConfirmShare: (url: string) => void }) =>
+    open ? (
+      <div data-testid="share-confirm-dialog" data-url={shareUrl}>
+        ShareConfirmDialog
+        <button data-testid="mock-confirm-share" onClick={() => onConfirmShare(shareUrl)}>確認分享</button>
+      </div>
+    ) : null,
 }));
 
 // 2d. Mock QrBrandCard (用 data-* 暴露 props 供驗證)
@@ -288,6 +293,10 @@ describe('Generator Integration Tests', () => {
       const shareBtn = await screen.findByRole('button', { name: /分享連結/i }, { timeout: 3000 });
       await user.click(shareBtn);
 
+      // 點擊 mock Dialog 的確認分享按鈕
+      const confirmBtn = await screen.findByTestId('mock-confirm-share');
+      await user.click(confirmBtn);
+
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
       });
@@ -400,9 +409,13 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       });
 
-      // 點擊分享按鈕
+      // 點擊分享按鈕 → 開啟確認 Dialog
       const shareBtn = screen.getByRole('button', { name: /分享連結/i });
       await user.click(shareBtn);
+
+      // 點擊 mock Dialog 的確認分享按鈕
+      const confirmBtn = await screen.findByTestId('mock-confirm-share');
+      await user.click(confirmBtn);
 
       // 驗證 URL 格式 — 前綴從 config 動態取得
       await waitFor(() => {
@@ -445,9 +458,13 @@ describe('Generator Integration Tests', () => {
         expect(screen.getAllByText('$1000').length).toBeGreaterThan(0);
       });
 
-      // 點擊分享按鈕
+      // 點擊分享按鈕 → 開啟確認 Dialog
       const shareBtn = screen.getByRole('button', { name: /分享連結/i });
       await user.click(shareBtn);
+
+      // 點擊 mock Dialog 的確認分享按鈕
+      const confirmBtn = await screen.findByTestId('mock-confirm-share');
+      await user.click(confirmBtn);
 
       // 驗證 URL 格式 — 前綴從 config 動態取得
       await waitFor(() => {
@@ -475,9 +492,13 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       });
 
-      // 點擊分享
+      // 點擊分享 → 開啟確認 Dialog
       const shareBtn = screen.getByRole('button', { name: /分享連結/i });
       await user.click(shareBtn);
+
+      // 點擊 mock Dialog 的確認分享按鈕
+      const confirmBtn = await screen.findByTestId('mock-confirm-share');
+      await user.click(confirmBtn);
 
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
@@ -522,8 +543,12 @@ describe('Generator Integration Tests', () => {
       const passwordInputs = screen.getAllByPlaceholderText('輸入分享密碼');
       await user.type(passwordInputs[0], 'mySecret123');
 
-      // 點擊分享
+      // 點擊分享 → 開啟確認 Dialog
       await user.click(screen.getByRole('button', { name: /分享連結/i }));
+
+      // 點擊 mock Dialog 的確認分享按鈕
+      const confirmBtn = await screen.findByTestId('mock-confirm-share');
+      await user.click(confirmBtn);
 
       // 驗證 URL 首碼為 1
       await waitFor(() => {
@@ -547,8 +572,12 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       });
 
-      // 不開啟密碼 toggle，直接分享
+      // 不開啟密碼 toggle，直接分享 → 開啟確認 Dialog
       await user.click(screen.getByRole('button', { name: /分享連結/i }));
+
+      // 點擊 mock Dialog 的確認分享按鈕
+      const confirmBtn = await screen.findByTestId('mock-confirm-share');
+      await user.click(confirmBtn);
 
       // 驗證 URL 首碼為 0
       await waitFor(() => {
@@ -581,8 +610,12 @@ describe('Generator Integration Tests', () => {
       const passwordInputs = screen.getAllByPlaceholderText('輸入分享密碼');
       await user.type(passwordInputs[0], PASSWORD);
 
-      // 點擊分享
+      // 點擊分享 → 開啟確認 Dialog
       await user.click(screen.getByRole('button', { name: /分享連結/i }));
+
+      // 點擊 mock Dialog 的確認分享按鈕
+      const confirmBtn = await screen.findByTestId('mock-confirm-share');
+      await user.click(confirmBtn);
 
       // 等待 URL 產生
       await waitFor(() => {
@@ -744,11 +777,11 @@ describe('Generator Integration Tests', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 縮網址服務連結 (Phase 8.5)
+  // 分享確認 Dialog
   // ---------------------------------------------------------------------------
 
-  describe('縮網址服務連結', () => {
-    test('收款模式：應顯示縮網址服務入口', async () => {
+  describe('分享確認 Dialog', () => {
+    test('收款模式：點擊分享應開啟確認 Dialog', async () => {
       const user = userEvent.setup();
       render(<Generator />);
 
@@ -759,10 +792,15 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/縮網址/)).toBeInTheDocument();
+      const shareBtn = screen.getByRole('button', { name: /分享連結/i });
+      await user.click(shareBtn);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('share-confirm-dialog')).toBeInTheDocument();
+      });
     });
 
-    test('分帳 Host：應顯示縮網址服務入口', async () => {
+    test('分帳 Host：點擊分享應開啟確認 Dialog', async () => {
       const user = userEvent.setup();
       render(<Generator />);
 
@@ -783,10 +821,15 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/縮網址/)).toBeInTheDocument();
+      const shareBtn = screen.getByRole('button', { name: /分享連結/i });
+      await user.click(shareBtn);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('share-confirm-dialog')).toBeInTheDocument();
+      });
     });
 
-    test('點擊縮網址入口應開啟 ShortenerDialog', async () => {
+    test('確認分享後不應顯示縮網址服務入口', async () => {
       const user = userEvent.setup();
       render(<Generator />);
 
@@ -797,13 +840,8 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       });
 
-      // 點擊縮網址入口
-      const shortenerBtn = screen.getByText(/縮網址/);
-      await user.click(shortenerBtn);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('shortener-dialog')).toBeInTheDocument();
-      });
+      // 不應有「縮網址服務」文字
+      expect(screen.queryByText('縮網址服務')).not.toBeInTheDocument();
     });
   });
 

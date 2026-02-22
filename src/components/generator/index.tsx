@@ -7,13 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import banks from '@/data/banks.json';
 import { QRCodeSVG } from 'qrcode.react';
-import { Share2, Check, Download, AlertTriangle, Users, Receipt, Copy, Lock, Eye, EyeOff, Link2, ShieldAlert } from 'lucide-react';
+import { Share2, Check, Download, AlertTriangle, Users, Receipt, Copy, Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { buildShareUrl } from '@/lib/url-builder';
 import { isCryptoAvailable } from '@/lib/crypto';
 import { SEG, getRouteConfig, AppMode, VALID_MODES } from '@/config/routes';
 import { AccountSwitcher } from './account-switcher';
 import { QrBrandCard, QR_CENTER_LABEL } from './qr-brand-card';
-import { ShortenerDialog } from './shortener-dialog';
+import { ShareConfirmDialog } from './share-confirm-dialog';
 
 import {
   Dialog,
@@ -108,13 +108,14 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const [isPasswordEnabled, setIsPasswordEnabled] = useState(false);
   const [sharePassword, setSharePassword] = useState('');
   const [showSharePassword, setShowSharePassword] = useState(false);
-  const [showShortener, setShowShortener] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [showTemplateSubmit, setShowTemplateSubmit] = useState(false);
   const [showEncryptionFailDialog, setShowEncryptionFailDialog] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
 
   const qrCardRef = useRef<HTMLDivElement>(null);
   const plaintextFallbackRef = useRef<string>('');
+  const pendingShareUrlRef = useRef<string>('');
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const accountCopyTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const downloadTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -295,6 +296,37 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   // 分帳模式：帳戶資訊是否齊全 + 帳單是否足夠
   const hasBankInfo = !!(values.bankCode && values.accountNumber);
   const billSufficient = isBillDataSufficient(billData);
+
+  // 分享文字預覽（供 ShareConfirmDialog 顯示）
+  const shareTextPreview = useMemo(() => {
+    const { bankCode, accountNumber, amount, comment } = form.getValues();
+    const primaryBank = banks.find(b => b.code === bankCode);
+    const bankName = primaryBank ? `${primaryBank.code} ${primaryBank.name}` : bankCode;
+    const authorCredit = (isTemplateActive && activeTemplate?.author) ? `(Template by ${activeTemplate.author.name})` : '';
+    const compactAccounts = sharePayload?.ac || [];
+
+    let text = '';
+    if (compactAccounts.length > 1) {
+      text += `可選擇以下收款帳戶：\n`;
+      compactAccounts.forEach(acc => {
+        const bName = banks.find(b => b.code === acc.b)?.name || acc.b;
+        text += `- ${bName} (${acc.b}): ${acc.a}\n`;
+      });
+    } else {
+      text += `銀行：${bankName}\n帳號：${accountNumber}`;
+    }
+
+    if (mode === 'bill') {
+      text += `\n\n🧾 分帳明細：${billData?.t || '未命名帳單'} ${authorCredit}`;
+      text += `\n總金額：${amount} 元`;
+      text += `\n(點擊連結查看您的應付金額)`;
+    } else {
+      if (amount) text += `\n金額：${amount} 元`;
+      if (comment) text += `\n備註：${comment} ${authorCredit}`;
+    }
+    return text;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values, mode, billData, sharePayload, isTemplateActive, activeTemplate]);
 
   // 組合模板投稿用的 formState（已 strip 敏感欄位）
   const templateFormState = useMemo((): TemplateFormState => {
@@ -483,8 +515,13 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
       return;
     }
 
-    await executeShare(shareUrl);
+    pendingShareUrlRef.current = shareUrl;
+    setShowShareDialog(true);
   };
+
+  const handleConfirmShare = useCallback(async (finalUrl: string) => {
+    await executeShare(finalUrl);
+  }, [executeShare]);
 
   const handleAccountSwitch = (b: string, a: string) => {
     form.setValue('bankCode', b, { shouldValidate: true });
@@ -817,17 +854,9 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
                         <p className="text-xs text-red-400 text-center">{copyError}</p>
                       )}
 
-                      {/* 縮網址 + 投稿入口 */}
+                      {/* 投稿入口 */}
                       {currentShareUrl && (
-                        <div className="flex items-center justify-center gap-4">
-                          <button
-                            type="button"
-                            onClick={() => setShowShortener(true)}
-                            className="text-xs text-white/50 hover:text-white/80 transition-colors flex items-center gap-1"
-                          >
-                            <Link2 className="h-3 w-3" />
-                            縮網址服務
-                          </button>
+                        <div className="flex items-center justify-center">
                           <button
                             type="button"
                             onClick={() => setShowTemplateSubmit(true)}
@@ -1009,15 +1038,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
 
                           {/* 縮網址 + 投稿入口 */}
                           {!isSharedLink && (
-                            <div className="flex items-center justify-center gap-4 pt-1">
-                              <button
-                                type="button"
-                                onClick={() => setShowShortener(true)}
-                                className="text-xs text-white/50 hover:text-white/80 transition-colors flex items-center gap-1"
-                              >
-                                <Link2 className="h-3 w-3" />
-                                縮網址服務
-                              </button>
+                            <div className="flex items-center justify-center pt-1">
                               <button
                                 type="button"
                                 onClick={() => setShowTemplateSubmit(true)}
@@ -1115,10 +1136,13 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         </DialogContent>
       </Dialog>
 
-      <ShortenerDialog
-        open={showShortener}
-        onOpenChange={setShowShortener}
-        shareUrl={currentShareUrl}
+      <ShareConfirmDialog
+        open={showShareDialog}
+        onOpenChange={setShowShareDialog}
+        shareText={shareTextPreview}
+        shareUrl={pendingShareUrlRef.current}
+        passwordHint={(isPasswordEnabled && sharePassword.trim()) ? '🔒 此連結需要密碼才能查看' : ''}
+        onConfirmShare={handleConfirmShare}
       />
 
       <TemplateSubmitModal

@@ -1,6 +1,9 @@
 /** 服務費費率 10% */
 export const SERVICE_CHARGE_MULTIPLIER = 1.1;
 
+/** 短連結服務 API (s.payme.tw) */
+export const SHORTENER_API_URL = 'https://s.payme.tw';
+
 /**
  * Z-Index Scale（文件化用途）
  * z-50: Radix UI 元件（Dialog, Popover, Navbar）— shadcn 預設，不可更動
