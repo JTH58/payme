@@ -10,7 +10,22 @@
     },
     "defaultValues": {
       "title": "Netflix 2026 Q1",
-      "amount": 390,
+      "amount": 460,
+      "pax": 4
+    }
+  },
+  {
+    "id": "disney-plus-share",
+    "title": "Disney+ 合租",
+    "emoji": "🏰",
+    "description": "Premium 方案四人均分",
+    "mode": "pay",
+    "author": {
+      "name": "PayMe Team"
+    },
+    "defaultValues": {
+      "title": "Disney+ 2026 Q1",
+      "amount": 335,
       "pax": 4
     }
   },
