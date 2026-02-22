@@ -30,6 +30,21 @@
     }
   },
   {
+    "id": "youtube-premium-family",
+    "title": "YouTube Premium",
+    "emoji": "▶️",
+    "description": "家庭方案六人均分",
+    "mode": "pay",
+    "author": {
+      "name": "PayMe Team"
+    },
+    "defaultValues": {
+      "title": "YouTube Premium 2026",
+      "amount": 479,
+      "pax": 6
+    }
+  },
+  {
     "id": "spotify-family",
     "title": "Spotify Family",
     "emoji": "🎵",
