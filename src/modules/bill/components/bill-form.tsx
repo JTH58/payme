@@ -42,6 +42,27 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
   // 用於自動 Focus 新增的項目
   const itemInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // 追蹤被手動修改過的項目索引（dirty = 不再自動全選）
+  const dirtyItemsRef = useRef<Set<number>>(
+    new Set(initialData?.i ? initialData.i.map((_, idx) => idx) : [])
+  );
+
+  // 成員變更時，自動全選未被手動修改過的項目
+  useEffect(() => {
+    const allIndices = members.map((_, i) => i);
+    setItems(prev => {
+      let changed = false;
+      const next = prev.map((item, idx) => {
+        if (dirtyItemsRef.current.has(idx)) return item;
+        const sorted = [...item.o].sort((a, b) => a - b);
+        if (sorted.length === allIndices.length && sorted.every((v, i) => v === allIndices[i])) return item;
+        changed = true;
+        return { ...item, o: allIndices };
+      });
+      return changed ? next : prev;
+    });
+  }, [members]);
+
   // 計算邏輯
   useEffect(() => {
     // 1. 計算總金額 (包含服務費)
@@ -80,6 +101,16 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
     }
   };
 
+  const removeMember = (memberIndex: number) => {
+    setMembers(members.filter((_, idx) => idx !== memberIndex));
+    setItems(prev => prev.map(item => ({
+      ...item,
+      o: item.o
+        .filter(i => i !== memberIndex)
+        .map(i => i > memberIndex ? i - 1 : i)
+    })));
+  };
+
   const addItem = () => {
     // 預設將所有人加入分攤名單 (全選)
     const allMemberIndices = members.map((_, i) => i);
@@ -95,6 +126,12 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
 
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
+    const newDirty = new Set<number>();
+    dirtyItemsRef.current.forEach(i => {
+      if (i < index) newDirty.add(i);
+      else if (i > index) newDirty.add(i - 1);
+    });
+    dirtyItemsRef.current = newDirty;
   };
 
   const updateItem = (index: number, field: keyof BillItem, value: any) => {
@@ -104,6 +141,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
   };
 
   const toggleItemOwner = (itemIndex: number, memberIndex: number) => {
+    dirtyItemsRef.current.add(itemIndex);
     const item = items[itemIndex];
     const newOwners = item.o.includes(memberIndex)
       ? item.o.filter(i => i !== memberIndex) // Remove
@@ -156,7 +194,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
                 {m}
                 {i > 0 && ( // 不允許刪除自己 (Host)
                   <button
-                    onClick={() => setMembers(members.filter((_, idx) => idx !== i))}
+                    onClick={() => removeMember(i)}
                     className="ml-1 hover:text-red-400"
                   >
                     <X size={12} />
@@ -224,7 +262,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
                       <div className="flex items-center justify-between px-2 mb-2">
                         <p className="text-xs text-muted-foreground font-medium">誰吃了這個？</p>
                         <button
-                          onClick={() => updateItem(idx, 'o', members.map((_, i) => i))}
+                          onClick={() => { dirtyItemsRef.current.add(idx); updateItem(idx, 'o', members.map((_, i) => i)); }}
                           className="text-[10px] text-purple-400 hover:underline"
                         >
                           全選

@@ -153,4 +153,163 @@ describe('BillForm Component', () => {
       expect(inputs.length).toBe(1);
     }
   });
+
+  // === Auto-select (dirtyItemsRef) tests ===
+
+  test('初始空項目在新增成員後自動全選', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const handleChange = jest.fn();
+    renderBillForm({ onBillDataChange: handleChange });
+
+    // 初始：1 位成員 "我"，空項目 o: []
+    // 新增成員 → 空項目 (non-dirty) 應自動全選
+    const input = screen.getByPlaceholderText('輸入朋友名字...');
+    await user.type(input, '小明');
+    await user.keyboard('{Enter}');
+    act(() => { jest.runAllTimers(); });
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0] as BillData;
+    expect(lastCall.i[0].o).toEqual([0, 1]); // 自動全選 "我" + "小明"
+  });
+
+  test('手動 toggle 後變 dirty → 新增成員不再自動加入', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const handleChange = jest.fn();
+    renderBillForm({ onBillDataChange: handleChange });
+
+    // 先新增成員讓項目自動全選
+    const input = screen.getByPlaceholderText('輸入朋友名字...');
+    await user.type(input, '小明');
+    await user.keyboard('{Enter}');
+    act(() => { jest.runAllTimers(); });
+
+    // 點擊分配按鈕打開 Popover
+    const assignBtn = screen.getAllByTitle('點擊分配成員')[0];
+    await user.click(assignBtn);
+    act(() => { jest.runAllTimers(); });
+
+    // Toggle 取消 "小明" (index 1) → 變成 dirty
+    // Popover 內的成員選項有 cursor-pointer class，badge 沒有
+    const allMing = screen.getAllByText('小明');
+    const popoverOption = allMing.find(el => el.classList.contains('cursor-pointer'));
+    await user.click(popoverOption!);
+    act(() => { jest.runAllTimers(); });
+
+    // 再新增第三位成員
+    await user.type(input, '小華');
+    await user.keyboard('{Enter}');
+    act(() => { jest.runAllTimers(); });
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0] as BillData;
+    // dirty 項目不會自動加入新成員，應仍然只有 [0]（toggle 掉了 1）
+    expect(lastCall.i[0].o).not.toContain(2);
+  });
+
+  test('initialData 項目視為 dirty → 新增成員不影響', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const handleChange = jest.fn();
+    const initialData: BillData = {
+      t: '',
+      m: ['我', '小華'],
+      i: [{ n: '蛋糕', p: 300, o: [0] }], // Host 刻意只選了自己
+      s: false,
+    };
+    renderBillForm({ onBillDataChange: handleChange, initialData });
+
+    // 新增成員
+    const input = screen.getByPlaceholderText('輸入朋友名字...');
+    await user.type(input, '小美');
+    await user.keyboard('{Enter}');
+    act(() => { jest.runAllTimers(); });
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0] as BillData;
+    // initialData 項目是 dirty，不應自動加入新成員
+    expect(lastCall.i[0].o).toEqual([0]);
+  });
+
+  test('刪除項目後 dirty 索引正確移位', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const handleChange = jest.fn();
+    const initialData: BillData = {
+      t: '',
+      m: ['我', '小華'],
+      i: [
+        { n: '項目A', p: 100, o: [0] },    // dirty (initialData idx 0)
+        { n: '項目B', p: 200, o: [0, 1] }, // dirty (initialData idx 1)
+      ],
+      s: false,
+    };
+    renderBillForm({ onBillDataChange: handleChange, initialData });
+
+    // 刪除項目A (index 0) → 項目B 變成 index 0，dirty 應移位
+    // 用 hover:bg-white/5 區分項目刪除按鈕 vs 成員刪除按鈕
+    const trashButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.classList.contains('hover:text-red-400') && btn.classList.contains('hover:bg-white/5')
+    );
+    await user.click(trashButtons[0]);
+    act(() => { jest.runAllTimers(); });
+
+    // 新增成員 → 原項目B (現在 index 0) 仍然是 dirty，不會自動全選
+    const input = screen.getByPlaceholderText('輸入朋友名字...');
+    await user.type(input, '小美');
+    await user.keyboard('{Enter}');
+    act(() => { jest.runAllTimers(); });
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0] as BillData;
+    expect(lastCall.i[0].o).toEqual([0, 1]); // 保持原值，不自動加新成員
+  });
+
+  test('成員移除時 o 索引正確調整', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const handleChange = jest.fn();
+    const initialData: BillData = {
+      t: '',
+      m: ['我', '小華', '小美'],
+      i: [{ n: '披薩', p: 500, o: [0, 1, 2] }],
+      s: false,
+    };
+    renderBillForm({ onBillDataChange: handleChange, initialData });
+
+    // 刪除成員 "小華" (index 1)
+    const badges = screen.getAllByText('小華');
+    const badge = badges[0].closest('.flex.items-center');
+    const removeBtn = badge?.querySelector('button');
+    await user.click(removeBtn!);
+    act(() => { jest.runAllTimers(); });
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0] as BillData;
+    // o 應從 [0, 1, 2] → 移除 1 → [0, 2] → 重新映射 → [0, 1]
+    expect(lastCall.i[0].o).toEqual([0, 1]);
+    expect(lastCall.m).toEqual(['我', '小美']);
+  });
+
+  test('全選按鈕標記 dirty', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const handleChange = jest.fn();
+    renderBillForm({ onBillDataChange: handleChange });
+
+    // 先新增成員讓項目自動全選
+    const input = screen.getByPlaceholderText('輸入朋友名字...');
+    await user.type(input, '小明');
+    await user.keyboard('{Enter}');
+    act(() => { jest.runAllTimers(); });
+
+    // 打開 Popover 點全選
+    const assignBtn = screen.getAllByTitle('點擊分配成員')[0];
+    await user.click(assignBtn);
+    act(() => { jest.runAllTimers(); });
+
+    const selectAllBtn = screen.getByText('全選');
+    await user.click(selectAllBtn);
+    act(() => { jest.runAllTimers(); });
+
+    // 再新增第三位成員 → 因為已 dirty，不應自動加入
+    await user.type(input, '小華');
+    await user.keyboard('{Enter}');
+    act(() => { jest.runAllTimers(); });
+
+    const lastCall = handleChange.mock.calls[handleChange.mock.calls.length - 1][0] as BillData;
+    // dirty 項目不會自動加入新成員 index 2
+    expect(lastCall.i[0].o).not.toContain(2);
+  });
 });
