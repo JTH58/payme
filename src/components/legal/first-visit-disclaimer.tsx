@@ -61,7 +61,7 @@ export function FirstVisitDisclaimer() {
                <div className="flex gap-3">
                  <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
                  <div className="space-y-1">
-                   <h4 className="text-sm font-medium text-amber-500">非官方工具聲明</h4>
+                   <p className="text-sm font-medium text-amber-500">非官方工具聲明</p>
                    <p className="text-xs text-amber-200/70 leading-relaxed">
                      本專案與任何銀行或支付機構無關。僅依據TWQR 公開規格進行編碼。
                    </p>

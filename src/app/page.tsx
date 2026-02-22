@@ -112,7 +112,8 @@ function HomeContent() {
         )}
       >
         <div className="flex flex-col items-center gap-4">
-          <img src="/icon-192.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon-splash-128.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} fetchPriority="high" />
           <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">Loading PayMe.tw</p>
         </div>
       </div>
@@ -255,8 +256,16 @@ function HomeContent() {
 export default function Home() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
-        <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">Loading PayMe.tw</p>
+      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon-splash-128.png" alt="PayMe.tw"
+               className="w-16 h-16 rounded-2xl animate-bounce"
+               width={64} height={64} fetchPriority="high" />
+          <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">
+            Loading PayMe.tw
+          </p>
+        </div>
       </div>
     }>
       <HomeContent />

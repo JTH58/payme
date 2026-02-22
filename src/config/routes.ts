@@ -49,7 +49,7 @@ export const APP_ROUTES: Record<string, RouteConfig> = {
       { key: SEG.TITLE, description: '收款標題', isOptional: true },
       { key: SEG.PAX, description: '分攤人數', isOptional: true }
     ],
-    ogImage: '/og-simple.png',
+    ogImage: '/og-simple.jpg',
     metaGenerator: (params) => {
       const title = decodeURIComponent(params[SEG.TITLE] || '');
       const pax = params[SEG.PAX] ? ` (${params[SEG.PAX]}人分攤)` : '';
@@ -58,7 +58,7 @@ export const APP_ROUTES: Record<string, RouteConfig> = {
         description: pax
           ? '自動計算每人應付金額，支援服務費設定。'
           : '點擊連結查看詳細金額並進行轉帳。',
-        image: '/og-simple.png',
+        image: '/og-simple.jpg',
       };
     }
   },
@@ -73,13 +73,13 @@ export const APP_ROUTES: Record<string, RouteConfig> = {
       { key: SEG.TITLE, description: '帳單標題', isOptional: true },
       { key: SEG.TEMPLATE_ID, description: '模板 ID (e.g., netflix)', isOptional: true }
     ],
-    ogImage: '/og-bill.png',
+    ogImage: '/og-bill.jpg',
     metaGenerator: (params) => {
       const title = decodeURIComponent(params[SEG.TITLE] || '詳細帳單');
       return {
         title: `${title} - PayMe.TW 分帳`,
         description: '點擊連結查看帳單細項，認領屬於您的消費項目。',
-        image: '/og-bill.png',
+        image: '/og-bill.jpg',
       };
     }
   }

@@ -906,7 +906,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
                               !form.watch('bankCode') || !form.watch('accountNumber') ? (
                                 <>
                                   <AlertTriangle className="w-8 h-8 opacity-50 text-orange-500" />
-                                  <span className="text-xs font-medium text-orange-600/80">缺少銀行帳號</span>
+                                  <span className="text-xs font-medium text-orange-700">缺少銀行帳號</span>
                                 </>
                               ) : (
                                 "等待輸入..."

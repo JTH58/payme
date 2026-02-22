@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "PayMe.tw",
     images: [
       {
-        url: "/og-simple.png",
+        url: "/og-simple.jpg",
         width: 1200,
         height: 630,
         alt: "PayMe.tw Preview",
@@ -42,8 +42,6 @@ export const viewport: Viewport = {
   themeColor: "#020617",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover", // Critical for env(safe-area-inset-*)
 };
 
@@ -55,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="zh-TW" className="dark">
       <head>
+        <link rel="preload" href="/icon-splash-128.png" as="image" type="image/png" fetchPriority="high" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <script
           type="application/ld+json"
