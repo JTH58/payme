@@ -16,8 +16,18 @@ jest.mock('@/lib/shortener-api', () => ({
   createShortLink: (...args: unknown[]) => mockCreateShortLink(...args),
 }));
 
+// Mock safe-storage
+const mockSafeGetItem = jest.fn();
+const mockSafeSetItem = jest.fn();
+jest.mock('@/lib/safe-storage', () => ({
+  safeGetItem: (...args: unknown[]) => mockSafeGetItem(...args),
+  safeSetItem: (...args: unknown[]) => mockSafeSetItem(...args),
+}));
+
 beforeEach(() => {
   mockCreateShortLink.mockReset();
+  mockSafeGetItem.mockReset();
+  mockSafeSetItem.mockReset();
 });
 
 describe('ShareConfirmDialog', () => {
@@ -71,10 +81,32 @@ describe('ShareConfirmDialog', () => {
   // Checkbox 行為
   // ---------------------------------------------------------------------------
   describe('Checkbox 行為', () => {
-    test('預設應未勾選', () => {
+    test('localStorage 無值時預設應未勾選', () => {
+      mockSafeGetItem.mockReturnValue(null);
       render(<ShareConfirmDialog {...defaultProps} />);
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).not.toBeChecked();
+    });
+
+    test('localStorage 為 "true" 時預設應勾選', () => {
+      mockSafeGetItem.mockReturnValue('true');
+      render(<ShareConfirmDialog {...defaultProps} />);
+      const checkbox = screen.getByRole('checkbox');
+      expect(checkbox).toBeChecked();
+    });
+
+    test('勾選後應寫入 localStorage', () => {
+      mockSafeGetItem.mockReturnValue(null);
+      render(<ShareConfirmDialog {...defaultProps} />);
+      fireEvent.click(screen.getByRole('checkbox'));
+      expect(mockSafeSetItem).toHaveBeenCalledWith('payme_use_short_url', 'true');
+    });
+
+    test('取消勾選後應寫入 localStorage', () => {
+      mockSafeGetItem.mockReturnValue('true');
+      render(<ShareConfirmDialog {...defaultProps} />);
+      fireEvent.click(screen.getByRole('checkbox'));
+      expect(mockSafeSetItem).toHaveBeenCalledWith('payme_use_short_url', 'false');
     });
 
     test('勾選後應顯示說明文字', async () => {
@@ -216,7 +248,8 @@ describe('ShareConfirmDialog', () => {
   // Dialog 關閉 reset
   // ---------------------------------------------------------------------------
   describe('Dialog 關閉 reset', () => {
-    test('關閉 Dialog 後重新開啟，狀態應重置', async () => {
+    test('關閉 Dialog 後重新開啟，error 應重置但 checkbox 保持', async () => {
+      mockCreateShortLink.mockRejectedValueOnce(new Error('失敗'));
       const onOpenChange = jest.fn();
       const { rerender } = render(
         <ShareConfirmDialog {...defaultProps} onOpenChange={onOpenChange} />
@@ -226,6 +259,12 @@ describe('ShareConfirmDialog', () => {
       fireEvent.click(screen.getByRole('checkbox'));
       expect(screen.getByRole('checkbox')).toBeChecked();
 
+      // 觸發 error
+      fireEvent.click(screen.getByRole('button', { name: /確認分享/i }));
+      await waitFor(() => {
+        expect(screen.getByText(/失敗/)).toBeInTheDocument();
+      });
+
       // 點擊取消
       fireEvent.click(screen.getByRole('button', { name: /取消/i }));
       expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -234,11 +273,14 @@ describe('ShareConfirmDialog', () => {
       rerender(<ShareConfirmDialog {...defaultProps} onOpenChange={onOpenChange} open={false} />);
       rerender(<ShareConfirmDialog {...defaultProps} onOpenChange={onOpenChange} open={true} />);
 
-      // Checkbox 應恢復未勾選
+      // Checkbox 應保持勾選（從 localStorage 讀取）
       await waitFor(() => {
         const checkbox = screen.getByRole('checkbox');
-        expect(checkbox).not.toBeChecked();
+        expect(checkbox).toBeChecked();
       });
+
+      // Error 應已重置
+      expect(screen.queryByText(/失敗/)).not.toBeInTheDocument();
     });
   });
 });

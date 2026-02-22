@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { createShortLink, type ShortenerMode } from '@/lib/shortener-api';
+import { STORAGE_KEY } from '@/config/storage-keys';
+import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
 
 interface ShareConfirmDialogProps {
   open: boolean;
@@ -34,14 +36,15 @@ export function ShareConfirmDialog({
   shortenerMode,
   onConfirmShare,
 }: ShareConfirmDialogProps) {
-  const [useShortUrl, setUseShortUrl] = useState(false);
+  const [useShortUrl, setUseShortUrl] = useState(
+    () => safeGetItem(STORAGE_KEY.useShortUrl) === 'true'
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
-        setUseShortUrl(false);
         setIsLoading(false);
         setError(null);
       }
@@ -98,7 +101,11 @@ export function ShareConfirmDialog({
             <Checkbox
               id="use-short-url"
               checked={useShortUrl}
-              onCheckedChange={(checked) => setUseShortUrl(checked === true)}
+              onCheckedChange={(checked) => {
+                const val = checked === true;
+                setUseShortUrl(val);
+                safeSetItem(STORAGE_KEY.useShortUrl, String(val));
+              }}
               disabled={isLoading}
             />
             <Label htmlFor="use-short-url" className="text-sm cursor-pointer">

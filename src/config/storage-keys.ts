@@ -12,6 +12,7 @@ export const STORAGE_KEY = {
   pwaPromptDismissed: 'pwa_prompt_dismissed',
   trustShieldCache: 'trust_shield_cache',
   hasVisited: 'payme_has_visited',
+  useShortUrl: 'payme_use_short_url',
 } as const;
 
 /**
