@@ -158,13 +158,14 @@ function HomeContent() {
           {/* Main Title */}
           <div className="space-y-2">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40 pb-2">
-              PayMe.TW • 台灣通用<br className="md:hidden" />收款碼
+              PayMe.TW • 收款工具
             </h1>
-            <p className="text-lg md:text-xl text-white/40 max-w-xl mx-auto leading-relaxed">
-              由使用者瀏覽器直接運算，<span className="text-white/70">資料不回傳</span>。
-              <br className="hidden md:block" />
-              支援所有採用 TWQR 格式的銀行，讓轉帳變得優雅的隱私工具。
-            </p>
+            <div className="text-sm text-white/40 max-w-md mx-auto grid grid-cols-2 gap-x-6 gap-y-1">
+              <span>• 符合 TWQR 規則</span>
+              <span>• 本地運算不上傳</span>
+              <span>• 支援多帳戶分享</span>
+              <span>• 輕鬆收款／分帳</span>
+            </div>
           </div>
 
         </header>
