@@ -196,16 +196,11 @@ describe('BillForm Component', () => {
     await user.keyboard('{Enter}');
     act(() => { jest.runAllTimers(); });
 
-    // 點擊分配按鈕打開 Popover
-    const assignBtn = screen.getAllByTitle('點擊分配成員')[0];
-    await user.click(assignBtn);
-    act(() => { jest.runAllTimers(); });
-
-    // Toggle 取消 "小明" (index 1) → 變成 dirty
-    // Popover 內的成員選項有 cursor-pointer class，badge 沒有
-    const allMing = screen.getAllByText('小明');
-    const popoverOption = allMing.find(el => el.classList.contains('cursor-pointer'));
-    await user.click(popoverOption!);
+    // 點擊 inline chip toggle 取消 "小明" (index 1) → 變成 dirty
+    const chipButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent === '小明✓'
+    );
+    await user.click(chipButtons[0]);
     act(() => { jest.runAllTimers(); });
 
     // 再新增第三位成員
@@ -322,11 +317,14 @@ describe('BillForm Component', () => {
     await user.keyboard('{Enter}');
     act(() => { jest.runAllTimers(); });
 
-    // 打開 Popover 點全選
-    const assignBtn = screen.getAllByTitle('點擊分配成員')[0];
-    await user.click(assignBtn);
+    // 先 toggle 取消一位，讓「全選」按鈕出現
+    const chipBtn = screen.getAllByRole('button').find(
+      (btn) => btn.textContent === '小明✓'
+    );
+    await user.click(chipBtn!);
     act(() => { jest.runAllTimers(); });
 
+    // 點擊 inline「全選」按鈕
     const selectAllBtn = screen.getByText('全選');
     await user.click(selectAllBtn);
     act(() => { jest.runAllTimers(); });

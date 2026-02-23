@@ -4,11 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
 import { TwqrFormValues } from '@/modules/core/utils/validators';
 import { BillData, BillItem, SimpleData } from '@/types/bill';
@@ -19,7 +14,7 @@ import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
 import { STORAGE_KEY } from '@/config/storage-keys';
 import {
   Minus, Plus, RotateCcw, Trash2, User, UserPlus, X,
-  HelpCircle, Users, Check, FileUp, Info, Wallet, Sparkles,
+  FileUp, Info, Wallet, Sparkles,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────
@@ -439,6 +434,42 @@ export function UnifiedForm({
         disabled={isItemizedLocked}
       />
 
+      {/* 2.5 Members management (itemized — above items so user adds people first) */}
+      {subMode === 'itemized' && (
+        <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <Label>分帳成員 ({members.length}人)</Label>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {members.map((m, i) => (
+              <Badge key={i} variant="secondary" className="pl-1 pr-2 py-1 flex items-center gap-1 animate-in fade-in zoom-in-95 duration-200">
+                <User size={12} className="opacity-50" />
+                {m}
+                {i > 0 && (
+                  <button onClick={() => removeMember(i)} className="ml-1 hover:text-red-400">
+                    <X size={12} />
+                  </button>
+                )}
+              </Badge>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="輸入朋友名字..."
+              value={newMemberName}
+              onChange={(e) => setNewMemberName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
+              className="h-10 text-sm"
+              aria-label="新增成員名稱"
+            />
+            <Button size="sm" variant="outline" onClick={addMember} type="button">
+              <UserPlus size={14} />
+            </Button>
+          </div>
+          {duplicateError && (
+            <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">{duplicateError}</p>
+          )}
+        </div>
+      )}
+
       {/* 3. Amount / Items section */}
       <div className="space-y-3">
         {!showItemsList ? (
@@ -493,102 +524,76 @@ export function UnifiedForm({
 
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
               {items.map((item, idx) => (
-                <div key={idx} className="flex gap-2 items-center group">
-                  {/* Owner assignment button (itemized only) */}
-                  {subMode === 'itemized' && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className={cn(
-                            "h-9 w-9 rounded-full flex-shrink-0 border-dashed transition-all",
-                            item.o.length > 0
-                              ? "bg-purple-500/20 text-purple-200 border-purple-500/50 hover:bg-purple-500/30"
-                              : "text-white/30 border-white/20 hover:text-white hover:border-white/50"
-                          )}
-                          title="點擊分配成員"
-                        >
-                          {item.o.length === 0 ? (
-                            <HelpCircle size={14} />
-                          ) : item.o.length === members.length ? (
-                            <Users size={14} />
-                          ) : (
-                            <span className="text-xs font-bold">{item.o.length}</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-48 p-2" align="start">
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between px-2 mb-2">
-                            <p className="text-xs text-muted-foreground font-medium">誰吃了這個？</p>
-                            <button
-                              onClick={() => { dirtyItemsRef.current.add(idx); updateItem(idx, 'o', members.map((_, i) => i)); }}
-                              className="text-[10px] text-purple-400 hover:underline"
-                            >
-                              全選
-                            </button>
-                          </div>
-                          {members.map((m, mIdx) => {
-                            const isSelected = item.o.includes(mIdx);
-                            return (
-                              <div
-                                key={mIdx}
-                                className={cn(
-                                  "flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer text-sm transition-colors",
-                                  isSelected ? "bg-purple-500/20 text-purple-100" : "hover:bg-white/5"
-                                )}
-                                onClick={() => toggleItemOwner(idx, mIdx)}
-                              >
-                                <div className={cn(
-                                  "w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                  isSelected ? "bg-purple-500 border-purple-500" : "border-white/30"
-                                )}>
-                                  {isSelected && <Check size={10} className="text-white" />}
-                                </div>
-                                {m}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-
-                  {/* Item name */}
-                  <Input
-                    ref={(el) => { itemInputRefs.current[idx] = el; }}
-                    value={item.n}
-                    onChange={(e) => updateItem(idx, 'n', e.target.value)}
-                    className="h-10 text-sm flex-1 bg-white/5 border-white/10 focus:border-white/30 focus:bg-white/10 placeholder:text-white/20 transition-all duration-200"
-                    placeholder="項目名稱"
-                    aria-label={`項目 ${idx + 1} 名稱`}
-                  />
-
-                  {/* Item price */}
-                  <div className="relative w-28 flex-shrink-0">
-                    <span className="absolute left-3 top-3 text-xs text-white/40 font-bold">$</span>
+                <div key={idx} className={cn(subMode === 'itemized' ? "space-y-1.5" : "")}>
+                  <div className="flex gap-2 items-center group">
+                    {/* Item name */}
                     <Input
-                      type="number"
-                      inputMode="numeric"
-                      value={item.p || ''}
-                      onChange={(e) => updateItem(idx, 'p', Number(e.target.value))}
-                      className="h-10 text-sm pl-6 bg-white/10 border-white/20 focus:bg-white/20 text-right font-medium placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all duration-200"
-                      placeholder="0"
-                      aria-label={`項目 ${idx + 1} 金額`}
+                      ref={(el) => { itemInputRefs.current[idx] = el; }}
+                      value={item.n}
+                      onChange={(e) => updateItem(idx, 'n', e.target.value)}
+                      className="h-10 text-sm flex-1 bg-white/5 border-white/10 focus:border-white/30 focus:bg-white/10 placeholder:text-white/20 transition-all duration-200"
+                      placeholder="項目名稱"
+                      aria-label={`項目 ${idx + 1} 名稱`}
                     />
+
+                    {/* Item price */}
+                    <div className="relative w-28 flex-shrink-0">
+                      <span className="absolute left-3 top-3 text-xs text-white/40 font-bold">$</span>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        value={item.p || ''}
+                        onChange={(e) => updateItem(idx, 'p', Number(e.target.value))}
+                        className="h-10 text-sm pl-6 bg-white/10 border-white/20 focus:bg-white/20 text-right font-medium placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all duration-200"
+                        placeholder="0"
+                        aria-label={`項目 ${idx + 1} 金額`}
+                      />
+                    </div>
+
+                    {/* Delete button */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-white/20 hover:text-red-400 hover:bg-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+                      onClick={() => removeItem(idx)}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
                   </div>
 
-                  {/* Delete button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-white/20 hover:text-red-400 hover:bg-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
-                    onClick={() => removeItem(idx)}
-                  >
-                    <Trash2 size={14} />
-                  </Button>
+                  {/* Inline member chips (itemized only) */}
+                  {subMode === 'itemized' && members.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pl-1">
+                      {members.map((m, mIdx) => {
+                        const isSelected = item.o.includes(mIdx);
+                        return (
+                          <button
+                            key={mIdx}
+                            type="button"
+                            className={cn(
+                              "text-xs px-2 py-0.5 rounded-full border transition-all duration-150 active:scale-[0.95]",
+                              isSelected
+                                ? "bg-purple-500/20 text-purple-200 border-purple-500/50"
+                                : "text-white/30 border-white/10 hover:text-white/50 hover:border-white/20"
+                            )}
+                            onClick={() => toggleItemOwner(idx, mIdx)}
+                          >
+                            {m}{isSelected ? '✓' : ''}
+                          </button>
+                        );
+                      })}
+                      {item.o.length < members.length && (
+                        <button
+                          type="button"
+                          className="text-[10px] px-1.5 py-0.5 text-purple-400 hover:underline"
+                          onClick={() => { dirtyItemsRef.current.add(idx); updateItem(idx, 'o', members.map((_, i) => i)); }}
+                        >
+                          全選
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -668,40 +673,6 @@ export function UnifiedForm({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-          </div>
-
-          {/* Members management */}
-          <div className="space-y-2">
-            <Label>分帳成員 ({members.length}人)</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {members.map((m, i) => (
-                <Badge key={i} variant="secondary" className="pl-1 pr-2 py-1 flex items-center gap-1 animate-in fade-in zoom-in-95 duration-200">
-                  <User size={12} className="opacity-50" />
-                  {m}
-                  {i > 0 && (
-                    <button onClick={() => removeMember(i)} className="ml-1 hover:text-red-400">
-                      <X size={12} />
-                    </button>
-                  )}
-                </Badge>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="輸入朋友名字..."
-                value={newMemberName}
-                onChange={(e) => setNewMemberName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
-                className="h-10 text-sm"
-                aria-label="新增成員名稱"
-              />
-              <Button size="sm" variant="outline" onClick={addMember} type="button">
-                <UserPlus size={14} />
-              </Button>
-            </div>
-            {duplicateError && (
-              <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">{duplicateError}</p>
-            )}
           </div>
 
           {/* Summary */}
