@@ -7,6 +7,7 @@ import { BillData, CompressedData } from '@/types/bill';
 import { safeGetItem, safeSetItem, safeRemoveItem } from '@/lib/safe-storage';
 import { AppMode } from '@/config/routes';
 import { STORAGE_KEY } from '@/config/storage-keys';
+import { FormSubMode, subModeToAppMode, inferSubMode } from '@/config/form-modes';
 
 /** 時序常數 */
 export const SPLASH_DURATION_MS = 600;
@@ -32,7 +33,16 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
 
   const computedInitialMode = (propMode as AppMode) || (decompressedValues.mo as AppMode) || 'pay';
 
-  const [mode, setMode] = useState<AppMode>(computedInitialMode);
+  // 推導初始 subMode
+  const computedInitialSubMode = inferSubMode(
+    computedInitialMode,
+    !!decompressedValues.sd
+  );
+
+  const [subMode, setSubModeState] = useState<FormSubMode>(computedInitialSubMode);
+
+  // mode 由 subMode 衍生
+  const mode: AppMode = subModeToAppMode(subMode);
 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,26 +63,36 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
 
   const isFirstRender = useRef(true);
 
-  // 0. 還原上次使用的模式
+  // 0. 還原上次使用的子模式
   useEffect(() => {
     if (isShared) {
       setIsInitialLoad(false);
-      if (computedInitialMode) {
-        setMode(computedInitialMode);
+      if (computedInitialSubMode) {
+        setSubModeState(computedInitialSubMode);
       }
       return;
     }
 
-    const lastMode = safeGetItem(STORAGE_KEYS.lastMode) as AppMode;
-    if (lastMode && ['pay', 'bill'].includes(lastMode)) {
-      if (lastMode !== mode) {
-        setMode(lastMode);
+    // 優先讀取 lastSubMode，若無則向後相容讀取 lastMode
+    const lastSubMode = safeGetItem(STORAGE_KEY.lastSubMode) as FormSubMode | null;
+    if (lastSubMode && ['personal', 'split', 'itemized'].includes(lastSubMode)) {
+      if (lastSubMode !== subMode) {
+        setSubModeState(lastSubMode);
+      }
+    } else {
+      // 向後相容：從舊的 lastMode 推導
+      const lastMode = safeGetItem(STORAGE_KEYS.lastMode) as AppMode;
+      if (lastMode && ['pay', 'bill'].includes(lastMode)) {
+        const inferred = inferSubMode(lastMode);
+        if (inferred !== subMode) {
+          setSubModeState(inferred);
+        }
       }
     }
 
     const timer = setTimeout(() => setIsInitialLoad(false), SPLASH_DURATION_MS);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only: 加入 mode/computedInitialMode 會在模式切換時重新初始化
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only
   }, [isShared]);
 
   // 0.5 分享連結延遲載入
@@ -106,6 +126,8 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
     }
 
     setQrString('');
+    // 同時保存 subMode 和 mode（向後相容）
+    safeSetItem(STORAGE_KEY.lastSubMode, subMode);
     safeSetItem(STORAGE_KEYS.lastMode, mode);
 
     const savedForm = safeGetItem(STORAGE_KEYS[mode]);
@@ -164,7 +186,7 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
 
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- templateId 故意省略：加入會導致模板套用時從 localStorage 還原資料覆蓋模板值
-  }, [mode, isShared, form]);
+  }, [subMode, isShared, form]);
 
   // 2. 自動儲存邏輯（不含 accounts）
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -245,10 +267,16 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
     }
   };
 
+  const switchSubMode = (newSubMode: FormSubMode) => {
+    if (newSubMode === subMode) return;
+    // 不再 setIsLoading(true) — 表單保持掛載，Section 透過動畫展開/收合
+    setSubModeState(newSubMode);
+  };
+
+  // 向後相容：保留 setMode，內部轉為 subMode
   const switchMode = (newMode: AppMode) => {
-    if (newMode === mode) return;
-    setIsLoading(true);
-    setMode(newMode);
+    const newSubMode = inferSubMode(newMode);
+    switchSubMode(newSubMode);
   };
 
   return {
@@ -263,6 +291,8 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
     initialSimpleData: decompressedValues.sd,
     mode,
     setMode: switchMode,
+    subMode,
+    setSubMode: switchSubMode,
     billData,
     setBillData,
     templateId,

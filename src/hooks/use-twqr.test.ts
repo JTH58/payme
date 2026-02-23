@@ -394,18 +394,14 @@ describe('useTwqr Hook', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    test('切換模式時 isLoading 應重新變為 true 再回 false', () => {
+    test('切換模式時 isLoading 不應重新觸發（表單保持掛載）', () => {
       const { result } = renderHook(() => useTwqr());
 
       act(() => { jest.advanceTimersByTime(SPLASH_DURATION_MS + SKELETON_DURATION_MS + 10); });
       expect(result.current.isLoading).toBe(false);
 
-      // Switch mode
+      // Switch mode — isLoading 不再觸發，表單透過動畫展開/收合
       act(() => { result.current.setMode('bill'); });
-      expect(result.current.isLoading).toBe(true);
-
-      // After skeleton duration
-      act(() => { jest.advanceTimersByTime(SKELETON_DURATION_MS + 10); });
       expect(result.current.isLoading).toBe(false);
     });
   });

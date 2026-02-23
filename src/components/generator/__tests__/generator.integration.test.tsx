@@ -60,6 +60,70 @@ jest.mock('../qr-brand-card', () => {
   return { QrBrandCard: MockQrBrandCard };
 });
 
+// 2e. Mock PreviewSheet (暴露 props 供整合測試驗證)
+jest.mock('../preview-sheet', () => ({
+  PreviewSheet: ({
+    open, onOpenChange, form, subMode, qrString, currentShareUrl,
+    sharedAccounts, onAccountSwitch, billData, currentBankName,
+    isPasswordEnabled, sharePassword, showSharePassword,
+    onPasswordToggle, onPasswordChange, onToggleShowPassword,
+    onShare, onDownload, isCopied, isDownloaded, copyError, qrCardRef,
+  }: any) =>
+    open ? (
+      <div data-testid="preview-sheet">
+        {/* Attach qrCardRef to a real DOM element for download tests */}
+        <div ref={qrCardRef} data-testid="qr-card-ref-target" />
+
+        {/* Account Switcher */}
+        {sharedAccounts && sharedAccounts.length > 1 && (
+          <div data-testid="preview-account-switcher">
+            {sharedAccounts.map((acc: any, i: number) => (
+              <button key={i} data-testid={`switch-account-${i}`} onClick={() => onAccountSwitch(acc.b, acc.a)}>
+                {acc.b}-{acc.a}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Mock QrBrandCard inside PreviewSheet */}
+        {(subMode === 'itemized' ? currentShareUrl : qrString) && (
+          <div data-testid="qr-brand-card"
+            data-variant={subMode === 'itemized' ? 'share' : 'payment'}
+            data-qr-value={subMode === 'itemized' ? currentShareUrl : qrString}
+            data-bank-name={currentBankName}
+            data-account-number={form.watch('accountNumber')}
+            data-bill-title={billData?.t || ''}
+            data-bill-total={form.watch('amount') || ''}
+            data-member-count={billData?.m?.length || 0}>
+            QrBrandCard
+          </div>
+        )}
+
+        {/* Password toggle */}
+        <button data-testid="password-toggle" onClick={onPasswordToggle}>設定密碼保護</button>
+        {isPasswordEnabled && (
+          <input
+            data-testid="password-input"
+            placeholder="輸入分享密碼"
+            value={sharePassword}
+            onChange={(e) => onPasswordChange(e.target.value)}
+          />
+        )}
+
+        {/* Share + Download */}
+        <button data-testid="share-btn" onClick={onShare} disabled={!(subMode === 'itemized' ? currentShareUrl : qrString)}>
+          {isCopied ? '已複製' : '分享連結'}
+        </button>
+        <button data-testid="download-btn" onClick={onDownload}>
+          {isDownloaded ? '已下載' : '下載圖片'}
+        </button>
+        {copyError && <p data-testid="copy-error">{copyError}</p>}
+
+        <button data-testid="close-preview" onClick={() => onOpenChange(false)}>關閉</button>
+      </div>
+    ) : null,
+}));
+
 // 3. Mock LZString (確保加解密行為一致)
 import LZString from 'lz-string';
 import { decrypt } from '@/lib/crypto';
@@ -81,16 +145,29 @@ const localStorageMock = (() => {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 // -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+/** 點擊「確定」按鈕打開 PreviewSheet */
+const openPreview = async (user: ReturnType<typeof userEvent.setup>) => {
+  const confirmBtn = screen.getByRole('button', { name: /確定/i });
+  await user.click(confirmBtn);
+  await waitFor(() => {
+    expect(screen.getByTestId('preview-sheet')).toBeInTheDocument();
+  });
+};
+
+// -----------------------------------------------------------------------------
 // Tests
 // -----------------------------------------------------------------------------
 
 describe('Generator Integration Tests', () => {
-  
+
   beforeEach(() => {
     // Reset Mocks & Storage
     jest.clearAllMocks();
     localStorageMock.clear();
-    
+
     // Reset URL Params
     const keys = Array.from(mockSearchParams.keys());
     for (const key of keys) mockSearchParams.delete(key);
@@ -108,64 +185,70 @@ describe('Generator Integration Tests', () => {
     ]));
   });
 
-  test('應正確渲染預設狀態 (收款模式)', async () => {
+  test('應正確渲染預設狀態 (個人收款模式)', async () => {
     render(<Generator />);
 
-    // 驗證標題或關鍵元素存在
-    expect(screen.getByRole('button', { name: /收款/i })).toBeInTheDocument();
-
-    // 驗證帳戶 trigger button 存在
+    // 驗證子模式選擇器存在
     await waitFor(() => {
-        expect(screen.getByText('帳戶')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /個人收款/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /平均分帳/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
     }, { timeout: 2000 });
+
+    // 驗證帳戶設定 button 存在（已移至表單底部）
+    expect(screen.getByText('帳戶設定')).toBeInTheDocument();
   });
 
-  test('當輸入金額與備註後，應自動產生 QR Code', async () => {
+  test('當輸入金額與備註後，點擊確定應在 PreviewSheet 中顯示 QR Code', async () => {
     const user = userEvent.setup();
     render(<Generator />);
 
     // 等待載入完成
     await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
-    // 輸入金額 (Placeholder 是 "0")
-    // 注意：可能有其他 input 也是 0，這裡假設金額欄位是第一個主要輸入
+    // 輸入金額
     const amountInput = screen.getByPlaceholderText('0');
     await user.type(amountInput, '500');
 
     // 輸入備註
-    const commentInput = screen.getByPlaceholderText(/例如：聚餐費/i); // 修正 Placeholder
+    const commentInput = screen.getByPlaceholderText(/例如：聚餐費/i);
     await user.type(commentInput, 'Lunch');
 
+    // 點擊確定開啟 PreviewSheet
+    await openPreview(user);
+
     // 驗證 QR Code 出現
-    await waitFor(() => {
-      const qr = screen.getByTestId('qr-brand-card');
-      expect(qr).toBeInTheDocument();
-      expect(qr.getAttribute('data-qr-value')).toContain('TWQRP');
-    });
+    const qr = screen.getByTestId('qr-brand-card');
+    expect(qr).toBeInTheDocument();
+    expect(qr.getAttribute('data-qr-value')).toContain('TWQRP');
   });
 
-  test('切換至「分帳」模式，應顯示分帳表單', async () => {
+  test('切換至「多人拆帳」模式，應顯示分帳表單', async () => {
     const user = userEvent.setup();
     render(<Generator />);
 
-    // 點擊切換模式按鈕
-    const billModeBtn = screen.getByRole('button', { name: /分帳/i });
-    await user.click(billModeBtn);
+    // 點擊多人拆帳子模式
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+    }, { timeout: 2000 });
+    await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
 
     // 驗證畫面變更 (等待 Loading 結束)
     await waitFor(() => {
-      // 改用 Placeholder 避免 Label 關聯問題
       expect(screen.getByPlaceholderText(/例如：週五燒肉局/i)).toBeInTheDocument();
       expect(screen.getByText(/分帳成員/i)).toBeInTheDocument();
     }, { timeout: 2000 });
   });
 
-  test('分帳流程：新增項目並全選成員，應正確計算總金額', async () => {
+  test('多人拆帳流程：新增項目並全選成員，應正確計算總金額', async () => {
     const user = userEvent.setup();
     render(<Generator />);
 
-    // 1. 切換模式
-    await user.click(screen.getByRole('button', { name: /分帳/i }));
+    // 1. 切換到多人拆帳
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+    }, { timeout: 2000 });
+    await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
 
     // 等待表單載入
     await waitFor(() => screen.getByPlaceholderText(/例如：週五燒肉局/i));
@@ -175,22 +258,20 @@ describe('Generator Integration Tests', () => {
 
     // 3. 新增成員 "Bob" (預設已有 "我")
     const memberInput = screen.getByPlaceholderText(/輸入朋友名字/i);
-    await user.type(memberInput, 'Bob{enter}'); 
+    await user.type(memberInput, 'Bob{enter}');
 
     // 4. 新增消費項目
     await user.click(screen.getByRole('button', { name: /新增項目/i }));
 
     // 5. 輸入項目金額
-    // 等待新項目出現
     await waitFor(() => {
         expect(screen.getAllByPlaceholderText('0').length).toBeGreaterThan(0);
     });
-    const inputs = screen.getAllByPlaceholderText('0'); 
-    // 取最後一個 (新增的項目金額欄位)
-    const priceInput = inputs[inputs.length - 1]; 
+    const inputs = screen.getAllByPlaceholderText('0');
+    const priceInput = inputs[inputs.length - 1];
     await user.type(priceInput, '1000');
 
-    // 6. 驗證總金額 (可能出現多次，只要有出現即可)
+    // 6. 驗證總金額
     await waitFor(() => {
         const amounts = screen.getAllByText('$1000');
         expect(amounts.length).toBeGreaterThan(0);
@@ -198,8 +279,6 @@ describe('Generator Integration Tests', () => {
   });
 
   test('分享連結模擬：訪客模式應顯示警語並還原資料', async () => {
-    // 1. 準備分享連結資料 (修正帳號長度為 10 碼)
-    // Phase 3: 透過 props 傳入 (由 page.tsx → useUrlParser 解析後傳入)
     const shareData = {
         mo: 'pay',
         b: '812',
@@ -221,15 +300,14 @@ describe('Generator Integration Tests', () => {
 
     // 4. 驗證資料還原
     await waitFor(() => {
-        // 可能有多個 812 (Button + QR Preview)
         const banks = screen.getAllByText(/812/);
         expect(banks.length).toBeGreaterThan(0);
-        
-        expect(screen.getByText('1234567890')).toBeInTheDocument(); // 帳號 (BankForm 唯讀文字)
-        expect(screen.getByDisplayValue('666')).toBeInTheDocument(); // 金額 (Input Value)
+
+        expect(screen.getByText('1234567890')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('666')).toBeInTheDocument();
     }, { timeout: 3000 });
-    
-    // 5. 驗證 QR Code 自動產生
+
+    // 5. 驗證 QR Code 自動產生 (Guest view still has inline QR)
     await waitFor(() => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
     });
@@ -244,29 +322,24 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待帳戶管理 trigger button 渲染完成，點擊開啟 AccountSheet
-      const accountTrigger = await screen.findByText('帳戶', {}, { timeout: 3000 });
+      const accountTrigger = await screen.findByText('帳戶設定', {}, { timeout: 3000 });
       await user.click(accountTrigger.closest('button')!);
 
       const addBtn = await screen.findByText(/新增其他收款帳戶/i, {}, { timeout: 3000 });
       await user.click(addBtn);
 
-      // 2. 驗證出現第二組輸入框
       await waitFor(() => {
         const accountInputs = screen.getAllByPlaceholderText(/輸入銀行帳號/i);
         expect(accountInputs).toHaveLength(2);
       });
 
-      // 3. 輸入第二組帳號
       const accountInputs = screen.getAllByPlaceholderText(/輸入銀行帳號/i);
       await user.type(accountInputs[1], '9999999999');
 
-      // 4. 操作 Checkbox 切換主要帳號
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes).toHaveLength(2);
-      await user.click(checkboxes[0]); // Uncheck first (force primary to second)
+      await user.click(checkboxes[0]);
 
-      // 驗證第二組帳號值正確
       expect(accountInputs[1]).toHaveValue('9999999999');
     });
 
@@ -278,8 +351,6 @@ describe('Generator Integration Tests', () => {
         configurable: true,
       });
 
-      // 預載多帳號資料到 localStorage（模擬使用者已設定好兩組帳號）
-      // ADR-029: 帳戶存於 payme_accounts
       localStorageMock.setItem('payme_accounts', JSON.stringify([
         { id: 'acc-1', bankCode: '822', accountNumber: '123456789012', isShared: true },
         { id: 'acc-2', bankCode: '004', accountNumber: '5555566666', isShared: true }
@@ -288,11 +359,14 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待帳戶管理 trigger button 渲染完成
-      await screen.findByRole('button', { name: /收款/i }, { timeout: 3000 });
+      // 等待載入完成
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /個人收款/i })).toBeInTheDocument();
+      }, { timeout: 3000 });
 
-      // 等待 QR Code 出現後，分享按鈕才可見
-      const shareBtn = await screen.findByRole('button', { name: /分享連結/i }, { timeout: 3000 });
+      // 開啟 PreviewSheet → 分享
+      await openPreview(user);
+      const shareBtn = screen.getByTestId('share-btn');
       await user.click(shareBtn);
 
       // 點擊 mock Dialog 的確認分享按鈕
@@ -304,7 +378,6 @@ describe('Generator Integration Tests', () => {
       });
 
       const hashPart = capturedShareUrl!.split('#/?data=')[1];
-      // 去掉首碼 0（新版明文格式）
       const compressed = hashPart.startsWith('0') ? hashPart.slice(1) : hashPart;
       const payload = JSON.parse(LZString.decompressFromEncodedURIComponent(compressed)!);
 
@@ -331,21 +404,18 @@ describe('Generator Integration Tests', () => {
       await waitFor(() => screen.getByText(/安全提醒與免責聲明/i));
       await user.click(screen.getByRole('button', { name: /我知道了/i }));
 
-      // 等待 Loading 結束、AccountSwitcher 顯示
+      // Guest view still has inline AccountSwitcher
       const switchLabel = await screen.findByText(/選擇轉入帳戶/i);
       expect(switchLabel).toBeInTheDocument();
 
-      // 點擊切換到第二個帳號 (004)
       const switchBtn = (await screen.findByText('*2222')).closest('button');
       await user.click(switchBtn!);
 
-      // 先等待 QR Code 重新生成
       await waitFor(() => {
          const qr = screen.getByTestId('qr-brand-card');
          expect(qr.getAttribute('data-qr-value')).toContain('D5%3D004');
       });
 
-      // 驗證複製按鈕內容更新 (使用部分匹配)
       await waitFor(() => {
         const copyBtn = screen.getByRole('button', { name: /複製帳號.*2222222222/i });
         expect(copyBtn).toBeInTheDocument();
@@ -365,14 +435,12 @@ describe('Generator Integration Tests', () => {
       capturedShareUrl = null;
       capturedClipboardText = null;
 
-      // Mock navigator.share 以捕獲 URL
       Object.defineProperty(navigator, 'share', {
         value: async (data: any) => { capturedShareUrl = data.url; },
         writable: true,
         configurable: true,
       });
 
-      // Mock navigator.clipboard.writeText 作為 fallback
       Object.defineProperty(navigator, 'clipboard', {
         value: {
           writeText: async (text: string) => { capturedClipboardText = text; },
@@ -383,7 +451,6 @@ describe('Generator Integration Tests', () => {
     });
 
     afterEach(() => {
-      // 還原 navigator.share
       Object.defineProperty(navigator, 'share', {
         value: undefined,
         writable: true,
@@ -396,35 +463,30 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待載入完成
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
-      // 填入金額與備註
       const amountInput = screen.getByPlaceholderText('0');
       await user.type(amountInput, '500');
 
       const commentInput = screen.getByPlaceholderText(/例如：聚餐費/i);
       await user.type(commentInput, '午餐費');
 
-      // 等待 QR Code 產生
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
+      // 開啟 PreviewSheet
+      await openPreview(user);
 
-      // 點擊分享按鈕 → 開啟確認 Dialog
-      const shareBtn = screen.getByRole('button', { name: /分享連結/i });
+      // 點擊分享按鈕
+      const shareBtn = screen.getByTestId('share-btn');
       await user.click(shareBtn);
 
       // 點擊 mock Dialog 的確認分享按鈕
       const confirmBtn = await screen.findByTestId('mock-confirm-share');
       await user.click(confirmBtn);
 
-      // 驗證 URL 格式 — 前綴從 config 動態取得
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
-        expect(capturedShareUrl).toMatch(new RegExp(`/${prefix}/`)); // 路由前綴
-        expect(capturedShareUrl).toMatch(/#\/\?data=/);               // hash 格式
-        expect(capturedShareUrl).not.toMatch(/^\/?data=/);            // 非舊格式
+        expect(capturedShareUrl).toMatch(new RegExp(`/${prefix}/`));
+        expect(capturedShareUrl).toMatch(/#\/\?data=/);
+        expect(capturedShareUrl).not.toMatch(/^\/?data=/);
       });
     });
 
@@ -433,21 +495,18 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 切換到分帳模式
-      await user.click(screen.getByRole('button', { name: /分帳/i }));
+      // 切換到多人拆帳模式
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 2000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
 
-      // 等待表單載入
       await waitFor(() => screen.getByPlaceholderText(/例如：週五燒肉局/i));
 
-      // 設定標題
       await user.type(screen.getByPlaceholderText(/例如：週五燒肉局/i), 'KTV趴');
-
-      // 新增成員
-      const memberInput = screen.getByPlaceholderText(/輸入朋友名字/i);
-      await user.type(memberInput, 'Bob{enter}');
-
-      // 新增項目並填金額
+      await user.type(screen.getByPlaceholderText(/輸入朋友名字/i), 'Bob{enter}');
       await user.click(screen.getByRole('button', { name: /新增項目/i }));
+
       await waitFor(() => {
         expect(screen.getAllByPlaceholderText('0').length).toBeGreaterThan(0);
       });
@@ -455,25 +514,24 @@ describe('Generator Integration Tests', () => {
       const priceInput = inputs[inputs.length - 1];
       await user.type(priceInput, '1000');
 
-      // 等待金額計算完成
       await waitFor(() => {
         expect(screen.getAllByText('$1000').length).toBeGreaterThan(0);
       });
 
-      // 點擊分享按鈕 → 開啟確認 Dialog
-      const shareBtn = screen.getByRole('button', { name: /分享連結/i });
+      // 開啟 PreviewSheet
+      await openPreview(user);
+
+      const shareBtn = screen.getByTestId('share-btn');
       await user.click(shareBtn);
 
-      // 點擊 mock Dialog 的確認分享按鈕
       const confirmBtn = await screen.findByTestId('mock-confirm-share');
       await user.click(confirmBtn);
 
-      // 驗證 URL 格式 — 前綴從 config 動態取得
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
-        expect(capturedShareUrl).toMatch(new RegExp(`/${prefix}/`)); // 路由前綴
-        expect(capturedShareUrl).toMatch(/KTV/);                      // 標題在路徑中
-        expect(capturedShareUrl).toMatch(/#\/\?data=/);               // hash 格式
+        expect(capturedShareUrl).toMatch(new RegExp(`/${prefix}/`));
+        expect(capturedShareUrl).toMatch(/KTV/);
+        expect(capturedShareUrl).toMatch(/#\/\?data=/);
       });
     });
 
@@ -483,22 +541,18 @@ describe('Generator Integration Tests', () => {
 
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
-      // 填入金額與備註
       const amountInput = screen.getByPlaceholderText('0');
       await user.type(amountInput, '1234');
 
       const commentInput = screen.getByPlaceholderText(/例如：聚餐費/i);
       await user.type(commentInput, '測試round-trip');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
+      // 開啟 PreviewSheet
+      await openPreview(user);
 
-      // 點擊分享 → 開啟確認 Dialog
-      const shareBtn = screen.getByRole('button', { name: /分享連結/i });
+      const shareBtn = screen.getByTestId('share-btn');
       await user.click(shareBtn);
 
-      // 點擊 mock Dialog 的確認分享按鈕
       const confirmBtn = await screen.findByTestId('mock-confirm-share');
       await user.click(confirmBtn);
 
@@ -506,7 +560,6 @@ describe('Generator Integration Tests', () => {
         expect(capturedShareUrl).not.toBeNull();
       });
 
-      // 從 URL 中解壓 hash data（去掉首碼 0）
       const hashPart = capturedShareUrl!.split('#/?data=')[1];
       expect(hashPart).toBeTruthy();
 
@@ -526,33 +579,25 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待載入完成
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
-
-      // 填入金額
       await user.type(screen.getByPlaceholderText('0'), '500');
 
-      // 等待 QR Code 產生
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
+      // 開啟 PreviewSheet
+      await openPreview(user);
 
-      // 開啟密碼 toggle（QR View 區域的）
-      const toggleButtons = screen.getAllByText('設定密碼保護');
-      await user.click(toggleButtons[0]);
+      // 點擊密碼 toggle
+      await user.click(screen.getByTestId('password-toggle'));
 
       // 輸入密碼
-      const passwordInputs = screen.getAllByPlaceholderText('輸入分享密碼');
-      await user.type(passwordInputs[0], 'mySecret123');
+      const passwordInput = screen.getByTestId('password-input');
+      await user.type(passwordInput, 'mySecret123');
 
-      // 點擊分享 → 開啟確認 Dialog
-      await user.click(screen.getByRole('button', { name: /分享連結/i }));
+      // 點擊分享
+      await user.click(screen.getByTestId('share-btn'));
 
-      // 點擊 mock Dialog 的確認分享按鈕
       const confirmBtn = await screen.findByTestId('mock-confirm-share');
       await user.click(confirmBtn);
 
-      // 驗證 URL 首碼為 1
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
         expect(capturedShareUrl).toMatch(/#\/\?data=1/);
@@ -563,25 +608,17 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待載入完成
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
-
-      // 填入金額
       await user.type(screen.getByPlaceholderText('0'), '300');
 
-      // 等待 QR Code 產生
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
+      // 開啟 PreviewSheet → 直接分享 (無密碼)
+      await openPreview(user);
 
-      // 不開啟密碼 toggle，直接分享 → 開啟確認 Dialog
-      await user.click(screen.getByRole('button', { name: /分享連結/i }));
+      await user.click(screen.getByTestId('share-btn'));
 
-      // 點擊 mock Dialog 的確認分享按鈕
       const confirmBtn = await screen.findByTestId('mock-confirm-share');
       await user.click(confirmBtn);
 
-      // 驗證 URL 首碼為 0
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
         expect(capturedShareUrl).toMatch(/#\/\?data=0/);
@@ -593,43 +630,32 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待載入完成
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
-
-      // 填入金額
       await user.type(screen.getByPlaceholderText('0'), '888');
 
-      // 等待 QR Code 產生
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
+      // 開啟 PreviewSheet
+      await openPreview(user);
 
       // 開啟密碼 toggle
-      const toggleButtons = screen.getAllByText('設定密碼保護');
-      await user.click(toggleButtons[0]);
+      await user.click(screen.getByTestId('password-toggle'));
 
       // 輸入密碼
-      const passwordInputs = screen.getAllByPlaceholderText('輸入分享密碼');
-      await user.type(passwordInputs[0], PASSWORD);
+      await user.type(screen.getByTestId('password-input'), PASSWORD);
 
-      // 點擊分享 → 開啟確認 Dialog
-      await user.click(screen.getByRole('button', { name: /分享連結/i }));
+      // 分享
+      await user.click(screen.getByTestId('share-btn'));
 
-      // 點擊 mock Dialog 的確認分享按鈕
       const confirmBtn = await screen.findByTestId('mock-confirm-share');
       await user.click(confirmBtn);
 
-      // 等待 URL 產生
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
         expect(capturedShareUrl).toMatch(/#\/\?data=1/);
       });
 
-      // 從 URL 提取 blob
       const blob = capturedShareUrl!.split('data=1')[1];
       expect(blob).toBeTruthy();
 
-      // 解密 + 解壓
       const compressed = await decrypt(PASSWORD, blob);
       const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
       expect(decompressed).toBeTruthy();
@@ -647,23 +673,20 @@ describe('Generator Integration Tests', () => {
 
   describe('bankCode Pre-fill (7G)', () => {
     test('應根據 initialBankCode 預填銀行選單', async () => {
-      // 清除 localStorage 模擬全新使用者
       localStorageMock.clear();
 
       render(<Generator initialBankCode="812" />);
 
-      // 等待帳戶 trigger button 渲染
       await waitFor(() => {
-        expect(screen.getByText('帳戶')).toBeInTheDocument();
+        expect(screen.getByText('帳戶設定')).toBeInTheDocument();
       }, { timeout: 3000 });
     });
 
     test('無效的 initialBankCode 應被忽略', async () => {
       render(<Generator initialBankCode="999" />);
 
-      // 應正常渲染，不 crash
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /收款/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /個人收款/i })).toBeInTheDocument();
       });
     });
   });
@@ -673,20 +696,18 @@ describe('Generator Integration Tests', () => {
   // ---------------------------------------------------------------------------
 
   describe('QrBrandCard 品牌化 QR 整合', () => {
-    test('收款模式：應渲染 QrBrandCard variant="payment"', async () => {
+    test('收款模式：PreviewSheet 中應渲染 QrBrandCard variant="payment"', async () => {
       const user = userEvent.setup();
       render(<Generator />);
 
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
-
-      // 填入金額觸發 QR 產生
       await user.type(screen.getByPlaceholderText('0'), '100');
 
-      await waitFor(() => {
-        const card = screen.getByTestId('qr-brand-card');
-        expect(card).toBeInTheDocument();
-        expect(card.getAttribute('data-variant')).toBe('payment');
-      });
+      await openPreview(user);
+
+      const card = screen.getByTestId('qr-brand-card');
+      expect(card).toBeInTheDocument();
+      expect(card.getAttribute('data-variant')).toBe('payment');
     });
 
     test('收款模式：QrBrandCard 應接收正確的銀行與帳號', async () => {
@@ -696,43 +717,21 @@ describe('Generator Integration Tests', () => {
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
-      await waitFor(() => {
-        const card = screen.getByTestId('qr-brand-card');
-        expect(card.getAttribute('data-bank-name')).toContain('822');
-        expect(card.getAttribute('data-account-number')).toBe('123456789012');
-      });
+      await openPreview(user);
+
+      const card = screen.getByTestId('qr-brand-card');
+      expect(card.getAttribute('data-bank-name')).toContain('822');
+      expect(card.getAttribute('data-account-number')).toBe('123456789012');
     });
 
-    test('分帳 Host：應渲染 QrBrandCard variant="share"', async () => {
+    test('多人拆帳 Host：PreviewSheet 中應渲染 QrBrandCard variant="share"', async () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 切換到分帳模式
-      await user.click(screen.getByRole('button', { name: /分帳/i }));
-      await waitFor(() => screen.getByPlaceholderText(/例如：週五燒肉局/i));
-
-      // 設定標題 + 成員 + 項目
-      await user.type(screen.getByPlaceholderText(/例如：週五燒肉局/i), '聚餐');
-      await user.type(screen.getByPlaceholderText(/輸入朋友名字/i), 'Bob{enter}');
-      await user.click(screen.getByRole('button', { name: /新增項目/i }));
-
       await waitFor(() => {
-        expect(screen.getAllByPlaceholderText('0').length).toBeGreaterThan(0);
-      });
-      const inputs = screen.getAllByPlaceholderText('0');
-      await user.type(inputs[inputs.length - 1], '500');
-
-      await waitFor(() => {
-        const card = screen.getByTestId('qr-brand-card');
-        expect(card.getAttribute('data-variant')).toBe('share');
-      });
-    });
-
-    test('分帳 Host：QrBrandCard qrValue 應為 Share URL', async () => {
-      const user = userEvent.setup();
-      render(<Generator />);
-
-      await user.click(screen.getByRole('button', { name: /分帳/i }));
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 2000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
       await waitFor(() => screen.getByPlaceholderText(/例如：週五燒肉局/i));
 
       await user.type(screen.getByPlaceholderText(/例如：週五燒肉局/i), '聚餐');
@@ -746,17 +745,23 @@ describe('Generator Integration Tests', () => {
       await user.type(inputs[inputs.length - 1], '500');
 
       await waitFor(() => {
-        const card = screen.getByTestId('qr-brand-card');
-        const qrValue = card.getAttribute('data-qr-value');
-        expect(qrValue).toMatch(/^https?:\/\//);
+        expect(screen.getAllByText('$500').length).toBeGreaterThan(0);
       });
+
+      await openPreview(user);
+
+      const card = screen.getByTestId('qr-brand-card');
+      expect(card.getAttribute('data-variant')).toBe('share');
     });
 
-    test('分帳 Host：應傳入帳單標題與金額', async () => {
+    test('多人拆帳 Host：QrBrandCard qrValue 應為 Share URL', async () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await user.click(screen.getByRole('button', { name: /分帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 2000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
       await waitFor(() => screen.getByPlaceholderText(/例如：週五燒肉局/i));
 
       await user.type(screen.getByPlaceholderText(/例如：週五燒肉局/i), '聚餐');
@@ -770,10 +775,45 @@ describe('Generator Integration Tests', () => {
       await user.type(inputs[inputs.length - 1], '500');
 
       await waitFor(() => {
-        const card = screen.getByTestId('qr-brand-card');
-        expect(card.getAttribute('data-bill-title')).toBe('聚餐');
-        expect(card.getAttribute('data-bill-total')).toBeTruthy();
+        expect(screen.getAllByText('$500').length).toBeGreaterThan(0);
       });
+
+      await openPreview(user);
+
+      const card = screen.getByTestId('qr-brand-card');
+      const qrValue = card.getAttribute('data-qr-value');
+      expect(qrValue).toMatch(/^https?:\/\//);
+    });
+
+    test('多人拆帳 Host：應傳入帳單標題與金額', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 2000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
+      await waitFor(() => screen.getByPlaceholderText(/例如：週五燒肉局/i));
+
+      await user.type(screen.getByPlaceholderText(/例如：週五燒肉局/i), '聚餐');
+      await user.type(screen.getByPlaceholderText(/輸入朋友名字/i), 'Bob{enter}');
+      await user.click(screen.getByRole('button', { name: /新增項目/i }));
+
+      await waitFor(() => {
+        expect(screen.getAllByPlaceholderText('0').length).toBeGreaterThan(0);
+      });
+      const inputs = screen.getAllByPlaceholderText('0');
+      await user.type(inputs[inputs.length - 1], '500');
+
+      await waitFor(() => {
+        expect(screen.getAllByText('$500').length).toBeGreaterThan(0);
+      });
+
+      await openPreview(user);
+
+      const card = screen.getByTestId('qr-brand-card');
+      expect(card.getAttribute('data-bill-title')).toBe('聚餐');
+      expect(card.getAttribute('data-bill-total')).toBeTruthy();
     });
   });
 
@@ -789,23 +829,22 @@ describe('Generator Integration Tests', () => {
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
-
-      const shareBtn = screen.getByRole('button', { name: /分享連結/i });
-      await user.click(shareBtn);
+      await openPreview(user);
+      await user.click(screen.getByTestId('share-btn'));
 
       await waitFor(() => {
         expect(screen.getByTestId('share-confirm-dialog')).toBeInTheDocument();
       });
     });
 
-    test('分帳 Host：點擊分享應開啟確認 Dialog', async () => {
+    test('多人拆帳 Host：點擊分享應開啟確認 Dialog', async () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await user.click(screen.getByRole('button', { name: /分帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 2000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
       await waitFor(() => screen.getByPlaceholderText(/例如：週五燒肉局/i));
 
       await user.type(screen.getByPlaceholderText(/例如：週五燒肉局/i), '聚餐');
@@ -819,11 +858,11 @@ describe('Generator Integration Tests', () => {
       await user.type(inputs[inputs.length - 1], '500');
 
       await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
+        expect(screen.getAllByText('$500').length).toBeGreaterThan(0);
       });
 
-      const shareBtn = screen.getByRole('button', { name: /分享連結/i });
-      await user.click(shareBtn);
+      await openPreview(user);
+      await user.click(screen.getByTestId('share-btn'));
 
       await waitFor(() => {
         expect(screen.getByTestId('share-confirm-dialog')).toBeInTheDocument();
@@ -836,10 +875,6 @@ describe('Generator Integration Tests', () => {
 
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
-
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
 
       // 不應有「縮網址服務」文字
       expect(screen.queryByText('縮網址服務')).not.toBeInTheDocument();
@@ -865,11 +900,9 @@ describe('Generator Integration Tests', () => {
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
+      await openPreview(user);
 
-      // Set up the spy just before clicking download (after render)
+      // Set up the spy
       const createSpy = jest.spyOn(document, 'createElement');
       createSpy.mockImplementation((tagName: string, options?: any) => {
         const el = originalCreateElement(tagName, options);
@@ -881,8 +914,7 @@ describe('Generator Integration Tests', () => {
         return el;
       });
 
-      const downloadBtn = screen.getByRole('button', { name: /下載圖片/i });
-      await user.click(downloadBtn);
+      await user.click(screen.getByTestId('download-btn'));
 
       await waitFor(() => {
         expect(capturedDownload).toContain('822');
@@ -899,12 +931,8 @@ describe('Generator Integration Tests', () => {
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
-
-      const downloadBtn = screen.getByRole('button', { name: /下載圖片/i });
-      await user.click(downloadBtn);
+      await openPreview(user);
+      await user.click(screen.getByTestId('download-btn'));
 
       await waitFor(() => {
         expect(toPngMock).toHaveBeenCalled();
@@ -919,26 +947,21 @@ describe('Generator Integration Tests', () => {
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
-      await waitFor(() => {
-        expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
-      });
+      await openPreview(user);
 
-      const downloadBtn = screen.getByRole('button', { name: /下載圖片/i });
-      // Should not throw
       await expect(async () => {
-        await user.click(downloadBtn);
+        await user.click(screen.getByTestId('download-btn'));
       }).not.toThrow();
     });
   });
 
   // ---------------------------------------------------------------------------
-  // Template Attribution (TEMPLATE BY) — 模式切換 + 參數變更偵測
+  // Template Attribution (TEMPLATE BY)
   // ---------------------------------------------------------------------------
 
   describe('Template Attribution (TEMPLATE BY)', () => {
-    /** 等待 Splash 結束，點擊模板按鈕開啟 TemplateSheet */
     const openTemplateSheet = async (user: ReturnType<typeof userEvent.setup>) => {
-      const sceneTrigger = await screen.findByText('模板', {}, { timeout: 3000 });
+      const sceneTrigger = await screen.findByText('使用模板', {}, { timeout: 3000 });
       await user.click(sceneTrigger.closest('button')!);
       await waitFor(() => {
         expect(screen.getByText('Netflix 合租')).toBeInTheDocument();
@@ -958,17 +981,20 @@ describe('Generator Integration Tests', () => {
       }, { timeout: 3000 });
     });
 
-    test('切換到其他模式時 badge 應隱藏', async () => {
+    test('切換到其他子模式時 badge 應隱藏', async () => {
       const user = userEvent.setup();
       render(<Generator />);
       await openTemplateSheet(user);
 
-      // 套用 payment 模板
+      // 套用 payment 模板 (splits to 'split' subMode)
       await user.click(screen.getByText('Netflix 合租'));
       await waitFor(() => expect(screen.getByText('TEMPLATE BY')).toBeInTheDocument(), { timeout: 3000 });
 
-      // 切到分帳模式
-      await user.click(screen.getByText('分帳'));
+      // Wait for loading to finish, then click 多人拆帳
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 3000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
 
       await waitFor(() => {
         expect(screen.queryByText('TEMPLATE BY')).not.toBeInTheDocument();
@@ -984,12 +1010,18 @@ describe('Generator Integration Tests', () => {
       await user.click(screen.getByText('Netflix 合租'));
       await waitFor(() => expect(screen.getByText('TEMPLATE BY')).toBeInTheDocument(), { timeout: 3000 });
 
-      // 切到分帳 → badge 消失
-      await user.click(screen.getByText('分帳'));
+      // Wait for loading to finish, then switch
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 3000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
       await waitFor(() => expect(screen.queryByText('TEMPLATE BY')).not.toBeInTheDocument(), { timeout: 3000 });
 
-      // 切回收款模式 → badge 回歸
-      await user.click(screen.getByText('收款'));
+      // Wait for loading, then switch back
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /平均分帳/i })).toBeInTheDocument();
+      }, { timeout: 3000 });
+      await user.click(screen.getByRole('button', { name: /平均分帳/i }));
       await waitFor(() => {
         expect(screen.getByText('TEMPLATE BY')).toBeInTheDocument();
         expect(screen.getByText('PayMe Team')).toBeInTheDocument();
@@ -1022,9 +1054,17 @@ describe('Generator Integration Tests', () => {
       });
 
       // 即使切到其他模式再切回來，badge 仍不會出現
-      await user.click(screen.getByText('分帳'));
+      // Wait for button to be available after loading
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
+      }, { timeout: 3000 });
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
       await waitFor(() => expect(screen.queryByText('TEMPLATE BY')).not.toBeInTheDocument(), { timeout: 3000 });
-      await user.click(screen.getByText('收款'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /個人收款/i })).toBeInTheDocument();
+      }, { timeout: 3000 });
+      await user.click(screen.getByRole('button', { name: /個人收款/i }));
       await waitFor(() => {
         expect(screen.queryByText('TEMPLATE BY')).not.toBeInTheDocument();
       }, { timeout: 3000 });
@@ -1059,25 +1099,16 @@ describe('Generator Integration Tests', () => {
         <Generator initialMode="bill" initialData={billShareData} isShared={true} />
       );
 
-      // 等待 Loading 結束，BillViewer 出現
       await waitFor(() => {
         expect(screen.getByText('帳單明細 (唯讀)')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // DEBUG: 觀察當前右側面板狀態
-      const hasQrBefore = screen.queryByTestId('qr-brand-card');
-      const hasWaitingText = screen.queryByText(/請先在左側選擇您的名字/);
-      const hasQrText = screen.queryByText(/掃描下方 QR Code/);
-
-      // 點擊成員 "Alice"
       await user.click(screen.getByText('Alice'));
 
-      // 選擇後：QR Code 應出現
       await waitFor(() => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // 文字應變更為 "掃描下方 QR Code 進行分帳"
       expect(screen.getByText(/掃描下方 QR Code 進行分帳/)).toBeInTheDocument();
     });
 
@@ -1086,7 +1117,7 @@ describe('Generator Integration Tests', () => {
         ...billShareData,
         bd: {
           ...billShareData.bd,
-          t: '週五錢櫃歡唱趴踢',  // 長標題 → [週五錢櫃歡唱趴踢] 分帳 (Alice) = 21+ chars
+          t: '週五錢櫃歡唱趴踢',
         },
       };
       const user = userEvent.setup({ pointerEventsCheck: 0 });
@@ -1098,10 +1129,8 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByText('帳單明細 (唯讀)')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // 點擊成員 "Alice"
       await user.click(screen.getByText('Alice'));
 
-      // 即使 comment 超過 20 字，QR Code 仍應出現
       await waitFor(() => {
         expect(screen.getByTestId('qr-brand-card')).toBeInTheDocument();
       }, { timeout: 3000 });
@@ -1117,7 +1146,6 @@ describe('Generator Integration Tests', () => {
         expect(screen.getByText('帳單明細 (唯讀)')).toBeInTheDocument();
       }, { timeout: 3000 });
 
-      // Alice 參與：包廂費 100/3 + 餐點 35/2 = 33.33 + 17.5 = 50.83 → 51
       await user.click(screen.getByText('Alice'));
 
       await waitFor(() => {
@@ -1130,24 +1158,18 @@ describe('Generator Integration Tests', () => {
     const user = userEvent.setup();
     render(<Generator />);
 
-    // 等待載入完成
     await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
-    // 輸入負數金額
     const amountInput = screen.getByPlaceholderText('0');
     await user.type(amountInput, '-100');
 
-    // 觸發 Blur 以啟動驗證 (如果驗證是在 onBlur 時觸發)
     await user.tab();
 
-    // 驗證 QR Code 不應出現
     await waitFor(() => {
         const qr = screen.queryByTestId('qr-code');
         expect(qr).not.toBeInTheDocument();
     });
-    
-    // 驗證錯誤訊息 (假設錯誤訊息會顯示在 input 下方)
-    // 根據 validators.ts: message: "金額必須為大於 0 的整數"
+
     await waitFor(() => {
         expect(screen.getByText(/金額必須為大於 0 的整數/i)).toBeInTheDocument();
     });

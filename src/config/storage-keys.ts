@@ -13,6 +13,7 @@ export const STORAGE_KEY = {
   trustShieldCache: 'trust_shield_cache',
   hasVisited: 'payme_has_visited',
   useShortUrl: 'payme_use_short_url',
+  lastSubMode: 'payme_last_sub_mode',
 } as const;
 
 /**

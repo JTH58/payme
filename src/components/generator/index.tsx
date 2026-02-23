@@ -3,17 +3,19 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useTwqr } from '@/hooks/use-twqr';
 import { useAccounts } from '@/hooks/use-accounts';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import banks from '@/data/banks.json';
 import { QRCodeSVG } from 'qrcode.react';
-import { Share2, Check, Download, AlertTriangle, Users, Receipt, Copy, Lock, Eye, EyeOff, ShieldAlert, Wallet, Sparkles } from 'lucide-react';
+import { Share2, Check, Download, AlertTriangle, Users, Copy, Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { buildShareUrl } from '@/lib/url-builder';
 import { isCryptoAvailable } from '@/lib/crypto';
 import { SEG, getRouteConfig, AppMode, VALID_MODES } from '@/config/routes';
+import { FormSubMode } from '@/config/form-modes';
 import { AccountSwitcher } from './account-switcher';
 import { QrBrandCard, QR_CENTER_LABEL } from './qr-brand-card';
 import { ShareConfirmDialog } from './share-confirm-dialog';
+import { UnifiedForm } from './unified-form';
+import { PreviewSheet } from './preview-sheet';
 
 import {
   Dialog,
@@ -23,8 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PaymentForm } from '@/modules/payment/components/payment-form';
-import { BillForm } from '@/modules/bill/components/bill-form';
 import { BankForm } from '@/modules/core/components/bank-form';
 import { BillViewer } from '@/modules/bill/components/bill-viewer';
 import { BillData, BillItem, SimpleData, CompressedData } from '@/types/bill';
@@ -32,7 +32,6 @@ import { Template } from '@/types/template';
 import templatesData from '@/data/templates.json';
 import { TemplateSubmitModal } from '@/components/template-submit-modal';
 import { stripSensitiveFields, type TemplateFormState } from '@/modules/feedback/schemas/submit-schema';
-import { FileUp } from 'lucide-react';
 import { AccountSheet } from './account-sheet';
 import { TemplateSheet } from './template-sheet';
 
@@ -73,6 +72,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     isSharedLink,
     mode,
     setMode,
+    subMode,
+    setSubMode,
     billData,
     setBillData,
     templateId,
@@ -95,8 +96,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   } = useAccounts();
 
   const [simpleData, setSimpleData] = useState<SimpleData | undefined>(undefined);
-  const [currentTemplateValues, setCurrentTemplateValues] = useState<SimpleData | null>(null);
-  const [defaultSplitEnabled, setDefaultSplitEnabled] = useState(false);
 
   const { formState: { errors } } = form;
 
@@ -115,6 +114,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [showAccountSheet, setShowAccountSheet] = useState(false);
   const [showTemplateSheet, setShowTemplateSheet] = useState(false);
+  const [showPreviewSheet, setShowPreviewSheet] = useState(false);
 
   const qrCardRef = useRef<HTMLDivElement>(null);
   const plaintextFallbackRef = useRef<string>('');
@@ -123,15 +123,13 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const accountCopyTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const downloadTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const templateSnapshotRef = useRef<{
-    mode: AppMode;
+    subMode: FormSubMode;
     amount?: string;
     comment?: string;
     simpleHash?: string;
     billHash?: string;
   } | null>(null);
   const cryptoAvailable = isCryptoAvailable();
-
-  const accountButtonLabel = '帳戶';
 
   // Cleanup all timeout refs on unmount
   useEffect(() => {
@@ -149,7 +147,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   }, [isSharedLink]);
 
   // primaryAccount 變化時同步到 form（非分享連結模式）
-  // 只在 primaryAccount 有實際值時同步，避免覆蓋 initialBankCode 等外部預填
   useEffect(() => {
     if (isSharedLink || !accountsLoaded) return;
     if (!primaryAccount?.bankCode || !primaryAccount?.accountNumber) return;
@@ -168,18 +165,17 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
       const validBank = banks.find(b => b.code === initialBankCode);
       if (validBank) {
         form.setValue('bankCode', initialBankCode, { shouldValidate: true });
-        // 同步更新 useAccounts 中的第一筆帳戶
         if (accounts.length > 0) {
           updateAccount(accounts[0].id, { bankCode: initialBankCode });
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- accounts 故意省略：加入會在每次帳戶編輯時重新執行預填
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- accounts 故意省略
   }, [initialBankCode, isShared, accountsLoaded, form, updateAccount]);
 
   const values = form.watch();
 
-  // 查找當前使用的模板（提前定義，供 currentShareUrl / handleShare 使用）
+  // 查找當前使用的模板
   const activeTemplate = useMemo(
     () => templateId ? templates.find(t => t.id === templateId) ?? null : null,
     [templateId]
@@ -190,32 +186,30 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
 
   const handleTemplateSelect = (t: Template) => {
     setTemplateId(t.id);
-    setMode(t.mode as AppMode);
 
     const def = t.defaultValues;
-    const snapshot: NonNullable<typeof templateSnapshotRef.current> = { mode: t.mode as AppMode };
+    const snapshot: NonNullable<typeof templateSnapshotRef.current> = {
+      subMode: t.mode === 'bill' ? 'itemized' : (def.pax ? 'split' : 'personal'),
+    };
 
-    if (t.mode === 'pay' && def.pax) {
-      // 有 pax → 開啟均分
-      const sv = { ta: def.amount?.toString() || '', pc: def.pax || 2, sc: false };
-      setCurrentTemplateValues(sv);
-      setDefaultSplitEnabled(true);
-      setSimpleData(sv);
-      snapshot.simpleHash = JSON.stringify(sv);
-    } else if (t.mode === 'bill') {
+    if (t.mode === 'bill') {
+      // Bill → itemized
+      setSubMode('itemized');
       const bd = { t: def.title || '', m: ['我'], i: [] as BillItem[], s: (def.taxRate || 0) > 0 };
       setBillData(bd);
       snapshot.billHash = JSON.stringify(bd);
-      setCurrentTemplateValues(null);
-      setDefaultSplitEnabled(false);
+    } else if (def.pax) {
+      // Pay + pax → split
+      setSubMode('split');
+      setSimpleData({ ta: def.amount?.toString() || '', pc: def.pax || 2, sc: false });
+      snapshot.simpleHash = JSON.stringify({ ta: def.amount?.toString() || '', pc: def.pax || 2, sc: false });
     } else {
-      // payment without pax → 直接輸入
+      // Pay without pax → personal
+      setSubMode('personal');
       form.setValue('amount', def.amount?.toString() || '');
       form.setValue('comment', def.title || '');
       snapshot.amount = def.amount?.toString() || '';
       snapshot.comment = def.title || '';
-      setCurrentTemplateValues(null);
-      setDefaultSplitEnabled(false);
     }
 
     templateSnapshotRef.current = snapshot;
@@ -230,8 +224,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     }
   };
 
-  // 即時計算 Share URL（供 QrBrandCard + ShortenerDialog 使用）
-  // 共用 payload + pathParams（供 currentShareUrl + handleShare 使用）
+  // 即時計算 Share URL
   const { sharePayload, sharePathParams } = useMemo(() => {
     const { bankCode, accountNumber, amount, comment } = form.getValues();
     if (!bankCode || !accountNumber) return { sharePayload: null, sharePathParams: {} };
@@ -300,7 +293,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
 
   // 分帳模式：帳戶資訊是否齊全 + 帳單是否足夠
   const hasBankInfo = !!(values.bankCode && values.accountNumber);
-  const billSufficient = isBillDataSufficient(billData);
 
   // 分享文字預覽（供 ShareConfirmDialog 顯示）
   const shareTextPreview = useMemo(() => {
@@ -333,7 +325,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values, mode, billData, sharePayload, isTemplateActive, activeTemplate]);
 
-  // 組合模板投稿用的 formState（已 strip 敏感欄位）
+  // 組合模板投稿用的 formState
   const templateFormState = useMemo((): TemplateFormState => {
     const raw: Record<string, unknown> = { mode };
     const { amount, comment } = form.getValues();
@@ -472,7 +464,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           document.body.appendChild(textArea);
           textArea.focus();
           textArea.select();
-          // Deprecated but still widely supported; kept as Clipboard API fallback
           const successful = document.execCommand('copy');
           document.body.removeChild(textArea);
           if (successful) {
@@ -554,7 +545,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        // Deprecated but still widely supported; kept as Clipboard API fallback
         const successful = document.execCommand('copy');
         document.body.removeChild(textArea);
         if (successful) {
@@ -572,18 +562,19 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   };
 
   // 模板參數變更偵測 — 使用者改過任何值即永久清除 templateId
+  // 只在目前 subMode 與模板原始 subMode 相同時才比對，避免切換模式時中繼狀態觸發 dirty
   useEffect(() => {
     const snap = templateSnapshotRef.current;
-    if (!templateId || !snap || snap.mode !== mode) return;
+    if (!templateId || !snap) return;
+    if (subMode !== snap.subMode) return;
 
     let isDirty = false;
 
-    if (snap.mode === 'pay' && !snap.simpleHash) {
-      // payment 模式無均分 → 偵測 amount/comment
+    if (snap.subMode === 'personal') {
       isDirty = values.amount !== snap.amount || values.comment !== snap.comment;
-    } else if (snap.mode === 'pay' && simpleData && snap.simpleHash) {
+    } else if (snap.subMode === 'split' && simpleData && snap.simpleHash) {
       isDirty = JSON.stringify(simpleData) !== snap.simpleHash;
-    } else if (snap.mode === 'bill' && billData && snap.billHash) {
+    } else if (snap.subMode === 'itemized' && billData && snap.billHash) {
       isDirty = JSON.stringify(billData) !== snap.billHash;
     }
 
@@ -592,43 +583,41 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
       templateSnapshotRef.current = null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values.amount, values.comment, simpleData, billData, mode, templateId]);
+  }, [values.amount, values.comment, simpleData, billData, subMode, templateId]);
 
-  return (
-    <>
-      <div
-        className={`fixed inset-0 z-[9999] bg-[#020617]/60 backdrop-blur-3xl flex items-center justify-center transition-opacity duration-1000 ease-out ${isInitialLoad ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
-      >
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-[0.2em] animate-pulse">
-            PayMe.TW
-          </h1>
-          <p className="text-white/40 text-sm tracking-widest uppercase">
-            Secure . Private . Fast
-          </p>
+  // ─── Render ────────────────────────────────────────
+
+  // Guest mode (shared link) — separate render path
+  if (isSharedLink) {
+    return (
+      <>
+        <div
+          className={`fixed inset-0 z-[9999] bg-[#020617]/60 backdrop-blur-3xl flex items-center justify-center transition-opacity duration-1000 ease-out ${isInitialLoad ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        >
+          <div className="text-center space-y-4">
+            <h1 className="text-5xl md:text-7xl font-bold text-white tracking-[0.2em] animate-pulse">PayMe.TW</h1>
+            <p className="text-white/40 text-sm tracking-widest uppercase">Secure . Private . Fast</p>
+          </div>
         </div>
-      </div>
 
-      <div className="w-full max-w-4xl mx-auto space-y-6 animate-accordion-down">
-        {/* 全域銀行資訊區塊 — 共享連結模式保留 inline 唯讀卡片 */}
-        {!isInitialLoad && isSharedLink && (
-          <BankForm
-            accounts={accounts}
-            primaryAccount={primaryAccount}
-            sharedAccounts={sharedAccounts}
-            onAddAccount={addAccount}
-            onRemoveAccount={removeAccount}
-            onUpdateAccount={updateAccount}
-            onToggleShared={toggleShared}
-            isSharedLink={isSharedLink}
-            sharedLinkBankCode={form.watch('bankCode')}
-            sharedLinkAccountNumber={form.watch('accountNumber')}
-          />
-        )}
+        <div className="w-full max-w-4xl mx-auto space-y-6 animate-accordion-down">
+          {/* 全域銀行資訊區塊 */}
+          {!isInitialLoad && (
+            <BankForm
+              accounts={accounts}
+              primaryAccount={primaryAccount}
+              sharedAccounts={sharedAccounts}
+              onAddAccount={addAccount}
+              onRemoveAccount={removeAccount}
+              onUpdateAccount={updateAccount}
+              onToggleShared={toggleShared}
+              isSharedLink={isSharedLink}
+              sharedLinkBankCode={form.watch('bankCode')}
+              sharedLinkAccountNumber={form.watch('accountNumber')}
+            />
+          )}
 
-        {/* 模式切換 + trigger buttons */}
-        {isSharedLink ? (
+          {/* Shared link header */}
           <div className="w-full max-w-md mx-auto bg-white/10 p-1 rounded-full flex items-center justify-between relative backdrop-blur-md">
             <div className="w-full flex items-center justify-between px-4 py-2">
               <span className="text-sm text-white/60">
@@ -642,447 +631,275 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
               </button>
             </div>
           </div>
-        ) : (
-          <div className="flex items-center gap-3 w-full max-w-md mx-auto">
-            <button
-              type="button"
-              onClick={() => setShowAccountSheet(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/60 hover:text-white/80 transition-all duration-150 active:scale-[0.98] text-xs whitespace-nowrap"
-            >
-              <Wallet size={16} />
-              <span>{accountButtonLabel}</span>
-            </button>
 
-            <div className="flex-1 bg-white/10 p-1 rounded-full flex items-center justify-between relative backdrop-blur-md">
-              <button
-                onClick={() => setMode('pay')}
-                aria-pressed={mode === 'pay'}
-                className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all duration-300 active:scale-[0.98] ${mode === 'pay' ? 'bg-white text-black shadow-sm' : 'text-white/60 hover:text-white'}`}
-              >
-                收款
-              </button>
-              <button
-                onClick={() => setMode('bill')}
-                aria-pressed={mode === 'bill'}
-                className={`flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all duration-300 active:scale-[0.98] ${mode === 'bill' ? 'bg-white text-black shadow-sm' : 'text-white/60 hover:text-white'}`}
-              >
-                分帳
-              </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full">
+            {/* 左側：表單區 (read-only) */}
+            <div className="flex flex-col gap-6">
+              <div className="transition-all duration-500 min-h-0 md:min-h-[550px]">
+                {isLoading ? (
+                  <div className="space-y-6 p-1">
+                    <div className="h-32 rounded-xl w-full animate-shimmer" />
+                    <div className="h-64 rounded-xl w-full animate-shimmer" />
+                  </div>
+                ) : (
+                  <>
+                    {mode === 'bill' && (
+                      <BillViewer form={form} billData={billData || { t: '', m: [], i: [], s: false }} />
+                    )}
+                    {mode === 'pay' && (
+                      <div className="pointer-events-none opacity-80">
+                        <UnifiedForm
+                          form={form}
+                          subMode={subMode}
+                          onSubModeChange={() => {}}
+                          reset={() => {}}
+                          initialSplitData={initialSimpleData}
+                          defaultSplitEnabled={!!initialSimpleData}
+                          isSharedMode={true}
+                          onConfirm={() => {}}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowTemplateSheet(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/60 hover:text-white/80 transition-all duration-150 active:scale-[0.98] text-xs whitespace-nowrap"
-            >
-              <Sparkles size={16} />
-              <span>模板</span>
-            </button>
+            {/* 右側：QR 預覽區 (guest) */}
+            <div className="flex flex-col items-center justify-center min-h-0 md:min-h-[550px] relative overflow-hidden rounded-xl border border-white/10 bg-black/20 p-4 sm:p-8">
+              {/* 多帳號切換器 */}
+              {initialData?.ac && (
+                <AccountSwitcher
+                  accounts={initialData.ac}
+                  currentBankCode={form.watch('bankCode')}
+                  currentAccountNumber={form.watch('accountNumber')}
+                  onSelect={handleAccountSwitch}
+                />
+              )}
+
+              <div className="mb-6 text-center space-y-1">
+                <h3 className="text-xl font-medium text-white/90">TWQR 預覽</h3>
+                <p className="text-sm text-white/50">
+                  {mode === 'bill' && !qrString
+                    ? "👈 請先在左側選擇您的名字"
+                    : (qrString
+                      ? `掃描下方 QR Code 進行${mode === 'bill' ? '分帳' : '轉帳'}`
+                      : "請先於左側輸入資料"
+                    )
+                  }
+                </p>
+              </div>
+
+              {qrString ? (
+                <div
+                  className="cursor-zoom-in hover:scale-105 transition-all duration-500"
+                  onClick={() => setIsFullscreen(true)}
+                >
+                  <QrBrandCard
+                    ref={qrCardRef}
+                    variant="payment"
+                    qrValue={qrString}
+                    bankName={currentBankName}
+                    accountNumber={form.watch('accountNumber')}
+                  />
+                </div>
+              ) : (
+                <div className="p-4 bg-white rounded-2xl shadow-2xl">
+                  <div className="w-[200px] h-[200px] bg-gray-100/50 rounded-lg flex flex-col items-center justify-center text-gray-400 space-y-2 text-center px-4">
+                    {mode === 'bill' ? (
+                      <>
+                        <Users className="w-8 h-8 opacity-50" />
+                        <span className="text-xs">等待選擇身份...</span>
+                      </>
+                    ) : (
+                      !form.watch('bankCode') || !form.watch('accountNumber') ? (
+                        <>
+                          <AlertTriangle className="w-8 h-8 opacity-50 text-orange-500" />
+                          <span className="text-xs font-medium text-orange-700">缺少銀行帳號</span>
+                        </>
+                      ) : (
+                        "等待輸入..."
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {qrString && (
+                <div className="mt-8 w-full space-y-3">
+                  {/* 複製帳號按鈕 */}
+                  <div className="space-y-1">
+                    <Button
+                      variant="outline"
+                      className="w-full border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-white/80 h-10 gap-2"
+                      onClick={handleCopyAccount}
+                    >
+                      {isAccountCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {isAccountCopied ? '已複製帳號' : `複製帳號 (${form.watch('accountNumber')})`}
+                    </Button>
+                    {accountCopyError && (
+                      <p className="text-xs text-red-400 text-center">{accountCopyError}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Shared Dialogs */}
+        <Dialog open={isFullscreen && !!qrString} onOpenChange={setIsFullscreen}>
+          <DialogContent className="sm:max-w-fit border-none bg-transparent shadow-none [&>button]:text-white/60">
+            <DialogDescription className="sr-only">放大 QR Code</DialogDescription>
+            <DialogTitle className="sr-only">QR Code 全螢幕檢視</DialogTitle>
+            <div className="flex flex-col items-center">
+              <div className="relative p-3 sm:p-6 md:p-8 bg-white rounded-3xl shadow-glow-white">
+                <QRCodeSVG
+                  value={qrString}
+                  size={300}
+                  level="Q"
+                  includeMargin={false}
+                  imageSettings={{
+                    src: QR_CENTER_LABEL,
+                    x: undefined,
+                    y: undefined,
+                    height: 24,
+                    width: 90,
+                    excavate: true,
+                  }}
+                />
+              </div>
+              <p className="mt-6 text-white/50 text-sm">點擊 ✕ 或外部區域關閉</p>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showDisclaimer} onOpenChange={setShowDisclaimer}>
+          <DialogContent className="sm:max-w-md border-orange-500/20">
+            <DialogHeader>
+              <div className="flex items-center gap-2 text-orange-500 mb-2">
+                <AlertTriangle className="h-6 w-6" />
+                <DialogTitle className="text-xl">安全提醒與免責聲明</DialogTitle>
+              </div>
+              <DialogDescription asChild>
+                <div className="text-left space-y-3 pt-2 text-base text-muted-foreground">
+                  <p>
+                    您正透過分享連結訪問 <strong>PayMe.tw</strong>。這是一個第三方開源工具，
+                    <span className="text-orange-600 font-semibold mx-1">並非</span>
+                    任何銀行或支付機構的官方應用程式。
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-sm">
+                    <li>本網站僅協助產生符合 TWQR 格式的條碼，不經手任何金流。</li>
+                    <li>
+                      <span className="font-bold text-foreground">詐騙防範：</span>
+                      請勿輕信來路不明的收款碼。付款前，請務必在您的銀行 App 內再次核對
+                      「<span className="font-bold text-foreground">轉入帳號</span>」與
+                      「<span className="font-bold text-foreground">金額</span>」。
+                    </li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground/80 mt-4 border-t pt-4">
+                    免責聲明：使用本工具產生的 QR Code 進行交易之風險由使用者自行承擔，
+                    開發者不對任何因使用本工具而產生的資金損失負責。
+                  </p>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-4 sm:justify-center">
+              <Button
+                type="button"
+                className="w-full sm:w-auto min-w-[120px] bg-orange-600 hover:bg-orange-700 text-white"
+                onClick={() => setShowDisclaimer(false)}
+              >
+                我知道了，繼續使用
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  // ─── Host mode ────────────────────────────────────
+
+  return (
+    <>
+      <div
+        className={`fixed inset-0 z-[9999] bg-[#020617]/60 backdrop-blur-3xl flex items-center justify-center transition-opacity duration-1000 ease-out ${isInitialLoad ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      >
+        <div className="text-center space-y-4">
+          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-[0.2em] animate-pulse">PayMe.TW</h1>
+          <p className="text-white/40 text-sm tracking-widest uppercase">Secure . Private . Fast</p>
+        </div>
+      </div>
+
+      <div className="w-full max-w-lg mx-auto space-y-6 animate-accordion-down">
+        {/* Template Attribution Badge */}
+        {isTemplateActive && activeTemplate?.author && (
+          <div className="flex justify-center">
+            <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700">
+              <p className="text-[10px] text-white/50 tracking-wider">
+                TEMPLATE BY <span className="text-white/90 font-medium ml-1">{activeTemplate.author.name}</span>
+              </p>
+            </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full">
-          {/* 左側：表單區 */}
-          <div className="flex flex-col gap-6">
-
-            <div className="transition-all duration-500 min-h-0 md:min-h-[550px]">
-              {isLoading ? (
-                <div className="space-y-6 p-1">
-                  <div className="h-32 rounded-xl w-full animate-shimmer" />
-                  <div className="h-64 rounded-xl w-full animate-shimmer" />
-                </div>
-              ) : (
-                <>
-                  {mode === 'pay' && (
-                    <div className={isSharedLink ? "pointer-events-none opacity-80" : ""}>
-                      <PaymentForm
-                        key={`payment-form-${mode}-${templateId || 'default'}`}
-                        form={form}
-                        reset={reset}
-                        initialSplitData={currentTemplateValues || initialSimpleData}
-                        onSplitDataChange={setSimpleData}
-                        isSharedMode={isSharedLink}
-                        defaultSplitEnabled={defaultSplitEnabled || !!initialSimpleData}
-                      />
-                    </div>
-                  )}
-
-                  {mode === 'bill' && (
-                    isSharedLink ? (
-                      <BillViewer form={form} billData={billData || { t: '', m: [], i: [], s: false }} />
-                    ) : (
-                      <BillForm
-                        key={`bill-form-${templateId || 'default'}`}
-                        form={form}
-                        onBillDataChange={setBillData}
-                        initialData={billData}
-                      />
-                    )
-                  )}
-                </>
-              )}
-            </div>
+        {/* Unified Form */}
+        {isLoading ? (
+          <div className="space-y-6 p-1">
+            <div className="h-32 rounded-xl w-full animate-shimmer" />
+            <div className="h-64 rounded-xl w-full animate-shimmer" />
           </div>
-
-          {/* 右側：預覽區 */}
-          <Card className="flex flex-col items-center justify-center min-h-0 md:min-h-[550px] relative overflow-hidden group border-white/10 bg-black/20">
-
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-            <CardContent className="flex flex-col items-center z-10 p-4 sm:p-8 w-full min-h-0 md:min-h-[550px] justify-center">
-              {/* 署名顯示區域 (Credit Badge) — 僅在模板原始模式下顯示 */}
-              {isTemplateActive && activeTemplate?.author && (
-                <div className="absolute top-4 right-4 bg-white/5 border border-white/10 px-3 py-1 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700">
-                  <p className="text-[10px] text-white/50 tracking-wider">
-                    TEMPLATE BY <span className="text-white/90 font-medium ml-1">{activeTemplate.author.name}</span>
-                  </p>
-                </div>
-              )}
-
-              {isLoading ? (
-                <div className="w-full flex flex-col items-center space-y-8">
-                  <div className="h-7 w-32 rounded-lg animate-shimmer" />
-                  <div className="w-[230px] h-[230px] rounded-2xl animate-shimmer" />
-                  <div className="h-16 w-full rounded-lg animate-shimmer" />
-                </div>
-              ) : (
-                <>
-                  {/* 分帳模式 (Host) 特殊顯示 */}
-                  {mode === 'bill' && !isSharedLink ? (
-                    <div className="flex flex-col items-center space-y-6 w-full">
-                      {/* 品牌化 QR Card — Share URL */}
-                      {currentShareUrl && (
-                        <>
-                          <div className="text-center space-y-1">
-                            <h3 className="text-xl font-medium text-white/90">TWQR 預覽</h3>
-                            <p className="text-sm text-white/50">掃描下方 QR Code 進行分帳</p>
-                          </div>
-                          <QrBrandCard
-                            ref={qrCardRef}
-                            variant="share"
-                            qrValue={currentShareUrl}
-                            billTitle={billData?.t || ''}
-                            billTotal={form.watch('amount') || ''}
-                            memberCount={billData?.m?.length || 0}
-                          />
-                        </>
-                      )}
-
-                      {!currentShareUrl && (
-                        <>
-                          <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-2 ${billSufficient ? 'bg-orange-500/20' : 'bg-purple-500/20 animate-bounce-slow'}`}>
-                            {billSufficient
-                              ? <AlertTriangle className="w-10 h-10 text-orange-300" />
-                              : <Receipt className="w-10 h-10 text-purple-300" />
-                            }
-                          </div>
-                          <div className="text-center space-y-2">
-                            {!billSufficient ? (
-                              <>
-                                <h3 className="text-xl font-bold text-white">建立分帳明細</h3>
-                                <div className="text-white/60 text-sm space-y-1">
-                                  {(!billData?.m || billData.m.length < 2) && (
-                                    <p>👥 請在左側新增至少一位朋友</p>
-                                  )}
-                                  {(!billData?.i || billData.i.length === 0) && (
-                                    <p>📝 請在左側新增至少一筆消費項目</p>
-                                  )}
-                                </div>
-                              </>
-                            ) : !hasBankInfo ? (
-                              <>
-                                <h3 className="text-xl font-bold text-white">分帳明細已就緒</h3>
-                                <p className="text-orange-400/80 text-sm">
-                                  ⚠️ 請先設定上方的「收款銀行」與「帳號」
-                                </p>
-                                <p className="text-white/40 text-xs">
-                                  共 {billData?.i?.length || 0} 筆項目，由 {billData?.m?.length || 0} 人分攤
-                                </p>
-                              </>
-                            ) : null}
-                          </div>
-                        </>
-                      )}
-
-                      {/* 密碼保護 Toggle */}
-                      <div className="w-full max-w-xs space-y-3">
-                        <button
-                          type="button"
-                          onClick={handlePasswordToggle}
-                          disabled={!cryptoAvailable}
-                          className={`flex items-center justify-between w-full px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 ${!cryptoAvailable ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
-                        >
-                          <span className="flex items-center gap-2 text-sm text-white/70">
-                            <Lock className="h-4 w-4" />
-                            設定密碼保護
-                          </span>
-                          <div className={`w-9 h-5 rounded-full transition-colors duration-200 flex items-center ${isPasswordEnabled ? 'bg-blue-500 justify-end' : 'bg-white/20 justify-start'
-                            }`}>
-                            <div className="w-4 h-4 bg-white rounded-full shadow-sm mx-0.5" />
-                          </div>
-                        </button>
-                        {!cryptoAvailable && (
-                          <p className="text-xs text-red-400/80">您的瀏覽器不支援加密功能</p>
-                        )}
-
-                        {isPasswordEnabled && (
-                          <div className="relative animate-in slide-in-from-top-1 fade-in duration-200">
-                            <input
-                              type={showSharePassword ? 'text' : 'password'}
-                              value={sharePassword}
-                              onChange={(e) => setSharePassword(e.target.value)}
-                              placeholder="輸入分享密碼"
-                              autoComplete="off"
-                              autoCapitalize="off"
-                              autoCorrect="off"
-                              spellCheck={false}
-                              className="glass-input h-10 rounded-lg w-full pr-10 pl-3 text-sm outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowSharePassword(!showSharePassword)}
-                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
-                              tabIndex={-1}
-                              aria-label={showSharePassword ? '隱藏密碼' : '顯示密碼'}
-                            >
-                              {showSharePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
-                        <Button
-                          className="w-full bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-900/20 active:scale-[0.96] transition-transform"
-                          onClick={handleShare}
-                          disabled={!currentShareUrl || (isPasswordEnabled && !sharePassword.trim())}
-                        >
-                          {isCopied ? <Check className="w-4 h-4 mr-2 animate-in zoom-in spin-in-12 duration-300" /> : <Share2 className="w-4 h-4 mr-2" />}
-                          {isCopied ? "已複製" : "分享連結"}
-                        </Button>
-                        <Button
-                          className="w-full bg-white text-black hover:bg-white/90 active:scale-[0.96] transition-transform"
-                          onClick={handleDownload}
-                          disabled={!currentShareUrl}
-                        >
-                          {isDownloaded ? <Check className="w-4 h-4 mr-2 animate-in zoom-in spin-in-12 duration-300" /> : <Download className="w-4 h-4 mr-2" />}
-                          {isDownloaded ? '已下載' : '下載圖片'}
-                        </Button>
-                      </div>
-                      {copyError && (
-                        <p className="text-xs text-red-400 text-center">{copyError}</p>
-                      )}
-
-                      {/* 投稿入口 */}
-                      {currentShareUrl && (
-                        <div className="flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={() => setShowTemplateSubmit(true)}
-                            disabled={isTemplateActive}
-                            className={`text-xs transition-colors flex items-center gap-1 ${isTemplateActive ? 'text-white/20 cursor-not-allowed' : 'text-white/50 hover:text-white/80'}`}
-                            title={isTemplateActive ? '請先修改模板內容再投稿' : undefined}
-                          >
-                            <FileUp className="h-3 w-3" />
-                            投稿此模板
-                          </button>
-                        </div>
-                      )}
-
-                      <p className="text-xs text-white/30">
-                        朋友們點擊連結後，可選擇自己的身份查看應付金額
-                      </p>
-                    </div>
-                  ) : (
-                    // 其他模式或訪客模式 (顯示 QR Code)
-                    <>
-                      {/* 多帳號切換器 */}
-                      {isSharedLink && initialData?.ac && (
-                        <AccountSwitcher
-                          accounts={initialData.ac}
-                          currentBankCode={form.watch('bankCode')}
-                          currentAccountNumber={form.watch('accountNumber')}
-                          onSelect={handleAccountSwitch}
-                        />
-                      )}
-                      {!isSharedLink && sharedAccounts.length > 1 && (
-                        <AccountSwitcher
-                          accounts={sharedAccounts.map(acc => ({ b: acc.bankCode, a: acc.accountNumber }))}
-                          currentBankCode={form.watch('bankCode')}
-                          currentAccountNumber={form.watch('accountNumber')}
-                          onSelect={handleAccountSwitch}
-                        />
-                      )}
-
-                      <div className="mb-6 text-center space-y-1">
-                        <h3 className="text-xl font-medium text-white/90">TWQR 預覽</h3>
-                        <p className="text-sm text-white/50">
-                          {mode === 'bill' && isSharedLink && !qrString
-                            ? "👈 請先在左側選擇您的名字"
-                            : (qrString
-                              ? `掃描下方 QR Code 進行${mode === 'bill' ? '分帳' : '轉帳'}`
-                              : (!form.watch('bankCode') || !form.watch('accountNumber')
-                                ? "⚠️ 請先設定上方的「收款銀行」與「帳號」"
-                                : "請先於左側輸入資料")
-                            )
-                          }
-                        </p>
-                      </div>
-
-                      {qrString ? (
-                        <div
-                          className="cursor-zoom-in hover:scale-105 transition-all duration-500"
-                          onClick={() => setIsFullscreen(true)}
-                        >
-                          <QrBrandCard
-                            ref={qrCardRef}
-                            variant="payment"
-                            qrValue={qrString}
-                            bankName={currentBankName}
-                            accountNumber={form.watch('accountNumber')}
-                          />
-                        </div>
-                      ) : (
-                        <div className="p-4 bg-white rounded-2xl shadow-2xl">
-                          <div className="w-[200px] h-[200px] bg-gray-100/50 rounded-lg flex flex-col items-center justify-center text-gray-400 space-y-2 text-center px-4">
-                            {mode === 'bill' && isSharedLink ? (
-                              <>
-                                <Users className="w-8 h-8 opacity-50" />
-                                <span className="text-xs">等待選擇身份...</span>
-                              </>
-                            ) : (
-                              !form.watch('bankCode') || !form.watch('accountNumber') ? (
-                                <>
-                                  <AlertTriangle className="w-8 h-8 opacity-50 text-orange-500" />
-                                  <span className="text-xs font-medium text-orange-700">缺少銀行帳號</span>
-                                </>
-                              ) : (
-                                "等待輸入..."
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {qrString && (
-                        <div className="mt-8 w-full space-y-3">
-                          {/* 複製帳號按鈕 (僅在分享模式顯示) */}
-                          {isSharedLink && (
-                            <div className="space-y-1">
-                              <Button
-                                variant="outline"
-                                className="w-full border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-white/80 h-10 gap-2"
-                                onClick={handleCopyAccount}
-                              >
-                                {isAccountCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                {isAccountCopied ? '已複製帳號' : `複製帳號 (${form.watch('accountNumber')})`}
-                              </Button>
-                              {accountCopyError && (
-                                <p className="text-xs text-red-400 text-center">{accountCopyError}</p>
-                              )}
-                            </div>
-                          )}
-
-                          {/* 密碼保護 Toggle — 僅 Host 模式顯示 */}
-                          {!isSharedLink && (
-                            <div className="w-full max-w-xs mx-auto space-y-3">
-                              <button
-                                type="button"
-                                onClick={handlePasswordToggle}
-                                disabled={!cryptoAvailable}
-                                className={`flex items-center justify-between w-full px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all duration-200 ${!cryptoAvailable ? 'opacity-50 cursor-not-allowed' : ''
-                                  }`}
-                              >
-                                <span className="flex items-center gap-2 text-sm text-white/70">
-                                  <Lock className="h-4 w-4" />
-                                  設定密碼保護
-                                </span>
-                                <div className={`w-9 h-5 rounded-full transition-colors duration-200 flex items-center ${isPasswordEnabled ? 'bg-blue-500 justify-end' : 'bg-white/20 justify-start'
-                                  }`}>
-                                  <div className="w-4 h-4 bg-white rounded-full shadow-sm mx-0.5" />
-                                </div>
-                              </button>
-                              {!cryptoAvailable && (
-                                <p className="text-xs text-red-400/80">您的瀏覽器不支援加密功能</p>
-                              )}
-
-                              {isPasswordEnabled && (
-                                <div className="relative animate-in slide-in-from-top-1 fade-in duration-200">
-                                  <input
-                                    type={showSharePassword ? 'text' : 'password'}
-                                    value={sharePassword}
-                                    onChange={(e) => setSharePassword(e.target.value)}
-                                    placeholder="輸入分享密碼"
-                                    autoComplete="off"
-                                    autoCapitalize="off"
-                                    autoCorrect="off"
-                                    spellCheck={false}
-                                    className="glass-input h-10 rounded-lg w-full pr-10 pl-3 text-sm outline-none"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowSharePassword(!showSharePassword)}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
-                                    tabIndex={-1}
-                                    aria-label={showSharePassword ? '隱藏密碼' : '顯示密碼'}
-                                  >
-                                    {showSharePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          <div className="grid grid-cols-2 gap-3 pt-2">
-                            <Button
-                              className="w-full bg-white/10 hover:bg-white/20 border-white/10 text-white"
-                              onClick={handleShare}
-                              disabled={isSharedLink || (isPasswordEnabled && !sharePassword.trim())}
-                            >
-                              {isCopied ? <Check className="w-4 h-4 mr-2" /> : <Share2 className="w-4 h-4 mr-2" />}
-                              {isCopied ? "已複製" : "分享連結"}
-                            </Button>
-
-                            <Button
-                              className="w-full bg-white text-black hover:bg-white/90"
-                              onClick={handleDownload}
-                            >
-                              {isDownloaded ? <Check className="w-4 h-4 mr-2 animate-in zoom-in spin-in-12 duration-300" /> : <Download className="w-4 h-4 mr-2" />}
-                              {isDownloaded ? '已下載' : '下載圖片'}
-                            </Button>
-                          </div>
-                          {copyError && (
-                            <p className="text-xs text-red-400 text-center">{copyError}</p>
-                          )}
-
-                          {/* 縮網址 + 投稿入口 */}
-                          {!isSharedLink && (
-                            <div className="flex items-center justify-center pt-1">
-                              <button
-                                type="button"
-                                onClick={() => setShowTemplateSubmit(true)}
-                                disabled={isTemplateActive}
-                                className={`text-xs transition-colors flex items-center gap-1 ${isTemplateActive ? 'text-white/20 cursor-not-allowed' : 'text-white/50 hover:text-white/80'}`}
-                                title={isTemplateActive ? '請先修改模板內容再投稿' : undefined}
-                              >
-                                <FileUp className="h-3 w-3" />
-                                投稿此模板
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
+        ) : (
+          <UnifiedForm
+            key={`unified-form-${templateId || 'default'}`}
+            form={form}
+            subMode={subMode}
+            onSubModeChange={setSubMode}
+            reset={reset}
+            onSplitDataChange={setSimpleData}
+            onBillDataChange={setBillData}
+            initialSplitData={simpleData || initialSimpleData}
+            initialBillData={billData}
+            isTemplateActive={isTemplateActive}
+            onShowTemplateSubmit={() => setShowTemplateSubmit(true)}
+            onShowAccountSheet={() => setShowAccountSheet(true)}
+            onShowTemplateSheet={() => setShowTemplateSheet(true)}
+            onConfirm={() => setShowPreviewSheet(true)}
+          />
+        )}
       </div>
 
+      {/* Preview Bottom Sheet */}
+      <PreviewSheet
+        open={showPreviewSheet}
+        onOpenChange={setShowPreviewSheet}
+        form={form}
+        subMode={subMode}
+        qrString={qrString}
+        currentShareUrl={currentShareUrl}
+        sharedAccounts={sharedAccounts.length > 1
+          ? sharedAccounts.map(acc => ({ b: acc.bankCode, a: acc.accountNumber }))
+          : undefined
+        }
+        onAccountSwitch={handleAccountSwitch}
+        billData={billData}
+        currentBankName={currentBankName}
+        isPasswordEnabled={isPasswordEnabled}
+        sharePassword={sharePassword}
+        showSharePassword={showSharePassword}
+        onPasswordToggle={handlePasswordToggle}
+        onPasswordChange={setSharePassword}
+        onToggleShowPassword={() => setShowSharePassword(!showSharePassword)}
+        onShare={handleShare}
+        onDownload={handleDownload}
+        isCopied={isCopied}
+        isDownloaded={isDownloaded}
+        copyError={copyError}
+        qrCardRef={qrCardRef}
+      />
+
+      {/* All Dialogs */}
       <Dialog open={isFullscreen && !!qrString} onOpenChange={setIsFullscreen}>
         <DialogContent className="sm:max-w-fit border-none bg-transparent shadow-none [&>button]:text-white/60">
           <DialogDescription className="sr-only">放大 QR Code</DialogDescription>
@@ -1104,56 +921,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
                 }}
               />
             </div>
-            <p className="mt-6 text-white/50 text-sm">
-              點擊 ✕ 或外部區域關閉
-            </p>
+            <p className="mt-6 text-white/50 text-sm">點擊 ✕ 或外部區域關閉</p>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showDisclaimer} onOpenChange={setShowDisclaimer}>
-        <DialogContent className="sm:max-w-md border-orange-500/20">
-          <DialogHeader>
-            <div className="flex items-center gap-2 text-orange-500 mb-2">
-              <AlertTriangle className="h-6 w-6" />
-              <DialogTitle className="text-xl">安全提醒與免責聲明</DialogTitle>
-            </div>
-            <DialogDescription asChild>
-              <div className="text-left space-y-3 pt-2 text-base text-muted-foreground">
-                <p>
-                  您正透過分享連結訪問 <strong>PayMe.tw</strong>。這是一個第三方開源工具，
-                  <span className="text-orange-600 font-semibold mx-1">並非</span>
-                  任何銀行或支付機構的官方應用程式。
-                </p>
-
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  <li>
-                    本網站僅協助產生符合 TWQR 格式的條碼，不經手任何金流。
-                  </li>
-                  <li>
-                    <span className="font-bold text-foreground">詐騙防範：</span>
-                    請勿輕信來路不明的收款碼。付款前，請務必在您的銀行 App 內再次核對
-                    「<span className="font-bold text-foreground">轉入帳號</span>」與
-                    「<span className="font-bold text-foreground">金額</span>」。
-                  </li>
-                </ul>
-
-                <p className="text-xs text-muted-foreground/80 mt-4 border-t pt-4">
-                  免責聲明：使用本工具產生的 QR Code 進行交易之風險由使用者自行承擔，
-                  開發者不對任何因使用本工具而產生的資金損失負責。
-                </p>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4 sm:justify-center">
-            <Button
-              type="button"
-              className="w-full sm:w-auto min-w-[120px] bg-orange-600 hover:bg-orange-700 text-white"
-              onClick={() => setShowDisclaimer(false)}
-            >
-              我知道了，繼續使用
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1200,9 +969,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
             </div>
             <DialogDescription asChild>
               <div className="text-left space-y-3 pt-2 text-base text-muted-foreground">
-                <p>
-                  連結加密過程發生錯誤，無法產生加密連結。
-                </p>
+                <p>連結加密過程發生錯誤，無法產生加密連結。</p>
                 <p className="text-sm">
                   您可以選擇以<span className="text-orange-500 font-semibold">未加密方式</span>分享，
                   但連結內容將不受密碼保護。
