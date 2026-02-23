@@ -88,7 +88,9 @@ export function ShareConfirmDialog({
           <DialogDescription>確認分享內容</DialogDescription>
         </DialogHeader>
 
+        {/* TODO: 如何使用暫時隱藏，待 guide 內容完善後恢復
         <button type="button" onClick={() => setHelpOpen(true)} className="text-xs text-blue-400 hover:underline self-start">如何使用？</button>
+        */}
 
         {/* 分享內容預覽 */}
         <div className="bg-muted rounded-lg p-3 max-h-[200px] overflow-y-auto space-y-1">

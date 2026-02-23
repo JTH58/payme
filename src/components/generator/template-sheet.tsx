@@ -47,7 +47,7 @@ export function TemplateSheet({ open, onOpenChange, onSelect }: TemplateSheetPro
             <button
               type="button"
               onClick={() => setHelpOpen(true)}
-              className="text-xs text-blue-400 hover:underline"
+              className="text-xs text-blue-400 hover:underline hidden"
             >
               如何使用？
             </button>

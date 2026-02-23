@@ -88,9 +88,11 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
             <Link href="/safety" className={cn(NAV_LINK_CLASS, isActive('/safety') && 'text-white/90 after:w-4/5')}>
               防詐資訊
             </Link>
+            {/* TODO: 使用教學暫時隱藏，待內容完善後恢復
             <Link href="/guide" className={cn(NAV_LINK_CLASS, isActive('/guide') && 'text-white/90 after:w-4/5')}>
               使用教學
             </Link>
+            */}
             <a
               href="https://www.threads.net/@payme.tw"
               target="_blank"
@@ -154,6 +156,7 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
             >
               防詐資訊
             </Link>
+            {/* TODO: 使用教學暫時隱藏，待內容完善後恢復
             <Link
               href="/guide"
               className={cn(MOBILE_LINK_CLASS, isActive('/guide') && 'text-white bg-white/5 border-l-2 border-blue-400')}
@@ -161,6 +164,7 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
             >
               使用教學
             </Link>
+            */}
             <a
               href="https://www.threads.net/@payme.tw"
               target="_blank"

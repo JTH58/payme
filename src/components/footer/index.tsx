@@ -41,9 +41,11 @@ export function Footer({ className, onFeedbackClick }: FooterProps) {
           <Link href="/safety" className="hover:text-white/70 hover:translate-x-0.5 transition-all duration-150">
             防詐資訊
           </Link>
+          {/* TODO: 使用教學暫時隱藏，待內容完善後恢復
           <Link href="/guide" className="hover:text-white/70 hover:translate-x-0.5 transition-all duration-150">
             使用教學
           </Link>
+          */}
           <a
             href="https://github.com/JTH58/payme"
             target="_blank"

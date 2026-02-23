@@ -158,7 +158,9 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span>🧾</span> 分帳模式
+          {/* TODO: 如何使用暫時隱藏，待 guide 內容完善後恢復
           <button type="button" onClick={() => setHelpOpen(true)} className="text-xs text-blue-400 hover:underline font-normal">如何使用？</button>
+          */}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -103,7 +103,9 @@ export function BackupDialog({ open, onOpenChange }: BackupDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
+        {/* TODO: 如何使用暫時隱藏，待 guide 內容完善後恢復
         <button type="button" onClick={() => setHelpOpen(true)} className="text-xs text-blue-400 hover:underline self-start">如何使用？</button>
+        */}
 
         {confirmOverwrite ? (
           <div className="space-y-4">
