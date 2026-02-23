@@ -10,11 +10,10 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { TwqrFormValues } from '@/modules/core/utils/validators';
-import { BillData, CompactAccount } from '@/types/bill';
+import { CompactAccount } from '@/types/bill';
 import { FormSubMode } from '@/config/form-modes';
 import { AccountSwitcher } from './account-switcher';
 import { QrBrandCard } from './qr-brand-card';
-import { BillViewer } from '@/modules/bill/components/bill-viewer';
 import {
   Share2, Check, Download, Lock, Eye, EyeOff,
 } from 'lucide-react';
@@ -31,8 +30,9 @@ interface PreviewSheetProps {
   // Account switching
   sharedAccounts?: CompactAccount[];
   onAccountSwitch?: (bankCode: string, accountNumber: string) => void;
-  // Bill data (itemized mode)
-  billData?: BillData;
+  // Bill info (itemized mode — for QrBrandCard share variant)
+  billTitle?: string;
+  memberCount?: number;
   // Branding info
   currentBankName: string;
   // Password
@@ -62,7 +62,8 @@ export function PreviewSheet({
   currentShareUrl,
   sharedAccounts,
   onAccountSwitch,
-  billData,
+  billTitle,
+  memberCount,
   currentBankName,
   isPasswordEnabled,
   sharePassword,
@@ -85,25 +86,17 @@ export function PreviewSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>預覽與分享</SheetTitle>
-          <SheetDescription>確認內容無誤後即可分享</SheetDescription>
+          <SheetTitle>{isItemized ? '分帳連結' : '預覽與分享'}</SheetTitle>
+          <SheetDescription>{isItemized ? '掃碼或點擊連結即可查看明細' : '確認內容無誤後即可分享'}</SheetDescription>
         </SheetHeader>
         <SheetBody className="space-y-6">
-          {/* Account switcher */}
-          {sharedAccounts && sharedAccounts.length > 1 && onAccountSwitch && (
+          {/* Account switcher (non-itemized only) */}
+          {!isItemized && sharedAccounts && sharedAccounts.length > 1 && onAccountSwitch && (
             <AccountSwitcher
               accounts={sharedAccounts}
               currentBankCode={form.watch('bankCode')}
               currentAccountNumber={form.watch('accountNumber')}
               onSelect={onAccountSwitch}
-            />
-          )}
-
-          {/* Member selector for itemized mode */}
-          {isItemized && billData && (
-            <BillViewer
-              form={form}
-              billData={billData}
             />
           )}
 
@@ -116,9 +109,9 @@ export function PreviewSheet({
                   variant={isItemized ? 'share' : 'payment'}
                   qrValue={isItemized ? currentShareUrl : qrString}
                   {...(isItemized ? {
-                    billTitle: billData?.t || '',
+                    billTitle: billTitle || '',
                     billTotal: form.watch('amount') || '',
-                    memberCount: billData?.m?.length || 0,
+                    memberCount: memberCount || 0,
                   } : {
                     bankName: currentBankName,
                     accountNumber: form.watch('accountNumber'),

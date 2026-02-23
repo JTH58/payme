@@ -64,7 +64,7 @@ jest.mock('../qr-brand-card', () => {
 jest.mock('../preview-sheet', () => ({
   PreviewSheet: ({
     open, onOpenChange, form, subMode, qrString, currentShareUrl,
-    sharedAccounts, onAccountSwitch, billData, currentBankName,
+    sharedAccounts, onAccountSwitch, billTitle, memberCount, currentBankName,
     isPasswordEnabled, sharePassword, showSharePassword,
     onPasswordToggle, onPasswordChange, onToggleShowPassword,
     onShare, onDownload, isCopied, isDownloaded, copyError, qrCardRef,
@@ -92,9 +92,9 @@ jest.mock('../preview-sheet', () => ({
             data-qr-value={subMode === 'itemized' ? currentShareUrl : qrString}
             data-bank-name={currentBankName}
             data-account-number={form.watch('accountNumber')}
-            data-bill-title={billData?.t || ''}
+            data-bill-title={billTitle || ''}
             data-bill-total={form.watch('amount') || ''}
-            data-member-count={billData?.m?.length || 0}>
+            data-member-count={memberCount || 0}>
             QrBrandCard
           </div>
         )}

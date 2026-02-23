@@ -883,7 +883,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           : undefined
         }
         onAccountSwitch={handleAccountSwitch}
-        billData={billData}
+        billTitle={billData?.t}
+        memberCount={billData?.m?.length}
         currentBankName={currentBankName}
         isPasswordEnabled={isPasswordEnabled}
         sharePassword={sharePassword}
