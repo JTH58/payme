@@ -58,7 +58,7 @@ export default function GuidePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         {/* Hero */}
         <h1 className="text-3xl font-bold mb-2">{hero.title}</h1>
         <p className="text-white/60 mb-12">{hero.subtitle}</p>

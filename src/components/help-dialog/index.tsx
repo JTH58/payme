@@ -29,7 +29,7 @@ export function HelpDialog({ open, onOpenChange, scenarioId }: HelpDialogProps) 
       if (!nextOpen) setGifError(false);
       onOpenChange(nextOpen);
     }}>
-      <DialogContent className="w-[calc(100%-2rem)] rounded-lg sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{scenario.title}</DialogTitle>
           <DialogDescription>{scenario.description}</DialogDescription>

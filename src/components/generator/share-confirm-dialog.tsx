@@ -82,7 +82,7 @@ export function ShareConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[calc(100%-2rem)] rounded-lg sm:max-w-md">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>分享確認</DialogTitle>
           <DialogDescription>確認分享內容</DialogDescription>

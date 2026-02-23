@@ -76,7 +76,7 @@ export function DecryptionChallenge({
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="glass-panel rounded-3xl p-8 space-y-6">
+      <div className="glass-panel rounded-3xl p-5 sm:p-8 space-y-6">
 
         {/* Lock Icon */}
         <div className="flex justify-center">

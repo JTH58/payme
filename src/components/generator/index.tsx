@@ -681,11 +681,11 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full">
           {/* 左側：表單區 */}
           <div className="flex flex-col gap-6">
 
-            <div className="transition-all duration-500 min-h-[550px]">
+            <div className="transition-all duration-500 min-h-0 md:min-h-[550px]">
               {isLoading ? (
                 <div className="space-y-6 p-1">
                   <div className="h-32 rounded-xl w-full animate-shimmer" />
@@ -725,11 +725,11 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           </div>
 
           {/* 右側：預覽區 */}
-          <Card className="flex flex-col items-center justify-center min-h-[550px] relative overflow-hidden group border-white/10 bg-black/20">
+          <Card className="flex flex-col items-center justify-center min-h-0 md:min-h-[550px] relative overflow-hidden group border-white/10 bg-black/20">
 
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-            <CardContent className="flex flex-col items-center z-10 p-8 w-full min-h-[550px] justify-center">
+            <CardContent className="flex flex-col items-center z-10 p-4 sm:p-8 w-full min-h-0 md:min-h-[550px] justify-center">
               {/* 署名顯示區域 (Credit Badge) — 僅在模板原始模式下顯示 */}
               {isTemplateActive && activeTemplate?.author && (
                 <div className="absolute top-4 right-4 bg-white/5 border border-white/10 px-3 py-1 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700">
@@ -1083,32 +1083,33 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
 
       </div>
 
-      {isFullscreen && qrString && (
-        <div
-          className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center cursor-zoom-out animate-in fade-in duration-300" // z-[9999] = Z_INDEX.FULLSCREEN — 需在所有元素之上
-          onClick={() => setIsFullscreen(false)}
-        >
-          <div className="relative p-8 bg-white rounded-3xl shadow-glow-white transform scale-125">
-            <QRCodeSVG
-              value={qrString}
-              size={300}
-              level="Q"
-              includeMargin={false}
-              imageSettings={{
-                src: QR_CENTER_LABEL,
-                x: undefined,
-                y: undefined,
-                height: 24,
-                width: 90,
-                excavate: true,
-              }}
-            />
+      <Dialog open={isFullscreen && !!qrString} onOpenChange={setIsFullscreen}>
+        <DialogContent className="sm:max-w-fit border-none bg-transparent shadow-none [&>button]:text-white/60">
+          <DialogDescription className="sr-only">放大 QR Code</DialogDescription>
+          <DialogTitle className="sr-only">QR Code 全螢幕檢視</DialogTitle>
+          <div className="flex flex-col items-center">
+            <div className="relative p-3 sm:p-6 md:p-8 bg-white rounded-3xl shadow-glow-white">
+              <QRCodeSVG
+                value={qrString}
+                size={300}
+                level="Q"
+                includeMargin={false}
+                imageSettings={{
+                  src: QR_CENTER_LABEL,
+                  x: undefined,
+                  y: undefined,
+                  height: 24,
+                  width: 90,
+                  excavate: true,
+                }}
+              />
+            </div>
+            <p className="mt-6 text-white/50 text-sm">
+              點擊 ✕ 或外部區域關閉
+            </p>
           </div>
-          <p className="mt-12 text-white/50 text-sm animate-pulse">
-            點擊任意處關閉
-          </p>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showDisclaimer} onOpenChange={setShowDisclaimer}>
         <DialogContent className="sm:max-w-md border-orange-500/20">

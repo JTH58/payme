@@ -213,7 +213,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
               value={newMemberName}
               onChange={(e) => setNewMemberName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
-              className="h-8 text-sm"
+              className="h-10 text-sm"
               aria-label="新增成員名稱"
             />
             <Button size="sm" variant="outline" onClick={addMember} type="button">
@@ -245,7 +245,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
                       variant="outline"
                       size="icon"
                       className={cn(
-                        "h-8 w-8 rounded-full flex-shrink-0 border-dashed transition-all",
+                        "h-9 w-9 rounded-full flex-shrink-0 border-dashed transition-all",
                         item.o.length > 0
                           ? "bg-purple-500/20 text-purple-200 border-purple-500/50 hover:bg-purple-500/30"
                           : "text-white/30 border-white/20 hover:text-white hover:border-white/50"
@@ -302,20 +302,20 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
                   ref={(el) => { itemInputRefs.current[idx] = el; }} // 綁定 Ref
                   value={item.n}
                   onChange={(e) => updateItem(idx, 'n', e.target.value)}
-                  className="h-9 text-sm flex-1 bg-white/5 border-white/10 focus:border-white/30 focus:bg-white/10 placeholder:text-white/20 transition-all duration-200"
+                  className="h-10 text-sm flex-1 bg-white/5 border-white/10 focus:border-white/30 focus:bg-white/10 placeholder:text-white/20 transition-all duration-200"
                   placeholder="項目名稱"
                   aria-label={`項目 ${idx + 1} 名稱`}
                 />
 
                 {/* 金額輸入 */}
                 <div className="relative w-28 flex-shrink-0">
-                  <span className="absolute left-3 top-2.5 text-xs text-white/40 font-bold">$</span>
+                  <span className="absolute left-3 top-3 text-xs text-white/40 font-bold">$</span>
                   <Input
                     type="number"
                     inputMode="numeric"
                     value={item.p || ''}
                     onChange={(e) => updateItem(idx, 'p', Number(e.target.value))}
-                    className="h-9 text-sm pl-6 bg-white/10 border-white/20 focus:bg-white/20 text-right font-medium placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all duration-200"
+                    className="h-10 text-sm pl-6 bg-white/10 border-white/20 focus:bg-white/20 text-right font-medium placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all duration-200"
                     placeholder="0"
                     aria-label={`項目 ${idx + 1} 金額`}
                   />
@@ -326,7 +326,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-white/20 hover:text-red-400 hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-all"
+                  className="h-8 w-8 text-white/20 hover:text-red-400 hover:bg-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
                   onClick={() => removeItem(idx)}
                 >
                   <Trash2 size={14} />

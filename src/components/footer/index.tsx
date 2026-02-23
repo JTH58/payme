@@ -15,7 +15,7 @@ export function Footer({ className, onFeedbackClick }: FooterProps) {
       "border-t border-white/5 bg-[#020617]/50 pb-[env(safe-area-inset-bottom)]",
       className
     )}>
-      <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6">
         {/* 品牌描述 — 爬蟲可讀 */}
         <div className="text-center space-y-2">
           <p className="text-sm text-white/50">
@@ -28,7 +28,7 @@ export function Footer({ className, onFeedbackClick }: FooterProps) {
         </div>
 
         {/* 導航連結 — 內部連結有助 SEO */}
-        <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/40">
+        <nav className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-6 gap-y-2 text-xs text-white/40">
           <Link href="/" className="hover:text-white/70 hover:translate-x-0.5 transition-all duration-150">
             首頁 — 產生收款碼
           </Link>

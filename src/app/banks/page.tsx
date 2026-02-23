@@ -35,7 +35,7 @@ export default function BanksPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <h1 className="text-3xl font-bold mb-2">支援銀行列表</h1>
         <p className="text-white/60 mb-8">
           全台 {banks.length} 間金融機構 TWQR 掃碼轉帳支援狀態

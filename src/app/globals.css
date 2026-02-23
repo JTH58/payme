@@ -55,6 +55,7 @@
     /* 加入背景流動光暈 */
     background: radial-gradient(circle at 50% 0%, #1a2c4e 0%, #020617 100%);
     min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
