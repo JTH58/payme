@@ -21,6 +21,7 @@ interface BankFormProps {
   isSharedLink?: boolean;
   sharedLinkBankCode?: string;
   sharedLinkAccountNumber?: string;
+  alwaysExpanded?: boolean;
 }
 
 export function BankForm({
@@ -34,6 +35,7 @@ export function BankForm({
   isSharedLink = false,
   sharedLinkBankCode,
   sharedLinkAccountNumber,
+  alwaysExpanded = false,
 }: BankFormProps) {
   const hasAccounts = accounts.some(acc => acc.bankCode && acc.accountNumber);
   const [isExpanded, setIsExpanded] = useState(!hasAccounts);
@@ -55,6 +57,77 @@ export function BankForm({
           <div className="text-sm text-white/40">{bankName}</div>
         </CardContent>
       </Card>
+    );
+  }
+
+  // alwaysExpanded 模式：直接渲染帳戶列表（用於 Sheet 內）
+  if (alwaysExpanded) {
+    return (
+      <div className="space-y-3">
+        {!hasAccounts && (
+          <div className="text-sm text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+            請先設定您的收款帳戶
+          </div>
+        )}
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onAddAccount}
+          className="w-full border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-white/60 h-12 gap-2"
+        >
+          <Plus size={16} />
+          新增其他收款帳戶
+        </Button>
+
+        <div className="space-y-3">
+          {accounts.map((account) => (
+            <div key={account.id} className="group relative flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 transition-all hover:bg-white/10">
+              <div className="pt-3">
+                <Checkbox
+                  checked={account.isShared}
+                  onCheckedChange={() => onToggleShared(account.id)}
+                  className="border-white/20 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                />
+              </div>
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-white/40 uppercase tracking-wider">Bank Code</Label>
+                  <SearchableSelect
+                    options={banks.map(b => ({ value: b.code, label: `${b.code} ${b.name}` }))}
+                    value={account.bankCode}
+                    onChange={(val) => onUpdateAccount(account.id, { bankCode: val })}
+                    placeholder="搜尋銀行..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-white/40 uppercase tracking-wider">Account No.</Label>
+                  <Input
+                    placeholder="輸入銀行帳號"
+                    maxLength={16}
+                    inputMode="numeric"
+                    value={account.accountNumber}
+                    onChange={(e) => onUpdateAccount(account.id, { accountNumber: e.target.value })}
+                    className={cn("font-mono tracking-wide h-10")}
+                  />
+                </div>
+              </div>
+              <div className="pt-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  onClick={() => onRemoveAccount(account.id)}
+                  disabled={accounts.length <= 1}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -114,6 +187,16 @@ export function BankForm({
             </div>
           )}
 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onAddAccount}
+            className="w-full border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-white/60 h-12 gap-2"
+          >
+            <Plus size={16} />
+            新增其他收款帳戶
+          </Button>
+
           <div className="space-y-3">
             {accounts.map((account) => (
               <div key={account.id} className="group relative flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 transition-all hover:bg-white/10">
@@ -166,16 +249,6 @@ export function BankForm({
               </div>
             ))}
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onAddAccount}
-            className="w-full border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-white/60 h-12 gap-2"
-          >
-            <Plus size={16} />
-            新增其他收款帳戶
-          </Button>
         </>
       )}
     </div>

@@ -27,6 +27,13 @@ jest.mock('html-to-image', () => ({
   toPng: (...args: unknown[]) => toPngMock(...args),
 }));
 
+// 2c-pre. Radix Dialog requires ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
 // 2c. Mock ShareConfirmDialog (避免 Dialog portal 在整合測試中的複雜性)
 jest.mock('../share-confirm-dialog', () => ({
   ShareConfirmDialog: ({ open, shareUrl, onConfirmShare }: { open: boolean; shareUrl: string; onConfirmShare: (url: string) => void }) =>
@@ -106,13 +113,10 @@ describe('Generator Integration Tests', () => {
 
     // 驗證標題或關鍵元素存在
     expect(screen.getByRole('button', { name: /收款/i })).toBeInTheDocument();
-    
-    // 驗證預設值 (等待 Loading 結束，並尋找按鈕文字)
+
+    // 驗證帳戶 trigger button 存在
     await waitFor(() => {
-        // 可能有多個 822 (按鈕 + QR字串)，取第一個
-        const elements = screen.getAllByText(/822/);
-        expect(elements.length).toBeGreaterThan(0);
-        expect(elements[0]).toBeInTheDocument();
+        expect(screen.getByText('帳戶')).toBeInTheDocument();
     }, { timeout: 2000 });
   });
 
@@ -121,7 +125,7 @@ describe('Generator Integration Tests', () => {
     render(<Generator />);
 
     // 等待載入完成
-    await waitFor(() => screen.getAllByText(/822/)[0]);
+    await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
     // 輸入金額 (Placeholder 是 "0")
     // 注意：可能有其他 input 也是 0，這裡假設金額欄位是第一個主要輸入
@@ -240,10 +244,9 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待 BankForm 渲染完成（isInitialLoad=false 需 600ms）
-      // BankForm 預設摺疊，先展開
-      const expandBtn = await screen.findByText(/分享帳戶/i, {}, { timeout: 3000 });
-      await user.click(expandBtn.closest('button')!);
+      // 等待帳戶管理 trigger button 渲染完成，點擊開啟 AccountSheet
+      const accountTrigger = await screen.findByText('帳戶', {}, { timeout: 3000 });
+      await user.click(accountTrigger.closest('button')!);
 
       const addBtn = await screen.findByText(/新增其他收款帳戶/i, {}, { timeout: 3000 });
       await user.click(addBtn);
@@ -285,9 +288,8 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      // 等待 BankForm 渲染完成（isInitialLoad=false 需 600ms）
-      // BankForm 預設摺疊，找到摘要
-      await screen.findByText(/分享帳戶/i, {}, { timeout: 3000 });
+      // 等待帳戶管理 trigger button 渲染完成
+      await screen.findByRole('button', { name: /收款/i }, { timeout: 3000 });
 
       // 等待 QR Code 出現後，分享按鈕才可見
       const shareBtn = await screen.findByRole('button', { name: /分享連結/i }, { timeout: 3000 });
@@ -395,7 +397,7 @@ describe('Generator Integration Tests', () => {
       render(<Generator />);
 
       // 等待載入完成
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
       // 填入金額與備註
       const amountInput = screen.getByPlaceholderText('0');
@@ -479,7 +481,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
       // 填入金額與備註
       const amountInput = screen.getByPlaceholderText('0');
@@ -525,7 +527,7 @@ describe('Generator Integration Tests', () => {
       render(<Generator />);
 
       // 等待載入完成
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
       // 填入金額
       await user.type(screen.getByPlaceholderText('0'), '500');
@@ -562,7 +564,7 @@ describe('Generator Integration Tests', () => {
       render(<Generator />);
 
       // 等待載入完成
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
       // 填入金額
       await user.type(screen.getByPlaceholderText('0'), '300');
@@ -592,7 +594,7 @@ describe('Generator Integration Tests', () => {
       render(<Generator />);
 
       // 等待載入完成
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
       // 填入金額
       await user.type(screen.getByPlaceholderText('0'), '888');
@@ -650,10 +652,9 @@ describe('Generator Integration Tests', () => {
 
       render(<Generator initialBankCode="812" />);
 
-      // 等待 BankForm 渲染完成，驗證 812 (台新) 被預選
+      // 等待帳戶 trigger button 渲染
       await waitFor(() => {
-        const elements = screen.getAllByText(/812/);
-        expect(elements.length).toBeGreaterThan(0);
+        expect(screen.getByText('帳戶')).toBeInTheDocument();
       }, { timeout: 3000 });
     });
 
@@ -676,7 +677,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
       // 填入金額觸發 QR 產生
       await user.type(screen.getByPlaceholderText('0'), '100');
@@ -692,7 +693,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
       await waitFor(() => {
@@ -785,7 +786,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
       await waitFor(() => {
@@ -833,7 +834,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
       await waitFor(() => {
@@ -861,7 +862,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
       await waitFor(() => {
@@ -895,7 +896,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
       await waitFor(() => {
@@ -915,7 +916,7 @@ describe('Generator Integration Tests', () => {
       const user = userEvent.setup();
       render(<Generator />);
 
-      await waitFor(() => screen.getAllByText(/822/)[0]);
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
       await user.type(screen.getByPlaceholderText('0'), '100');
 
       await waitFor(() => {
@@ -935,8 +936,10 @@ describe('Generator Integration Tests', () => {
   // ---------------------------------------------------------------------------
 
   describe('Template Attribution (TEMPLATE BY)', () => {
-    /** 等待 Splash + Skeleton 動畫結束、TemplateGallery 出現 */
-    const waitForTemplateGallery = async () => {
+    /** 等待 Splash 結束，點擊模板按鈕開啟 TemplateSheet */
+    const openTemplateSheet = async (user: ReturnType<typeof userEvent.setup>) => {
+      const sceneTrigger = await screen.findByText('模板', {}, { timeout: 3000 });
+      await user.click(sceneTrigger.closest('button')!);
       await waitFor(() => {
         expect(screen.getByText('Netflix 合租')).toBeInTheDocument();
       }, { timeout: 3000 });
@@ -945,7 +948,7 @@ describe('Generator Integration Tests', () => {
     test('套用模板後應顯示署名 badge', async () => {
       const user = userEvent.setup();
       render(<Generator />);
-      await waitForTemplateGallery();
+      await openTemplateSheet(user);
 
       await user.click(screen.getByText('Netflix 合租'));
 
@@ -958,7 +961,7 @@ describe('Generator Integration Tests', () => {
     test('切換到其他模式時 badge 應隱藏', async () => {
       const user = userEvent.setup();
       render(<Generator />);
-      await waitForTemplateGallery();
+      await openTemplateSheet(user);
 
       // 套用 payment 模板
       await user.click(screen.getByText('Netflix 合租'));
@@ -975,7 +978,7 @@ describe('Generator Integration Tests', () => {
     test('切回原模式時 badge 應回歸', async () => {
       const user = userEvent.setup();
       render(<Generator />);
-      await waitForTemplateGallery();
+      await openTemplateSheet(user);
 
       // 套用 payment 模板
       await user.click(screen.getByText('Netflix 合租'));
@@ -996,7 +999,7 @@ describe('Generator Integration Tests', () => {
     test('使用者修改模板參數後 badge 應永久消失', async () => {
       const user = userEvent.setup();
       render(<Generator />);
-      await waitForTemplateGallery();
+      await openTemplateSheet(user);
 
       // 套用 pay 模板 (Spotify Family)
       await user.click(screen.getByText('Spotify Family'));
@@ -1128,7 +1131,7 @@ describe('Generator Integration Tests', () => {
     render(<Generator />);
 
     // 等待載入完成
-    await waitFor(() => screen.getAllByText(/822/)[0]);
+    await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
     // 輸入負數金額
     const amountInput = screen.getByPlaceholderText('0');

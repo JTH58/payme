@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import banks from '@/data/banks.json';
 import { QRCodeSVG } from 'qrcode.react';
-import { Share2, Check, Download, AlertTriangle, Users, Receipt, Copy, Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
+import { Share2, Check, Download, AlertTriangle, Users, Receipt, Copy, Lock, Eye, EyeOff, ShieldAlert, Wallet, Sparkles } from 'lucide-react';
 import { buildShareUrl } from '@/lib/url-builder';
 import { isCryptoAvailable } from '@/lib/crypto';
 import { SEG, getRouteConfig, AppMode, VALID_MODES } from '@/config/routes';
@@ -28,12 +28,13 @@ import { BillForm } from '@/modules/bill/components/bill-form';
 import { BankForm } from '@/modules/core/components/bank-form';
 import { BillViewer } from '@/modules/bill/components/bill-viewer';
 import { BillData, BillItem, SimpleData, CompressedData } from '@/types/bill';
-import { TemplateGallery } from '@/modules/templates/components/TemplateGallery';
 import { Template } from '@/types/template';
 import templatesData from '@/data/templates.json';
 import { TemplateSubmitModal } from '@/components/template-submit-modal';
 import { stripSensitiveFields, type TemplateFormState } from '@/modules/feedback/schemas/submit-schema';
 import { FileUp } from 'lucide-react';
+import { AccountSheet } from './account-sheet';
+import { TemplateSheet } from './template-sheet';
 
 function isValidTemplate(item: unknown): item is Template {
   if (typeof item !== 'object' || item === null) return false;
@@ -112,6 +113,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const [showTemplateSubmit, setShowTemplateSubmit] = useState(false);
   const [showEncryptionFailDialog, setShowEncryptionFailDialog] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
+  const [showAccountSheet, setShowAccountSheet] = useState(false);
+  const [showTemplateSheet, setShowTemplateSheet] = useState(false);
 
   const qrCardRef = useRef<HTMLDivElement>(null);
   const plaintextFallbackRef = useRef<string>('');
@@ -127,6 +130,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     billHash?: string;
   } | null>(null);
   const cryptoAvailable = isCryptoAvailable();
+
+  const accountButtonLabel = '帳戶';
 
   // Cleanup all timeout refs on unmount
   useEffect(() => {
@@ -606,30 +611,25 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
       </div>
 
       <div className="w-full max-w-4xl mx-auto space-y-6 animate-accordion-down">
-        {/* 全域銀行資訊區塊 (置頂) */}
-        {!isInitialLoad && (
-          <>
-            {!isSharedLink && (
-              <TemplateGallery onSelect={handleTemplateSelect} />
-            )}
-            <BankForm
-              accounts={accounts}
-              primaryAccount={primaryAccount}
-              sharedAccounts={sharedAccounts}
-              onAddAccount={addAccount}
-              onRemoveAccount={removeAccount}
-              onUpdateAccount={updateAccount}
-              onToggleShared={toggleShared}
-              isSharedLink={isSharedLink}
-              sharedLinkBankCode={form.watch('bankCode')}
-              sharedLinkAccountNumber={form.watch('accountNumber')}
-            />
-          </>
+        {/* 全域銀行資訊區塊 — 共享連結模式保留 inline 唯讀卡片 */}
+        {!isInitialLoad && isSharedLink && (
+          <BankForm
+            accounts={accounts}
+            primaryAccount={primaryAccount}
+            sharedAccounts={sharedAccounts}
+            onAddAccount={addAccount}
+            onRemoveAccount={removeAccount}
+            onUpdateAccount={updateAccount}
+            onToggleShared={toggleShared}
+            isSharedLink={isSharedLink}
+            sharedLinkBankCode={form.watch('bankCode')}
+            sharedLinkAccountNumber={form.watch('accountNumber')}
+          />
         )}
 
-        {/* 模式切換按鈕 */}
-        <div className="w-full max-w-md mx-auto bg-white/10 p-1 rounded-full flex items-center justify-between relative backdrop-blur-md">
-          {isSharedLink ? (
+        {/* 模式切換 + trigger buttons */}
+        {isSharedLink ? (
+          <div className="w-full max-w-md mx-auto bg-white/10 p-1 rounded-full flex items-center justify-between relative backdrop-blur-md">
             <div className="w-full flex items-center justify-between px-4 py-2">
               <span className="text-sm text-white/60">
                 ✨ 這是 {mode === 'bill' ? '分帳' : '收款'} 連結 (唯讀模式)
@@ -641,8 +641,19 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
                 建立我的收款碼
               </button>
             </div>
-          ) : (
-            <>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 w-full max-w-md mx-auto">
+            <button
+              type="button"
+              onClick={() => setShowAccountSheet(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/60 hover:text-white/80 transition-all duration-150 active:scale-[0.98] text-xs whitespace-nowrap"
+            >
+              <Wallet size={16} />
+              <span>{accountButtonLabel}</span>
+            </button>
+
+            <div className="flex-1 bg-white/10 p-1 rounded-full flex items-center justify-between relative backdrop-blur-md">
               <button
                 onClick={() => setMode('pay')}
                 aria-pressed={mode === 'pay'}
@@ -657,9 +668,18 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
               >
                 分帳
               </button>
-            </>
-          )}
-        </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowTemplateSheet(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white/60 hover:text-white/80 transition-all duration-150 active:scale-[0.98] text-xs whitespace-nowrap"
+            >
+              <Sparkles size={16} />
+              <span>模板</span>
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
           {/* 左側：表單區 */}
@@ -1144,6 +1164,24 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         passwordHint={(isPasswordEnabled && sharePassword.trim()) ? '🔒 此連結需要密碼才能查看' : ''}
         shortenerMode={mode === 'bill' ? 'bill' : 'simple'}
         onConfirmShare={handleConfirmShare}
+      />
+
+      <AccountSheet
+        open={showAccountSheet}
+        onOpenChange={setShowAccountSheet}
+        accounts={accounts}
+        primaryAccount={primaryAccount}
+        sharedAccounts={sharedAccounts}
+        onAddAccount={addAccount}
+        onRemoveAccount={removeAccount}
+        onUpdateAccount={updateAccount}
+        onToggleShared={toggleShared}
+      />
+
+      <TemplateSheet
+        open={showTemplateSheet}
+        onOpenChange={setShowTemplateSheet}
+        onSelect={handleTemplateSelect}
       />
 
       <TemplateSubmitModal
