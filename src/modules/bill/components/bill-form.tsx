@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from '@/lib/utils';
 import { SERVICE_CHARGE_MULTIPLIER } from '@/config/constants';
+import { HelpDialog } from '@/components/help-dialog';
 
 interface BillFormProps {
   form: UseFormReturn<TwqrFormValues>;
@@ -38,6 +39,8 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
   const [items, setItems] = useState<BillItem[]>(initialData?.i || [
     { n: '', p: 0, o: [] } // 預設空項目，無分配者
   ]);
+
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // 用於自動 Focus 新增的項目
   const itemInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -155,6 +158,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <span>🧾</span> 分帳模式
+          <button type="button" onClick={() => setHelpOpen(true)} className="text-xs text-blue-400 hover:underline font-normal">如何使用？</button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -345,6 +349,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
         </div>
 
       </CardContent>
+      <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} scenarioId="split-bill" />
     </Card>
   );
 }

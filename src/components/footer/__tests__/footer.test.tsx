@@ -21,6 +21,12 @@ describe('Footer', () => {
     expect(screen.getByText(/支援銀行/).closest('a')).toHaveAttribute('href', '/banks');
   });
 
+  it('should have a link to /guide (使用教學)', () => {
+    render(<Footer />);
+    const guideLink = screen.getByText(/使用教學/);
+    expect(guideLink.closest('a')).toHaveAttribute('href', '/guide');
+  });
+
   it('should render feedback button when callback is provided', () => {
     const mockFn = jest.fn();
     render(<Footer onFeedbackClick={mockFn} />);

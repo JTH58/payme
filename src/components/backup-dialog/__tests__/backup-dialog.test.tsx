@@ -9,6 +9,12 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
+// Mock next/link
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+}));
+
 // Mock backup lib
 jest.mock('@/lib/backup', () => ({
   createBackupPayload: jest.fn(),
@@ -34,6 +40,11 @@ describe('BackupDialog', () => {
   it('should render dialog when open', () => {
     render(<BackupDialog open onOpenChange={() => {}} />);
     expect(screen.getByText('備份與轉移')).toBeInTheDocument();
+  });
+
+  it('should render "如何使用？" help button', () => {
+    render(<BackupDialog open onOpenChange={() => {}} />);
+    expect(screen.getByText('如何使用？')).toBeInTheDocument();
   });
 
   it('should copy export link on button click', async () => {

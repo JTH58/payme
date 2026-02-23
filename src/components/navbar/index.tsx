@@ -88,6 +88,9 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
             <Link href="/safety" className={cn(NAV_LINK_CLASS, isActive('/safety') && 'text-white/90 after:w-4/5')}>
               防詐資訊
             </Link>
+            <Link href="/guide" className={cn(NAV_LINK_CLASS, isActive('/guide') && 'text-white/90 after:w-4/5')}>
+              使用教學
+            </Link>
             <a
               href="https://www.threads.net/@payme.tw"
               target="_blank"
@@ -150,6 +153,13 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
               onClick={() => setIsMenuOpen(false)}
             >
               防詐資訊
+            </Link>
+            <Link
+              href="/guide"
+              className={cn(MOBILE_LINK_CLASS, isActive('/guide') && 'text-white bg-white/5 border-l-2 border-blue-400')}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              使用教學
             </Link>
             <a
               href="https://www.threads.net/@payme.tw"

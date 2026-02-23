@@ -10,6 +10,7 @@ function generateSitemapXml() {
     { loc: `${BASE_URL}/banks`, priority: '0.8', changefreq: 'monthly' },
     { loc: `${BASE_URL}/features`, priority: '0.7', changefreq: 'monthly' },
     { loc: `${BASE_URL}/safety`, priority: '0.7', changefreq: 'monthly' },
+    { loc: `${BASE_URL}/guide`, priority: '0.7', changefreq: 'monthly' },
     ...banks.map((bank) => ({
       loc: `${BASE_URL}/banks/${bank.code}`,
       priority: '0.6',
@@ -38,5 +39,5 @@ module.exports = { generateSitemapXml };
 if (require.main === module) {
   const xml = generateSitemapXml();
   fs.writeFileSync(path.join(__dirname, '../public/sitemap.xml'), xml, 'utf-8');
-  console.log(`✅ Sitemap generated with ${banks.length + 4} URLs`);
+  console.log(`✅ Sitemap generated with ${banks.length + 5} URLs`);
 }

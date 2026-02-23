@@ -18,6 +18,7 @@ import {
   restoreBackup,
   hasExistingUserData,
 } from '@/lib/backup';
+import { HelpDialog } from '@/components/help-dialog';
 
 interface BackupDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function BackupDialog({ open, onOpenChange }: BackupDialogProps) {
   const [importError, setImportError] = useState<string | null>(null);
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<ReturnType<typeof decompressBackup>>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const handleCopyLink = useCallback(async () => {
     const payload = createBackupPayload();
@@ -100,6 +102,8 @@ export function BackupDialog({ open, onOpenChange }: BackupDialogProps) {
             匯出你的資料到其他裝置，或從備份還原。
           </DialogDescription>
         </DialogHeader>
+
+        <button type="button" onClick={() => setHelpOpen(true)} className="text-xs text-blue-400 hover:underline self-start">如何使用？</button>
 
         {confirmOverwrite ? (
           <div className="space-y-4">
@@ -192,6 +196,7 @@ export function BackupDialog({ open, onOpenChange }: BackupDialogProps) {
             )}
           </div>
         )}
+        <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} scenarioId="backup" />
       </DialogContent>
     </Dialog>
   );

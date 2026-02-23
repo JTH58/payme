@@ -6,6 +6,19 @@ import { BillForm } from '../bill-form';
 import { TwqrFormValues } from '@/modules/core/utils/validators';
 import { BillData } from '@/types/bill';
 
+// ResizeObserver (Radix Dialog 需要)
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock next/link
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+}));
+
 // Mock safe-storage to prevent side effects
 jest.mock('@/lib/safe-storage', () => ({
   safeGetItem: jest.fn(() => null),
@@ -281,6 +294,21 @@ describe('BillForm Component', () => {
     // o 應從 [0, 1, 2] → 移除 1 → [0, 2] → 重新映射 → [0, 1]
     expect(lastCall.i[0].o).toEqual([0, 1]);
     expect(lastCall.m).toEqual(['我', '小美']);
+  });
+
+  test('應渲染「如何使用？」幫助按鈕', () => {
+    renderBillForm();
+    expect(screen.getByText('如何使用？')).toBeInTheDocument();
+  });
+
+  test('點擊「如何使用？」後 HelpDialog 顯示「分帳收款」', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    renderBillForm();
+
+    await user.click(screen.getByText('如何使用？'));
+    act(() => { jest.runAllTimers(); });
+
+    expect(screen.getByText('分帳收款')).toBeInTheDocument();
   });
 
   test('全選按鈕標記 dirty', async () => {

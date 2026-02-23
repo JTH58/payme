@@ -1,0 +1,164 @@
+{
+  "hero": {
+    "title": "使用教學",
+    "subtitle": "從基本收款到進階功能，一步步帶你上手 PayMe.tw"
+  },
+  "scenarios": [
+    {
+      "id": "basic-payment",
+      "icon": "QrCode",
+      "iconColor": "text-blue-400",
+      "title": "基本收款",
+      "description": "選擇銀行、輸入帳號，一秒產生收款 QR Code。",
+      "gif": "/guide/basic-payment.gif",
+      "steps": [
+        {
+          "title": "選擇銀行",
+          "description": "從 266 間金融機構中搜尋並選擇您的收款銀行。",
+          "image": "/guide/basic-payment-1.png"
+        },
+        {
+          "title": "輸入帳號與金額",
+          "description": "輸入銀行帳號，選填收款金額，系統自動驗證格式。",
+          "image": "/guide/basic-payment-2.png"
+        },
+        {
+          "title": "產生 QR Code",
+          "description": "點擊產生按鈕，即可取得收款碼、下載圖片或複製連結。",
+          "image": "/guide/basic-payment-3.png"
+        }
+      ]
+    },
+    {
+      "id": "split-bill",
+      "icon": "Calculator",
+      "iconColor": "text-pink-400",
+      "title": "分帳收款",
+      "description": "多人聚餐、合資購物，自動計算每人應付金額。",
+      "gif": "/guide/split-bill.gif",
+      "steps": [
+        {
+          "title": "切換分帳模式",
+          "description": "在主頁面點擊「分帳」標籤，進入分帳計算器。",
+          "image": "/guide/split-bill-1.png"
+        },
+        {
+          "title": "新增成員與項目",
+          "description": "輸入朋友名字新增成員，再逐一新增消費項目與金額。",
+          "image": "/guide/split-bill-2.png"
+        },
+        {
+          "title": "分配與產生",
+          "description": "點擊分配按鈕選擇每筆項目的分攤者，系統自動計算總額。",
+          "image": "/guide/split-bill-3.png"
+        }
+      ]
+    },
+    {
+      "id": "share-link",
+      "icon": "Share2",
+      "iconColor": "text-orange-400",
+      "title": "密碼分享",
+      "description": "透過 AES-GCM 加密產生安全收款連結，保護你的帳號資訊。",
+      "gif": "/guide/share-link.gif",
+      "steps": [
+        {
+          "title": "設定密碼",
+          "description": "在產生收款碼後，勾選「密碼保護」並輸入自訂密碼。",
+          "image": "/guide/share-link-1.png"
+        },
+        {
+          "title": "選擇短網址",
+          "description": "可選擇使用限時加密短網址，連結 12 小時後自動銷毀。",
+          "image": "/guide/share-link-2.png"
+        },
+        {
+          "title": "分享給付款人",
+          "description": "複製連結或直接分享，對方輸入密碼後即可查看收款資訊。",
+          "image": "/guide/share-link-3.png"
+        }
+      ]
+    },
+    {
+      "id": "templates",
+      "icon": "Sparkles",
+      "iconColor": "text-yellow-400",
+      "title": "快速套用模板",
+      "description": "使用熱門場景模板，一鍵套用常見收款情境。",
+      "gif": "/guide/templates.gif",
+      "steps": [
+        {
+          "title": "瀏覽模板",
+          "description": "在主頁面上方的「熱門場景」橫向捲動瀏覽可用模板。",
+          "image": "/guide/templates-1.png"
+        },
+        {
+          "title": "點擊套用",
+          "description": "點擊任一模板卡片，表單欄位自動填入對應的場景資料。",
+          "image": "/guide/templates-2.png"
+        },
+        {
+          "title": "自訂修改",
+          "description": "根據實際需求調整金額、帳號等資訊，然後產生收款碼。",
+          "image": "/guide/templates-3.png"
+        }
+      ]
+    },
+    {
+      "id": "backup",
+      "icon": "Download",
+      "iconColor": "text-cyan-400",
+      "title": "備份與轉移",
+      "description": "匯出你的帳戶資料到其他裝置，或從備份還原。",
+      "gif": "/guide/backup.gif",
+      "steps": [
+        {
+          "title": "開啟備份功能",
+          "description": "點擊右上角設定圖示，選擇「備份與轉移」。",
+          "image": "/guide/backup-1.png"
+        },
+        {
+          "title": "匯出資料",
+          "description": "複製匯出連結或產生備份文字，傳送到目標裝置。",
+          "image": "/guide/backup-2.png"
+        },
+        {
+          "title": "匯入還原",
+          "description": "在目標裝置開啟連結或貼上備份文字，即可還原所有資料。",
+          "image": "/guide/backup-3.png"
+        }
+      ]
+    },
+    {
+      "id": "pwa-install",
+      "icon": "Smartphone",
+      "iconColor": "text-green-400",
+      "title": "安裝為 App",
+      "description": "將 PayMe.tw 安裝為 PWA，像原生 App 一樣離線使用。",
+      "gif": "/guide/pwa-install.gif",
+      "steps": [
+        {
+          "title": "開啟安裝提示",
+          "description": "在瀏覽器中造訪 PayMe.tw，點擊網址列旁的安裝圖示。",
+          "image": "/guide/pwa-install-1.png"
+        },
+        {
+          "title": "確認安裝",
+          "description": "點擊「安裝」按鈕，PayMe.tw 會加入你的主畫面。",
+          "image": "/guide/pwa-install-2.png"
+        },
+        {
+          "title": "離線使用",
+          "description": "安裝後即使沒有網路也能產生收款碼，適合收訊不佳的環境。",
+          "image": "/guide/pwa-install-3.png"
+        }
+      ]
+    }
+  ],
+  "cta": {
+    "title": "立即開始使用",
+    "description": "免註冊、免下載，打開即用。支援全台 266 間金融機構。",
+    "buttonText": "前往首頁",
+    "buttonHref": "/"
+  }
+}

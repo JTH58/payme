@@ -10,6 +10,12 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
+// Mock next/link
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, ...props }: any) => <a {...props}>{children}</a>,
+}));
+
 // Mock createShortLink
 const mockCreateShortLink = jest.fn();
 jest.mock('@/lib/shortener-api', () => ({
@@ -74,6 +80,16 @@ describe('ShareConfirmDialog', () => {
     test('無密碼提示時不應顯示', () => {
       render(<ShareConfirmDialog {...defaultProps} />);
       expect(screen.queryByText(/密碼/)).not.toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 情境幫助
+  // ---------------------------------------------------------------------------
+  describe('情境幫助', () => {
+    test('應渲染「如何使用？」幫助按鈕', () => {
+      render(<ShareConfirmDialog {...defaultProps} />);
+      expect(screen.getByText('如何使用？')).toBeInTheDocument();
     });
   });
 

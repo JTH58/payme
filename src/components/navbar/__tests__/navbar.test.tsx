@@ -38,6 +38,12 @@ describe('Navbar', () => {
     expect(safetyLinks[0].closest('a')).toHaveAttribute('href', '/safety');
   });
 
+  it('should have a link to /guide (使用教學)', () => {
+    render(<Navbar />);
+    const guideLinks = screen.getAllByText(/使用教學/);
+    expect(guideLinks[0].closest('a')).toHaveAttribute('href', '/guide');
+  });
+
   it('should have a GitHub link', () => {
     render(<Navbar />);
     const githubLinks = screen.getAllByText(/GitHub/i);

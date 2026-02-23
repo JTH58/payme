@@ -16,6 +16,7 @@ import {
 import { createShortLink, type ShortenerMode } from '@/lib/shortener-api';
 import { STORAGE_KEY } from '@/config/storage-keys';
 import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
+import { HelpDialog } from '@/components/help-dialog';
 
 interface ShareConfirmDialogProps {
   open: boolean;
@@ -41,6 +42,7 @@ export function ShareConfirmDialog({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
@@ -85,6 +87,8 @@ export function ShareConfirmDialog({
           <DialogTitle>分享確認</DialogTitle>
           <DialogDescription>確認分享內容</DialogDescription>
         </DialogHeader>
+
+        <button type="button" onClick={() => setHelpOpen(true)} className="text-xs text-blue-400 hover:underline self-start">如何使用？</button>
 
         {/* 分享內容預覽 */}
         <div className="bg-muted rounded-lg p-3 max-h-[200px] overflow-y-auto space-y-1">
@@ -158,6 +162,7 @@ export function ShareConfirmDialog({
             確認分享
           </Button>
         </DialogFooter>
+        <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} scenarioId="share-link" />
       </DialogContent>
     </Dialog>
   );

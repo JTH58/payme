@@ -25,6 +25,10 @@ describe('Sitemap Generator', () => {
     expect(xml).toContain('<loc>https://payme.tw/safety</loc>');
   });
 
+  it('should include /guide page', () => {
+    expect(xml).toContain('<loc>https://payme.tw/guide</loc>');
+  });
+
   it('should include 266 bank detail pages', () => {
     const bankUrlCount = (xml.match(/<loc>https:\/\/payme\.tw\/banks\/\d{3}<\/loc>/g) || []).length;
     expect(bankUrlCount).toBe(266);
@@ -35,8 +39,8 @@ describe('Sitemap Generator', () => {
     expect(xml).toContain('<loc>https://payme.tw/banks/812</loc>');
   });
 
-  it('should have total of 270 URLs (home + banks listing + features + safety + 266 banks)', () => {
+  it('should have total of 271 URLs (home + banks listing + features + safety + guide + 266 banks)', () => {
     const totalUrls = (xml.match(/<url>/g) || []).length;
-    expect(totalUrls).toBe(270);
+    expect(totalUrls).toBe(271);
   });
 });
