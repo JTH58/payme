@@ -113,8 +113,8 @@ function HomeContent() {
       >
         <div className="flex flex-col items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon-splash-128.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} fetchPriority="high" />
-          <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">Loading PayMe.tw</p>
+          <img src="/icon-splash-128.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} />
+          <p className="text-white/40 tracking-[0.2em] text-sm font-medium uppercase animate-pulse">Loading PayMe.tw</p>
         </div>
       </div>
 
@@ -259,10 +259,8 @@ export default function Home() {
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon-splash-128.png" alt="PayMe.tw"
-               className="w-16 h-16 rounded-2xl animate-bounce"
-               width={64} height={64} fetchPriority="high" />
-          <p className="text-white/40 tracking-[0.2em] text-xs font-medium uppercase animate-pulse">
+          <img src="/icon-splash-128.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} />
+          <p className="text-white/40 tracking-[0.2em] text-sm font-medium uppercase animate-pulse">
             Loading PayMe.tw
           </p>
         </div>

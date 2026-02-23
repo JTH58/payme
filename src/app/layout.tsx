@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://payme.tw"),
@@ -53,7 +50,6 @@ export default function RootLayout({
   return (
     <html lang="zh-TW" className="dark">
       <head>
-        <link rel="preload" href="/icon-splash-128.png" as="image" type="image/png" fetchPriority="high" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <script
           type="application/ld+json"
@@ -71,7 +67,7 @@ export default function RootLayout({
           }) }}
         />
       </head>
-      <body className={cn(inter.className, "min-h-screen antialiased overflow-x-hidden selection:bg-blue-500/20 bg-[#020617] text-white")}>
+      <body className={cn("font-sans min-h-screen antialiased overflow-x-hidden selection:bg-blue-500/20 bg-[#020617] text-white")}>
         {children}
       </body>
     </html>
