@@ -173,6 +173,14 @@ describe('Generator Integration Tests', () => {
     for (const key of keys) mockSearchParams.delete(key);
 
     // Setup Default Bank (模擬使用者已經設定過銀行，避免每次都要填)
+    // personal 模式使用獨立 key (payme_data_personal)
+    localStorageMock.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '822',
+        accountNumber: '123456789012',
+        amount: '',
+        comment: ''
+    }));
+    // split 模式仍使用 payme_data_payment
     localStorageMock.setItem('payme_data_payment', JSON.stringify({
         bankCode: '822',
         accountNumber: '123456789012',
@@ -1151,6 +1159,171 @@ describe('Generator Integration Tests', () => {
       await waitFor(() => {
         expect(screen.getByText('$51')).toBeInTheDocument();
       }, { timeout: 3000 });
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 模式切換資料隔離
+  // ---------------------------------------------------------------------------
+
+  describe('模式切換資料隔離', () => {
+    test('個人收款 → 平均分帳：金額不互相污染', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      // 等待個人收款模式載入
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 在個人收款輸入金額
+      const amountInput = screen.getByPlaceholderText('0');
+      await user.type(amountInput, '500');
+
+      // 切換到平均分帳
+      await user.click(screen.getByRole('button', { name: /平均分帳/i }));
+
+      // 等待模式切換完成
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /平均分帳/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 平均分帳的金額不應顯示個人收款的 500
+      await waitFor(() => {
+        const inputs = screen.getAllByPlaceholderText('0');
+        // 所有金額輸入框的值應為空
+        const hasOldAmount = inputs.some(input => (input as HTMLInputElement).value === '500');
+        expect(hasOldAmount).toBe(false);
+      });
+    });
+
+    test('多人拆帳 → 回到個人收款：個人資料應保留（從 localStorage 還原）', async () => {
+      // 預設 personal 有已存金額
+      localStorageMock.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '822', accountNumber: '123456789012', amount: '777', comment: '咖啡',
+      }));
+
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      // 等待個人收款模式載入並確認金額
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('0') as HTMLInputElement;
+        expect(input.value).toBe('777');
+      }, { timeout: 3000 });
+
+      // 切到多人拆帳
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/例如：週五燒肉局/i)).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // 切回個人收款
+      await user.click(screen.getByRole('button', { name: /個人收款/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /個人收款/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 個人收款的金額應從 localStorage 還原
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('0') as HTMLInputElement;
+        expect(input.value).toBe('777');
+      }, { timeout: 3000 });
+    });
+
+    test('個人收款消費項目 → 平均分帳：items 不互相同步', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      // 等待個人收款模式載入
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 切換到消費項目輸入模式
+      await user.click(screen.getByText('○ 消費項目'));
+
+      // 新增一筆消費項目並填入金額
+      const priceInputs = screen.getAllByPlaceholderText('0');
+      await user.type(priceInputs[0], '200');
+
+      // 確認填入成功
+      expect((priceInputs[0] as HTMLInputElement).value).toBe('200');
+
+      // 切換到平均分帳
+      await user.click(screen.getByRole('button', { name: /平均分帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /平均分帳/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 平均分帳的消費總金額應為空（total mode 的預設狀態）
+      await waitFor(() => {
+        const totalInput = screen.getByLabelText('消費總金額') as HTMLInputElement;
+        expect(totalInput.value).toBe('');
+      });
+    });
+
+    test('個人收款消費項目 → 多人拆帳 → 回個人收款：消費項目保留', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      // 等待個人收款模式載入
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 切換到消費項目輸入模式
+      await user.click(screen.getByText('○ 消費項目'));
+
+      // 填入消費項目名稱和金額
+      const nameInput = screen.getByPlaceholderText('項目名稱');
+      await user.type(nameInput, '便當');
+
+      const priceInputs = screen.getAllByPlaceholderText('0');
+      await user.type(priceInputs[0], '100');
+
+      // 切到多人拆帳
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 切回個人收款
+      await user.click(screen.getByRole('button', { name: /個人收款/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /個人收款/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 應該還原消費項目模式，且項目名稱和金額都保留
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('便當')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('100')).toBeInTheDocument();
+      }, { timeout: 3000 });
+    });
+
+    test('平均分帳勾選服務費 → 切到個人收款：服務費不應被勾選', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      // 等待載入
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 切到平均分帳
+      await user.click(screen.getByRole('button', { name: /平均分帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /平均分帳/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 勾選服務費
+      const serviceChargeCheckbox = screen.getByLabelText(/加收 10% 服務費/i);
+      await user.click(serviceChargeCheckbox);
+      expect(serviceChargeCheckbox).toBeChecked();
+
+      // 切到個人收款
+      await user.click(screen.getByRole('button', { name: /個人收款/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /個人收款/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 個人收款的服務費應未勾選
+      await waitFor(() => {
+        const checkbox = screen.getByLabelText(/加收 10% 服務費/i);
+        expect(checkbox).not.toBeChecked();
+      });
     });
   });
 

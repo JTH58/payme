@@ -13,9 +13,15 @@ import { FormSubMode, subModeToAppMode, inferSubMode } from '@/config/form-modes
 export const SPLASH_DURATION_MS = 600;
 export const SKELETON_DURATION_MS = 300;
 
-const STORAGE_KEYS: Record<AppMode | 'billData' | 'lastMode', string> = {
-  pay: STORAGE_KEY.payment,
-  bill: STORAGE_KEY.bill,
+/** subMode → localStorage form data key */
+const SUBMODE_FORM_KEYS: Record<FormSubMode, string> = {
+  personal: STORAGE_KEY.personal,
+  split: STORAGE_KEY.payment,     // split 繼續用 payme_data_payment
+  itemized: STORAGE_KEY.bill,
+};
+
+/** 非 form 的輔助 key */
+const EXTRA_KEYS = {
   billData: STORAGE_KEY.billData,
   lastMode: STORAGE_KEY.lastMode,
 };
@@ -62,6 +68,7 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
   });
 
   const isFirstRender = useRef(true);
+  const hasInitialLoad = useRef(false);
 
   // 0. 還原上次使用的子模式
   useEffect(() => {
@@ -81,7 +88,7 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
       }
     } else {
       // 向後相容：從舊的 lastMode 推導
-      const lastMode = safeGetItem(STORAGE_KEYS.lastMode) as AppMode;
+      const lastMode = safeGetItem(EXTRA_KEYS.lastMode) as AppMode;
       if (lastMode && ['pay', 'bill'].includes(lastMode)) {
         const inferred = inferSubMode(lastMode);
         if (inferred !== subMode) {
@@ -128,10 +135,25 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
     setQrString('');
     // 同時保存 subMode 和 mode（向後相容）
     safeSetItem(STORAGE_KEY.lastSubMode, subMode);
-    safeSetItem(STORAGE_KEYS.lastMode, mode);
+    safeSetItem(EXTRA_KEYS.lastMode, mode);
 
-    const savedForm = safeGetItem(STORAGE_KEYS[mode]);
-    const savedBillData = mode === 'bill' ? safeGetItem(STORAGE_KEYS.billData) : null;
+    // 使用 subMode 對應的 storage key
+    let savedForm = safeGetItem(SUBMODE_FORM_KEYS[subMode]);
+
+    // Personal mode fallback：初次載入時，若 payme_data_personal 不存在，嘗試讀取 payme_data_payment（向後相容遷移）
+    // 限定初次載入，避免切換模式時 split 的資料污染 personal
+    const isInitialMount = !hasInitialLoad.current;
+    hasInitialLoad.current = true;
+    if (!savedForm && subMode === 'personal' && isInitialMount) {
+      savedForm = safeGetItem(STORAGE_KEY.payment);
+    }
+
+    const savedBillData = mode === 'bill' ? safeGetItem(EXTRA_KEYS.billData) : null;
+
+    // 銀行帳戶由 useAccounts 統一管理，模式切換時保留當前值
+    // 僅初次載入時從 localStorage 還原（尚無 useAccounts 資料）
+    const currentBank = form.getValues('bankCode') || '';
+    const currentAccount = form.getValues('accountNumber') || '';
 
     if (savedForm) {
       try {
@@ -139,27 +161,29 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
         // 移除舊的 accounts 欄位（已遷移到 payme_accounts）
         delete parsedForm.accounts;
 
+        const bankCode = isInitialMount ? (parsedForm.bankCode || '') : currentBank;
+        const accountNumber = isInitialMount ? (parsedForm.accountNumber || '') : currentAccount;
+
         form.reset({
-          bankCode: parsedForm.bankCode || '',
-          accountNumber: parsedForm.accountNumber || '',
+          bankCode,
+          accountNumber,
           amount: parsedForm.amount || '',
           comment: parsedForm.comment || '',
         });
 
-        const validation = twqrFormSchema.safeParse(parsedForm);
+        const mergedForm = { ...parsedForm, bankCode, accountNumber };
+        const validation = twqrFormSchema.safeParse(mergedForm);
 
         timers.push(setTimeout(() => {
            form.trigger();
            if (validation.success) {
-             generateQr(parsedForm);
+             generateQr(mergedForm);
            }
         }, 0));
       } catch { /* localStorage 讀取失敗，使用預設值 */ }
     } else {
       // 該模式沒有紀錄 → 只設定 amount/comment 為空
       // bankCode/accountNumber 由 useAccounts.primaryAccount 驅動
-      const currentBank = form.getValues('bankCode') || '';
-      const currentAccount = form.getValues('accountNumber') || '';
       form.reset({
         bankCode: currentBank,
         accountNumber: currentAccount,
@@ -200,7 +224,7 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
       saveTimerRef.current = setTimeout(() => {
         // 只存 bankCode, accountNumber, amount, comment
         const { bankCode, accountNumber, amount, comment } = value;
-        safeSetItem(STORAGE_KEYS[mode], JSON.stringify({ bankCode, accountNumber, amount, comment }));
+        safeSetItem(SUBMODE_FORM_KEYS[subMode], JSON.stringify({ bankCode, accountNumber, amount, comment }));
       }, 400);
     });
 
@@ -208,7 +232,7 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
       clearTimeout(saveTimerRef.current);
       subscription.unsubscribe();
     };
-  }, [mode, isShared, form]);
+  }, [subMode, isShared, form]);
 
   // 3. QR Code 自動生成邏輯
   // 使用同步 Zod 驗證取代 form.formState.isValid，
@@ -230,7 +254,7 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
   useEffect(() => {
     if (isShared) return;
     if (mode === 'bill' && billData) {
-      safeSetItem(STORAGE_KEYS.billData, JSON.stringify(billData));
+      safeSetItem(EXTRA_KEYS.billData, JSON.stringify(billData));
     }
   }, [billData, mode, isShared]);
 
@@ -262,8 +286,8 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
     });
     setQrString('');
     if (!isShared) {
-      safeRemoveItem(STORAGE_KEYS[mode]);
-      if (mode === 'bill') safeRemoveItem(STORAGE_KEYS.billData);
+      safeRemoveItem(SUBMODE_FORM_KEYS[subMode]);
+      if (mode === 'bill') safeRemoveItem(EXTRA_KEYS.billData);
     }
   };
 

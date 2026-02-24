@@ -247,8 +247,9 @@ describe('useTwqr Hook', () => {
       });
 
       // Before debounce timeout, should NOT have written mode data
+      // 預設 personal 模式現在寫入 payme_data_personal
       const writesBefore = setSpy.mock.calls.filter(
-        c => c[0] === 'payme_data_payment'
+        c => c[0] === 'payme_data_personal'
       );
       expect(writesBefore.length).toBe(0);
 
@@ -256,11 +257,168 @@ describe('useTwqr Hook', () => {
       act(() => { jest.advanceTimersByTime(500); });
 
       const writesAfter = setSpy.mock.calls.filter(
-        c => c[0] === 'payme_data_payment'
+        c => c[0] === 'payme_data_personal'
       );
       expect(writesAfter.length).toBe(1);
 
       setSpy.mockRestore();
+    });
+  });
+
+  describe('模式資料隔離 (Mode Data Isolation)', () => {
+    test('personal 與 split 各自讀取獨立 storage key', () => {
+      // 設定兩個不同的 storage：personal 專用 key 和 split 使用的 payment key
+      window.localStorage.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '822', accountNumber: '123456789012', amount: '500', comment: '個人午餐',
+      }));
+      window.localStorage.setItem('payme_data_payment', JSON.stringify({
+        bankCode: '822', accountNumber: '123456789012', amount: '200', comment: '均分晚餐',
+      }));
+
+      // 以 personal 模式啟動
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      // personal 應讀取 payme_data_personal 的資料
+      expect(result.current.subMode).toBe('personal');
+      expect(result.current.form.getValues('amount')).toBe('500');
+      expect(result.current.form.getValues('comment')).toBe('個人午餐');
+
+      // 切到 split → 應讀取 payme_data_payment
+      act(() => {
+        result.current.setSubMode('split');
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(result.current.subMode).toBe('split');
+      expect(result.current.form.getValues('amount')).toBe('200');
+      expect(result.current.form.getValues('comment')).toBe('均分晚餐');
+    });
+
+    test('split → personal：personal 無已存資料時 amount/comment 應為空', () => {
+      // 只設定 split (payment) 的資料，不設 personal
+      window.localStorage.setItem('payme_data_payment', JSON.stringify({
+        bankCode: '822', accountNumber: '123456789012', amount: '200', comment: '均分',
+      }));
+      window.localStorage.setItem('payme_last_sub_mode', 'split');
+
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      expect(result.current.subMode).toBe('split');
+      expect(result.current.form.getValues('amount')).toBe('200');
+
+      // 切到 personal → personal 沒有自己的存檔，應為空
+      act(() => {
+        result.current.setSubMode('personal');
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(result.current.subMode).toBe('personal');
+      expect(result.current.form.getValues('amount')).toBe('');
+      expect(result.current.form.getValues('comment')).toBe('');
+    });
+
+    test('personal → itemized → personal：round-trip 應保留 personal 資料', () => {
+      // 預設 personal 存檔
+      window.localStorage.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '822', accountNumber: '123456789012', amount: '300', comment: '咖啡',
+      }));
+
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      expect(result.current.subMode).toBe('personal');
+      expect(result.current.form.getValues('amount')).toBe('300');
+
+      // 切到 itemized
+      act(() => {
+        result.current.setSubMode('itemized');
+        jest.advanceTimersByTime(1000);
+      });
+
+      // 切回 personal
+      act(() => {
+        result.current.setSubMode('personal');
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(result.current.subMode).toBe('personal');
+      expect(result.current.form.getValues('amount')).toBe('300');
+      expect(result.current.form.getValues('comment')).toBe('咖啡');
+    });
+
+    test('bank values 跨模式保持一致（fallback path 保留 bank）', () => {
+      // 只有 personal 有完整資料，split/itemized 無存檔
+      window.localStorage.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '004', accountNumber: '9876543210', amount: '100', comment: '',
+      }));
+
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      expect(result.current.form.getValues('bankCode')).toBe('004');
+      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
+
+      // 切到 split（無存檔 → fallback path 保留 bank 值）
+      act(() => {
+        result.current.setSubMode('split');
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(result.current.form.getValues('bankCode')).toBe('004');
+      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
+
+      // 切到 itemized（無存檔 → fallback path 保留 bank 值）
+      act(() => {
+        result.current.setSubMode('itemized');
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(result.current.form.getValues('bankCode')).toBe('004');
+      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
+    });
+
+    test('bank values 跨模式保持一致（savedForm path 也保留 bank）', () => {
+      // personal 有完整資料，split 有舊存檔但 bank 為空
+      window.localStorage.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '004', accountNumber: '9876543210', amount: '100', comment: '',
+      }));
+      window.localStorage.setItem('payme_data_payment', JSON.stringify({
+        bankCode: '', accountNumber: '', amount: '200', comment: '均分',
+      }));
+
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      expect(result.current.form.getValues('bankCode')).toBe('004');
+
+      // 切到 split（有存檔但 bank 為空 → 應保留當前 bank，只還原 amount/comment）
+      act(() => {
+        result.current.setSubMode('split');
+        jest.advanceTimersByTime(1000);
+      });
+
+      expect(result.current.form.getValues('bankCode')).toBe('004');
+      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
+      expect(result.current.form.getValues('amount')).toBe('200');
+      expect(result.current.form.getValues('comment')).toBe('均分');
+    });
+
+    test('向後相容遷移：舊 payme_data_payment → personal fallback', () => {
+      // 舊格式：只有 payme_data_payment，沒有 payme_data_personal
+      window.localStorage.setItem('payme_data_payment', JSON.stringify({
+        bankCode: '822', accountNumber: '123456789012', amount: '999', comment: '舊資料',
+      }));
+      window.localStorage.setItem('payme_last_sub_mode', 'personal');
+
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      expect(result.current.subMode).toBe('personal');
+      // 應從 payme_data_payment 讀取作為 fallback
+      expect(result.current.form.getValues('amount')).toBe('999');
+      expect(result.current.form.getValues('comment')).toBe('舊資料');
     });
   });
 

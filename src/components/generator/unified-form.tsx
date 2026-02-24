@@ -18,6 +18,12 @@ import {
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────
+interface SubModeSnapshot {
+  items: BillItem[];
+  hasServiceCharge: boolean;
+  inputMethod: InputMethod;
+}
+
 interface UnifiedFormProps {
   form: UseFormReturn<TwqrFormValues>;
   subMode: FormSubMode;
@@ -154,18 +160,11 @@ export function UnifiedForm({
   const { register, setValue, formState: { errors } } = form;
   const config = FORM_SUB_MODE_CONFIG[subMode];
 
+  // ─── Snapshot cache for sub-mode isolation ────────
+  const snapshotCacheRef = useRef<Partial<Record<FormSubMode, SubModeSnapshot>>>({});
+
   // ─── Input Method ──────────────────────────────────
   const [inputMethod, setInputMethod] = useState<InputMethod>(config.defaultInputMethod);
-
-  // 切換 subMode 時一律重置為該模式預設輸入方式
-  // 使用 render-time setState（getDerivedStateFromProps 模式）
-  // 確保 inputMethod 在 effects 執行前就已同步更新，避免中繼狀態觸發錯誤的計算
-  const prevSubModeRef = useRef(subMode);
-  if (prevSubModeRef.current !== subMode) {
-    prevSubModeRef.current = subMode;
-    const newConfig = FORM_SUB_MODE_CONFIG[subMode];
-    setInputMethod(newConfig.defaultInputMethod);
-  }
 
   // ─── Split state (personal/split + total mode) ────
   const [totalAmount, setTotalAmount] = useState<string>(initialSplitData?.ta || '');
@@ -193,6 +192,41 @@ export function UnifiedForm({
   // ─── Comment (personal/split only) ────────────────
   // In itemized mode, comment is auto-generated
 
+  // ─── SubMode snapshot save/restore ─────────────────
+  // 切換 subMode 時保存/還原各模式工作狀態
+  // 使用 render-time setState（getDerivedStateFromProps 模式）
+  // 確保 state 在 effects 執行前就已同步更新，避免中繼狀態觸發錯誤的計算
+  const prevSubModeRef = useRef(subMode);
+  if (prevSubModeRef.current !== subMode) {
+    const prevMode = prevSubModeRef.current;
+    prevSubModeRef.current = subMode;
+
+    // ① 離開時保存快照
+    snapshotCacheRef.current[prevMode] = {
+      items: items.map(item => ({ ...item })),
+      hasServiceCharge,
+      inputMethod,
+    };
+
+    // ② 進入時還原快照（itemized 由 sync effect 處理 items/serviceCharge）
+    const cached = snapshotCacheRef.current[subMode];
+    if (cached) {
+      setInputMethod(cached.inputMethod);
+      if (subMode !== 'itemized') {
+        setItems(cached.items);
+        setHasServiceCharge(cached.hasServiceCharge);
+      }
+    } else {
+      // 首次進入該模式 → 用預設值
+      const newConfig = FORM_SUB_MODE_CONFIG[subMode];
+      setInputMethod(newConfig.defaultInputMethod);
+      if (subMode !== 'itemized') {
+        setItems([{ n: '', p: 0, o: [] }]);
+        setHasServiceCharge(false);
+      }
+    }
+  }
+
   // ─── Itemized state sync (因為不再 remount) ──────
   // 進入 itemized 時，從 parent 傳入的 billData 同步內部 state
   // 使用 ref 確保每次 subMode 轉場只同步一次，避免 user 編輯後被覆蓋
@@ -216,8 +250,13 @@ export function UnifiedForm({
     }
   }, [subMode, initialBillData]);
 
-  // Initialize from localStorage
+  // Initialize from localStorage (mount-only)
+  // Guard ref 防止 initialSplitData 從 truthy → undefined 時重新觸發
+  // （personal+total effect 呼叫 onSplitDataChange(undefined) 會改變 initialSplitData prop）
+  const hasInitializedSplitRef = useRef(false);
   useEffect(() => {
+    if (hasInitializedSplitRef.current) return;
+    hasInitializedSplitRef.current = true;
     if (isSharedMode || initialSplitData) {
       setIsLoaded(true);
       return;
@@ -410,6 +449,8 @@ export function UnifiedForm({
     setNewMemberName('');
     setTitle('');
     dirtyItemsRef.current = new Set();
+    // 清除當前模式的快照，避免 reset 後切回時還原舊資料
+    delete snapshotCacheRef.current[subMode];
   };
 
   // ─── Derived state ────────────────────────────────

@@ -3,6 +3,7 @@
  * 各模組統一從此匯入，避免散落的字串常數
  */
 export const STORAGE_KEY = {
+  personal: 'payme_data_personal',
   payment: 'payme_data_payment',
   bill: 'payme_data_bill',
   billData: 'payme_data_bill_detail',
@@ -21,6 +22,7 @@ export const STORAGE_KEY = {
  * 用於備份/還原功能 — 僅包含使用者個人資料，排除裝置獨立的旗標與快取
  */
 export const USER_DATA_KEYS = [
+  'payme_data_personal',
   'payme_data_payment',
   'payme_data_bill',
   'payme_data_bill_detail',
