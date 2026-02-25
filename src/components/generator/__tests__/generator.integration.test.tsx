@@ -1236,15 +1236,15 @@ describe('Generator Integration Tests', () => {
       // 等待個人收款模式載入
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
-      // 切換到消費項目輸入模式
-      await user.click(screen.getByText('○ 消費項目'));
+      // 勾選「使用明細計算」checkbox
+      await user.click(screen.getByLabelText('使用明細計算'));
 
-      // 新增一筆消費項目並填入金額
-      const priceInputs = screen.getAllByPlaceholderText('0');
-      await user.type(priceInputs[0], '200');
+      // 新增一筆消費項目並填入金額（用 aria-label 精準定位）
+      const itemPriceInput = screen.getByLabelText('項目 1 金額');
+      await user.type(itemPriceInput, '200');
 
       // 確認填入成功
-      expect((priceInputs[0] as HTMLInputElement).value).toBe('200');
+      expect((itemPriceInput as HTMLInputElement).value).toBe('200');
 
       // 切換到平均分帳
       await user.click(screen.getByRole('button', { name: /平均分帳/i }));
@@ -1266,15 +1266,15 @@ describe('Generator Integration Tests', () => {
       // 等待個人收款模式載入
       await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
 
-      // 切換到消費項目輸入模式
-      await user.click(screen.getByText('○ 消費項目'));
+      // 勾選「使用明細計算」checkbox
+      await user.click(screen.getByLabelText('使用明細計算'));
 
       // 填入消費項目名稱和金額
       const nameInput = screen.getByPlaceholderText('項目名稱');
       await user.type(nameInput, '便當');
 
-      const priceInputs = screen.getAllByPlaceholderText('0');
-      await user.type(priceInputs[0], '100');
+      const itemPriceInput = screen.getByLabelText('項目 1 金額');
+      await user.type(itemPriceInput, '100');
 
       // 切到多人拆帳
       await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
@@ -1324,6 +1324,117 @@ describe('Generator Integration Tests', () => {
         const checkbox = screen.getByLabelText(/加收 10% 服務費/i);
         expect(checkbox).not.toBeChecked();
       });
+    });
+  });
+
+  // ─── InputMethodToggle → Checkbox 重構測試 ─────────────────────
+  describe('金額輸入 checkbox 重構', () => {
+    test('個人收款：勾選明細後金額輸入隱藏，顯示總額 preview', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 金額輸入應可見且可編輯
+      const amountInput = screen.getByLabelText('轉帳金額 (選填)') as HTMLInputElement;
+      expect(amountInput).toBeInTheDocument();
+      expect(amountInput).not.toHaveAttribute('readOnly');
+
+      // 勾選「使用明細計算」
+      await user.click(screen.getByLabelText('使用明細計算'));
+
+      // 金額輸入應消失
+      expect(screen.queryByLabelText('轉帳金額 (選填)')).not.toBeInTheDocument();
+
+      // 總額 preview 應出現
+      expect(screen.getByText('總額')).toBeInTheDocument();
+
+      // 填入項目金額（等待 items list 渲染完成）
+      await waitFor(() => {
+        expect(screen.getByLabelText('項目 1 金額')).toBeInTheDocument();
+      });
+      const itemPriceInput = screen.getByLabelText('項目 1 金額') as HTMLInputElement;
+      await user.type(itemPriceInput, '350');
+
+      // 總額 preview 應顯示計算值（小計 + preview 都會顯示 $350）
+      await waitFor(() => {
+        const matches = screen.getAllByText(/\$350/);
+        expect(matches.length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    test('平均分帳：勾選明細後消費總金額隱藏，每人應付仍在', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 切到平均分帳
+      await user.click(screen.getByRole('button', { name: /平均分帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /平均分帳/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 消費總金額應可見且可編輯
+      const totalInput = screen.getByLabelText('消費總金額') as HTMLInputElement;
+      expect(totalInput).toBeInTheDocument();
+      expect(totalInput).not.toHaveAttribute('readOnly');
+
+      // 勾選「使用明細計算」
+      await user.click(screen.getByLabelText('使用明細計算'));
+
+      // 消費總金額應消失
+      expect(screen.queryByLabelText('消費總金額')).not.toBeInTheDocument();
+
+      // 每人應付 preview 仍在
+      expect(screen.getByText('每人應付')).toBeInTheDocument();
+    });
+
+    test('多人拆帳：不顯示 checkbox', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 切到多人拆帳
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 不應顯示 checkbox
+      expect(screen.queryByLabelText('使用明細計算')).not.toBeInTheDocument();
+
+      // 但消費明細應直接可見
+      expect(screen.getByText('消費明細')).toBeInTheDocument();
+    });
+
+    test('多人拆帳：應顯示總額 preview', async () => {
+      const user = userEvent.setup();
+      render(<Generator />);
+
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 切到多人拆帳
+      await user.click(screen.getByRole('button', { name: /多人拆帳/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /多人拆帳/i })).toHaveAttribute('aria-pressed', 'true');
+      }, { timeout: 3000 });
+
+      // 應顯示「總額」preview
+      await waitFor(() => {
+        expect(screen.getByText('總額')).toBeInTheDocument();
+      });
+    });
+
+    test('pill 按鈕已移除', async () => {
+      render(<Generator />);
+
+      await screen.findByPlaceholderText('0', {}, { timeout: 3000 });
+
+      // 舊的 pill 按鈕不應存在
+      expect(screen.queryByText('○ 總金額')).not.toBeInTheDocument();
+      expect(screen.queryByText('○ 消費項目')).not.toBeInTheDocument();
     });
   });
 

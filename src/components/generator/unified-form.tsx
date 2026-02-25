@@ -104,39 +104,6 @@ function SubModeSelector({
   );
 }
 
-/** 二選一 toggle: 總金額 / 消費項目 */
-function InputMethodToggle({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: InputMethod;
-  onChange: (v: InputMethod) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex gap-2">
-      {(['total', 'items'] as const).map(m => (
-        <button
-          key={m}
-          type="button"
-          onClick={() => !disabled && onChange(m)}
-          disabled={disabled && m !== value}
-          className={cn(
-            "flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 border",
-            value === m
-              ? 'bg-white/10 border-white/20 text-white'
-              : disabled
-                ? 'border-white/5 text-white/20 cursor-not-allowed'
-                : 'border-white/10 text-white/40 hover:text-white/60 hover:border-white/20'
-          )}
-        >
-          {m === 'total' ? '○ 總金額' : '○ 消費項目'}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 // ─── Main Component ──────────────────────────────────────
 
@@ -191,6 +158,8 @@ export function UnifiedForm({
 
   // ─── Comment (personal/split only) ────────────────
   // In itemized mode, comment is auto-generated
+  // Split mode: auto-generated until user manually edits
+  const splitCommentDirtyRef = useRef(false);
 
   // ─── SubMode snapshot save/restore ─────────────────
   // 切換 subMode 時保存/還原各模式工作狀態
@@ -311,7 +280,9 @@ export function UnifiedForm({
     if (!result) return;
 
     setValue('amount', result.perPersonAmount.toString(), { shouldValidate: true });
-    setValue('comment', result.comment, { shouldValidate: true });
+    if (!splitCommentDirtyRef.current) {
+      setValue('comment', result.comment, { shouldValidate: true });
+    }
   }, [totalAmount, peopleCount, hasServiceCharge, subMode, inputMethod, setValue, onSplitDataChange, isLoaded, isSharedMode]);
 
   // Split mode + items: sum items, then split
@@ -326,7 +297,9 @@ export function UnifiedForm({
     const comment = `均分$${finalTotal}${serviceText}/${peopleCount}人`.slice(0, 20);
 
     setValue('amount', perPerson.toString(), { shouldValidate: true });
-    setValue('comment', comment, { shouldValidate: true });
+    if (!splitCommentDirtyRef.current) {
+      setValue('comment', comment, { shouldValidate: true });
+    }
 
     if (onSplitDataChange) {
       onSplitDataChange({ ta: itemTotal.toString(), pc: peopleCount, sc: hasServiceCharge });
@@ -449,14 +422,16 @@ export function UnifiedForm({
     setNewMemberName('');
     setTitle('');
     dirtyItemsRef.current = new Set();
+    splitCommentDirtyRef.current = false;
     // 清除當前模式的快照，避免 reset 後切回時還原舊資料
     delete snapshotCacheRef.current[subMode];
   };
 
   // ─── Derived state ────────────────────────────────
+  const useItemsCheckbox = inputMethod === 'items';
+  const showCheckbox = subMode !== 'itemized';
   const showItemsList = inputMethod === 'items';
   const showSplitSection = subMode === 'split' || subMode === 'itemized';
-  const isItemizedLocked = subMode === 'itemized';
   const itemsTotal = items.reduce((sum, item) => sum + (Number(item.p) || 0), 0);
 
   // ─── Render ───────────────────────────────────────
@@ -468,12 +443,21 @@ export function UnifiedForm({
 
       <div className="border-t border-white/[0.06]" />
 
-      {/* 2. Input method toggle */}
-      <InputMethodToggle
-        value={inputMethod}
-        onChange={setInputMethod}
-        disabled={isItemizedLocked}
-      />
+      {/* 2. Checkbox: 使用明細計算 (personal/split only) */}
+      {showCheckbox && (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="useItemsCalc"
+            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            checked={useItemsCheckbox}
+            onChange={(e) => setInputMethod(e.target.checked ? 'items' : 'total')}
+          />
+          <Label htmlFor="useItemsCalc" className="text-sm font-normal cursor-pointer select-none">
+            使用明細計算
+          </Label>
+        </div>
+      )}
 
       {/* 2.5 Members management (itemized — above items so user adds people first) */}
       {subMode === 'itemized' && (
@@ -513,49 +497,49 @@ export function UnifiedForm({
 
       {/* 3. Amount / Items section */}
       <div className="space-y-3">
-        {!showItemsList ? (
-          /* ── Total amount input ── */
-          subMode === 'split' ? (
-            /* Split: uses local totalAmount state */
-            <div className="space-y-2">
-              <Label htmlFor="totalAmount">消費總金額</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-white/50">$</span>
-                <Input
-                  id="totalAmount"
-                  className="pl-7 text-lg font-medium"
-                  placeholder="0"
-                  type="number"
-                  inputMode="numeric"
-                  value={totalAmount}
-                  onChange={(e) => setTotalAmount(e.target.value)}
-                />
-              </div>
+        {/* ── Amount input (hidden when items mode active) ── */}
+        {subMode === 'split' && !showItemsList && (
+          <div className="space-y-2">
+            <Label htmlFor="totalAmount">消費總金額</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-white/50">$</span>
+              <Input
+                id="totalAmount"
+                className="pl-7 text-lg font-medium"
+                placeholder="0"
+                type="number"
+                inputMode="numeric"
+                value={totalAmount}
+                onChange={(e) => setTotalAmount(e.target.value)}
+              />
             </div>
-          ) : (
-            /* Personal: direct form binding */
-            <div className="space-y-2">
-              <Label htmlFor="amount">轉帳金額 (選填)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-white/50">$</span>
-                <Input
-                  id="amount"
-                  className={cn(
-                    "pl-7 text-lg font-medium transition-transform",
-                    errors.amount && 'border-red-500/50 animate-shake'
-                  )}
-                  placeholder="0"
-                  type="number"
-                  inputMode="numeric"
-                  {...register('amount')}
-                />
-              </div>
-              {errors.amount && <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">{errors.amount.message}</p>}
+          </div>
+        )}
+
+        {subMode === 'personal' && !showItemsList && (
+          <div className="space-y-2">
+            <Label htmlFor="amount">轉帳金額 (選填)</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-white/50">$</span>
+              <Input
+                id="amount"
+                className={cn(
+                  "pl-7 text-lg font-medium transition-transform",
+                  errors.amount && 'border-red-500/50 animate-shake'
+                )}
+                placeholder="0"
+                type="number"
+                inputMode="numeric"
+                {...register('amount')}
+              />
             </div>
-          )
-        ) : (
-          /* ── Items list ── */
-          <div className="space-y-3">
+            {errors.amount && <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">{errors.amount.message}</p>}
+          </div>
+        )}
+
+        {/* ── Items list (expands below amount) ── */}
+        {showItemsList && (
+          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex justify-between items-center">
               <Label>消費明細</Label>
               <Button size="sm" variant="ghost" onClick={addItem} type="button" className="text-purple-400 hover:text-purple-300 h-9 px-2">
@@ -704,6 +688,19 @@ export function UnifiedForm({
         </div>
       )}
 
+      {/* Personal: 總額 preview (only when items mode) */}
+      {subMode === 'personal' && showItemsList && (
+        <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center space-y-1">
+          <p className="text-xs text-blue-300 uppercase tracking-wider font-semibold">總額</p>
+          <p className="text-3xl font-bold text-white">
+            ${form.watch('amount') || 0}
+          </p>
+          {hasServiceCharge && (
+            <p className="text-xs text-white/30">(已包含服務費)</p>
+          )}
+        </div>
+      )}
+
       {subMode === 'itemized' && (
         <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {/* Title */}
@@ -716,22 +713,27 @@ export function UnifiedForm({
             />
           </div>
 
-          {/* Summary */}
-          <div className="pt-4 border-t border-white/10 flex justify-between items-end">
-            <div className="text-xs text-white/50 space-y-1">
-              <p>總計 {items.length} 筆項目</p>
-              <p>{members.length} 人分攤</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-white/50 mb-1">總收款額</p>
-              <p className="text-2xl font-bold text-white">${form.watch('amount')}</p>
-            </div>
+          {/* Summary stats */}
+          <div className="pt-4 border-t border-white/10 text-xs text-white/50 space-y-1">
+            <p>總計 {items.length} 筆項目</p>
+            <p>{members.length} 人分攤</p>
+          </div>
+
+          {/* 總額 preview card */}
+          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center space-y-1">
+            <p className="text-xs text-blue-300 uppercase tracking-wider font-semibold">總額</p>
+            <p className="text-3xl font-bold text-white">
+              ${form.watch('amount')}
+            </p>
+            {hasServiceCharge && (
+              <p className="text-xs text-white/30">(已包含服務費)</p>
+            )}
           </div>
         </div>
       )}
 
-      {/* 5. Comment + Title (personal/split) */}
-      {subMode !== 'itemized' && inputMethod === 'total' && subMode === 'personal' && (
+      {/* 5. Comment (personal: editable / split: readOnly auto-generated) */}
+      {subMode === 'personal' && (
         <div className="space-y-2 animate-in fade-in slide-in-from-bottom-1 duration-200">
           <Label htmlFor="comment">轉帳備註 (選填)</Label>
           <Input
@@ -744,6 +746,23 @@ export function UnifiedForm({
             {...register('comment')}
           />
           {errors.comment && <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">{errors.comment.message}</p>}
+        </div>
+      )}
+
+      {subMode === 'split' && (
+        <div className="space-y-2 animate-in fade-in slide-in-from-bottom-1 duration-200">
+          <Label htmlFor="comment">轉帳備註 (選填)</Label>
+          <Input
+            id="comment"
+            placeholder="自動產生"
+            className={cn(
+              "transition-transform",
+              !splitCommentDirtyRef.current && 'opacity-60'
+            )}
+            {...register('comment', {
+              onChange: () => { splitCommentDirtyRef.current = true; },
+            })}
+          />
         </div>
       )}
 
