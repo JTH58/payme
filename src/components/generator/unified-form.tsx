@@ -105,6 +105,35 @@ function SubModeSelector({
 }
 
 
+/** CSS Grid 高度過渡：0fr ↔ 1fr，關閉後延遲卸載子節點 */
+function AnimatedCollapse({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const [shouldRender, setShouldRender] = useState(open);
+
+  // 展開時同步掛載（render-time setState，避免多一幀空白）
+  if (open && !shouldRender) {
+    setShouldRender(true);
+  }
+
+  // 收合後延遲卸載（等動畫結束）
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => setShouldRender(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
+  return (
+    <div className={cn(
+      "grid transition-[grid-template-rows] duration-300 ease-out",
+      open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+    )}>
+      <div className="overflow-hidden min-h-0">
+        {shouldRender && children}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────
 
 export function UnifiedForm({
@@ -497,48 +526,115 @@ export function UnifiedForm({
 
       {/* 3. Amount / Items section */}
       <div className="space-y-3">
-        {/* ── Amount input (hidden when items mode active) ── */}
-        {subMode === 'split' && !showItemsList && (
-          <div className="space-y-2">
-            <Label htmlFor="totalAmount">消費總金額</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-white/50">$</span>
-              <Input
-                id="totalAmount"
-                className="pl-7 text-lg font-medium"
-                placeholder="0"
-                type="number"
-                inputMode="numeric"
-                value={totalAmount}
-                onChange={(e) => setTotalAmount(e.target.value)}
-              />
+        {/* ── Amount input (collapses when items mode active) ── */}
+        {subMode === 'split' && (
+          <AnimatedCollapse open={!showItemsList}>
+            <div className="space-y-2">
+              <Label htmlFor="totalAmount">消費總金額</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-white/50">$</span>
+                <Input
+                  id="totalAmount"
+                  className="pl-7 text-lg font-medium"
+                  placeholder="0"
+                  type="number"
+                  inputMode="numeric"
+                  value={totalAmount}
+                  onChange={(e) => setTotalAmount(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
+          </AnimatedCollapse>
         )}
 
-        {subMode === 'personal' && !showItemsList && (
-          <div className="space-y-2">
-            <Label htmlFor="amount">轉帳金額 (選填)</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-white/50">$</span>
-              <Input
-                id="amount"
-                className={cn(
-                  "pl-7 text-lg font-medium transition-transform",
-                  errors.amount && 'border-red-500/50 animate-shake'
-                )}
-                placeholder="0"
-                type="number"
-                inputMode="numeric"
-                {...register('amount')}
-              />
+        {subMode === 'personal' && (
+          <AnimatedCollapse open={!showItemsList}>
+            <div className="space-y-2">
+              <Label htmlFor="amount">轉帳金額 (選填)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-white/50">$</span>
+                <Input
+                  id="amount"
+                  className={cn(
+                    "pl-7 text-lg font-medium transition-transform",
+                    errors.amount && 'border-red-500/50 animate-shake'
+                  )}
+                  placeholder="0"
+                  type="number"
+                  inputMode="numeric"
+                  {...register('amount')}
+                />
+              </div>
+              {errors.amount && <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">{errors.amount.message}</p>}
             </div>
-            {errors.amount && <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">{errors.amount.message}</p>}
-          </div>
+          </AnimatedCollapse>
         )}
 
-        {/* ── Items list (expands below amount) ── */}
-        {showItemsList && (
+        {/* ── Items list (collapses when total mode active) ── */}
+        {subMode !== 'itemized' && (
+          <AnimatedCollapse open={showItemsList}>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <Label>消費明細</Label>
+                <Button size="sm" variant="ghost" onClick={addItem} type="button" className="text-purple-400 hover:text-purple-300 h-9 px-2">
+                  <Plus size={14} className="mr-1" /> 新增項目
+                </Button>
+              </div>
+
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
+                {items.map((item, idx) => (
+                  <div key={idx}>
+                    <div className="flex gap-2 items-center group">
+                      {/* Item name */}
+                      <Input
+                        ref={(el) => { itemInputRefs.current[idx] = el; }}
+                        value={item.n}
+                        onChange={(e) => updateItem(idx, 'n', e.target.value)}
+                        className="h-10 text-sm flex-1 bg-white/5 border-white/10 focus:border-white/30 focus:bg-white/10 placeholder:text-white/20 transition-all duration-200"
+                        placeholder="項目名稱"
+                        aria-label={`項目 ${idx + 1} 名稱`}
+                      />
+
+                      {/* Item price */}
+                      <div className="relative w-28 flex-shrink-0">
+                        <span className="absolute left-3 top-3 text-xs text-white/40 font-bold">$</span>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          value={item.p || ''}
+                          onChange={(e) => updateItem(idx, 'p', Number(e.target.value))}
+                          className="h-10 text-sm pl-6 bg-white/10 border-white/20 focus:bg-white/20 text-right font-medium placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all duration-200"
+                          placeholder="0"
+                          aria-label={`項目 ${idx + 1} 金額`}
+                        />
+                      </div>
+
+                      {/* Delete button */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-white/20 hover:text-red-400 hover:bg-white/5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+                        onClick={() => removeItem(idx)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Items sum */}
+              <div className="flex justify-between items-center pt-2 border-t border-white/10 text-sm">
+                <span className="text-white/50">{items.length} 筆項目小計</span>
+                <span className="text-white font-medium">${itemsTotal}</span>
+              </div>
+            </div>
+          </AnimatedCollapse>
+        )}
+
+        {/* ── Items list (itemized — always visible, no collapse) ── */}
+        {subMode === 'itemized' && (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex justify-between items-center">
               <Label>消費明細</Label>
@@ -549,7 +645,7 @@ export function UnifiedForm({
 
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
               {items.map((item, idx) => (
-                <div key={idx} className={cn(subMode === 'itemized' ? "space-y-1.5" : "")}>
+                <div key={idx} className="space-y-1.5">
                   <div className="flex gap-2 items-center group">
                     {/* Item name */}
                     <Input
@@ -588,7 +684,7 @@ export function UnifiedForm({
                   </div>
 
                   {/* Inline member chips (itemized only) */}
-                  {subMode === 'itemized' && members.length > 0 && (
+                  {members.length > 0 && (
                     <div className="flex flex-wrap gap-1 pl-1">
                       {members.map((m, mIdx) => {
                         const isSelected = item.o.includes(mIdx);
@@ -688,17 +784,19 @@ export function UnifiedForm({
         </div>
       )}
 
-      {/* Personal: 總額 preview (only when items mode) */}
-      {subMode === 'personal' && showItemsList && (
-        <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center space-y-1">
-          <p className="text-xs text-blue-300 uppercase tracking-wider font-semibold">總額</p>
-          <p className="text-3xl font-bold text-white">
-            ${form.watch('amount') || 0}
-          </p>
-          {hasServiceCharge && (
-            <p className="text-xs text-white/30">(已包含服務費)</p>
-          )}
-        </div>
+      {/* Personal: 總額 preview (collapses when total mode) */}
+      {subMode === 'personal' && (
+        <AnimatedCollapse open={showItemsList}>
+          <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center space-y-1">
+            <p className="text-xs text-blue-300 uppercase tracking-wider font-semibold">總額</p>
+            <p className="text-3xl font-bold text-white">
+              ${form.watch('amount') || 0}
+            </p>
+            {hasServiceCharge && (
+              <p className="text-xs text-white/30">(已包含服務費)</p>
+            )}
+          </div>
+        </AnimatedCollapse>
       )}
 
       {subMode === 'itemized' && (

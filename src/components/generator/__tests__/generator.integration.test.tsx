@@ -1343,8 +1343,10 @@ describe('Generator Integration Tests', () => {
       // 勾選「使用明細計算」
       await user.click(screen.getByLabelText('使用明細計算'));
 
-      // 金額輸入應消失
-      expect(screen.queryByLabelText('轉帳金額 (選填)')).not.toBeInTheDocument();
+      // 金額輸入應消失（AnimatedCollapse 300ms 延遲卸載）
+      await waitFor(() => {
+        expect(screen.queryByLabelText('轉帳金額 (選填)')).not.toBeInTheDocument();
+      });
 
       // 總額 preview 應出現
       expect(screen.getByText('總額')).toBeInTheDocument();
@@ -1383,8 +1385,10 @@ describe('Generator Integration Tests', () => {
       // 勾選「使用明細計算」
       await user.click(screen.getByLabelText('使用明細計算'));
 
-      // 消費總金額應消失
-      expect(screen.queryByLabelText('消費總金額')).not.toBeInTheDocument();
+      // 消費總金額應消失（AnimatedCollapse 300ms 延遲卸載）
+      await waitFor(() => {
+        expect(screen.queryByLabelText('消費總金額')).not.toBeInTheDocument();
+      });
 
       // 每人應付 preview 仍在
       expect(screen.getByText('每人應付')).toBeInTheDocument();
