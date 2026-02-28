@@ -6,7 +6,6 @@ import { Generator } from "@/components/generator";
 import { ShieldCheck, Zap, AlertTriangle, Download } from "lucide-react";
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { FirstVisitDisclaimer } from '@/components/legal/first-visit-disclaimer';
 import { useUrlParser } from '@/hooks/use-url-parser';
 import { DecryptionChallenge } from '@/components/decryption-challenge';
 import { GridPattern } from '@/components/ui/grid-pattern';
@@ -241,8 +240,6 @@ function HomeContent() {
       {/* Global Modals - Loaded but hidden until interactions */}
       <FeedbackModal open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
       <BackupDialog open={isBackupOpen} onOpenChange={setIsBackupOpen} />
-      <FirstVisitDisclaimer />
-
       {/* 備份連結匯入確認 Dialog */}
       {isBackupImportOpen && backupData && (
         <BackupImportConfirm

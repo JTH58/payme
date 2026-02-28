@@ -34,6 +34,9 @@ import { TemplateSubmitModal } from '@/components/template-submit-modal';
 import { stripSensitiveFields, type TemplateFormState } from '@/modules/feedback/schemas/submit-schema';
 import { AccountSheet } from './account-sheet';
 import { TemplateSheet } from './template-sheet';
+import { FirstVisitDisclaimer } from '@/components/legal/first-visit-disclaimer';
+import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
+import { STORAGE_KEY as KEYS } from '@/config/storage-keys';
 
 function isValidTemplate(item: unknown): item is Template {
   if (typeof item !== 'object' || item === null) return false;
@@ -115,6 +118,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const [showAccountSheet, setShowAccountSheet] = useState(false);
   const [showTemplateSheet, setShowTemplateSheet] = useState(false);
   const [showPreviewSheet, setShowPreviewSheet] = useState(false);
+  const [showFirstVisit, setShowFirstVisit] = useState(false);
 
   const qrCardRef = useRef<HTMLDivElement>(null);
   const plaintextFallbackRef = useRef<string>('');
@@ -870,7 +874,13 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
             onShowTemplateSubmit={() => setShowTemplateSubmit(true)}
             onShowAccountSheet={() => setShowAccountSheet(true)}
             onShowTemplateSheet={() => setShowTemplateSheet(true)}
-            onConfirm={() => setShowPreviewSheet(true)}
+            onConfirm={() => {
+              if (!safeGetItem(KEYS.hasVisited)) {
+                setShowFirstVisit(true);
+              } else {
+                setShowPreviewSheet(true);
+              }
+            }}
           />
         )}
       </div>
@@ -965,6 +975,15 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         open={showTemplateSubmit}
         onOpenChange={setShowTemplateSubmit}
         formState={templateFormState}
+      />
+
+      <FirstVisitDisclaimer
+        open={showFirstVisit}
+        onAccept={() => {
+          safeSetItem(KEYS.hasVisited, 'true');
+          setShowFirstVisit(false);
+          setShowPreviewSheet(true);
+        }}
       />
 
       <Dialog open={showEncryptionFailDialog} onOpenChange={setShowEncryptionFailDialog}>

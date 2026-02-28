@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FirstVisitDisclaimer } from '../first-visit-disclaimer';
 
@@ -10,89 +10,30 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 }));
 
 describe('FirstVisitDisclaimer', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    jest.useFakeTimers();
+  it('should show dialog when open is true', () => {
+    render(<FirstVisitDisclaimer open={true} onAccept={jest.fn()} />);
+
+    expect(screen.getByText('第一次使用提醒')).toBeInTheDocument();
+    expect(screen.getByText(/歡迎使用/)).toBeInTheDocument();
+    expect(screen.getByText('非官方工具聲明')).toBeInTheDocument();
+    expect(screen.getByText('絕對隱私')).toBeInTheDocument();
+    expect(screen.getByText('使用者責任')).toBeInTheDocument();
   });
 
-  afterEach(() => {
-    jest.useRealTimers();
+  it('should NOT show dialog when open is false', () => {
+    render(<FirstVisitDisclaimer open={false} onAccept={jest.fn()} />);
+
+    expect(screen.queryByText('第一次使用提醒')).not.toBeInTheDocument();
   });
 
-  it('should show dialog after delay when user has not visited', async () => {
-    render(<FirstVisitDisclaimer />);
+  it('should call onAccept when button is clicked', async () => {
+    const onAccept = jest.fn();
+    const user = userEvent.setup();
 
-    // Dialog should not be open yet
-    expect(screen.queryByText('安全使用協議')).not.toBeInTheDocument();
+    render(<FirstVisitDisclaimer open={true} onAccept={onAccept} />);
 
-    // Advance past the 800ms delay
-    act(() => {
-      jest.advanceTimersByTime(900);
-    });
+    await user.click(screen.getByText(/接受並繼續使用/));
 
-    expect(screen.getByText('安全使用協議')).toBeInTheDocument();
-  });
-
-  it('should NOT show dialog if user has already visited', () => {
-    localStorage.setItem('payme_has_visited', 'true');
-
-    render(<FirstVisitDisclaimer />);
-
-    act(() => {
-      jest.advanceTimersByTime(900);
-    });
-
-    expect(screen.queryByText('安全使用協議')).not.toBeInTheDocument();
-  });
-
-  it('should close dialog and set storage on agree', async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
-    render(<FirstVisitDisclaimer />);
-
-    act(() => {
-      jest.advanceTimersByTime(900);
-    });
-
-    const button = screen.getByText(/接受協議/);
-    await user.click(button);
-
-    expect(localStorage.getItem('payme_has_visited')).toBe('true');
-  });
-
-  it('should still work when localStorage throws on read', () => {
-    const spy = jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new DOMException('SecurityError');
-    });
-
-    // Should not crash — safeGetItem returns null, so dialog will show
-    render(<FirstVisitDisclaimer />);
-
-    act(() => {
-      jest.advanceTimersByTime(900);
-    });
-
-    expect(screen.getByText('安全使用協議')).toBeInTheDocument();
-    spy.mockRestore();
-  });
-
-  it('should still work when localStorage throws on write', async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-
-    render(<FirstVisitDisclaimer />);
-
-    act(() => {
-      jest.advanceTimersByTime(900);
-    });
-
-    const spy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new DOMException('QuotaExceededError');
-    });
-
-    const button = screen.getByText(/接受協議/);
-    // Should not crash
-    await user.click(button);
-
-    spy.mockRestore();
+    expect(onAccept).toHaveBeenCalledTimes(1);
   });
 });

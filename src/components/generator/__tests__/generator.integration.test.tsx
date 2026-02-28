@@ -191,6 +191,8 @@ describe('Generator Integration Tests', () => {
     localStorageMock.setItem('payme_accounts', JSON.stringify([
       { id: 'acc-default', bankCode: '822', accountNumber: '123456789012', isShared: true }
     ]));
+    // 跳過首次使用提醒（大部分測試不需要測試 disclaimer）
+    localStorageMock.setItem('payme_has_visited', 'true');
   });
 
   test('應正確渲染預設狀態 (個人收款模式)', async () => {
