@@ -1,0 +1,103 @@
+{
+  "hero": {
+    "title": "TWQR 台灣共用支付碼",
+    "subtitle": "一碼通用、跨行互通的台灣 QR Code 掃碼轉帳標準"
+  },
+  "sections": [
+    {
+      "id": "what-is-twqr",
+      "title": "什麼是 TWQR？",
+      "content": "TWQR（Taiwan QR Code）是由財金資訊股份有限公司制定的台灣共用支付碼標準。它讓不同銀行的 App 都能掃描同一張 QR Code 完成轉帳，不需要知道對方使用哪家銀行，也不需要手動輸入銀行代碼和帳號。"
+    },
+    {
+      "id": "who-made-twqr",
+      "title": "誰制定了 TWQR？",
+      "content": "TWQR 由財金資訊股份有限公司（FISC）主導制定，該公司為台灣金融基礎建設的核心機構，負責跨行金融資訊傳輸與清算。TWQR 標準已獲得全台各大銀行採用，成為台灣行動支付生態系的重要基礎。"
+    },
+    {
+      "id": "how-it-works",
+      "title": "TWQR 如何運作？",
+      "content": "TWQR 將收款人的銀行代碼、帳號、金額等資訊編碼成 QR Code。付款人只需用銀行 App 掃描，系統會自動辨識收款資訊並帶入轉帳畫面，確認後即可完成付款。整個過程安全、快速、免手續費。"
+    }
+  ],
+  "howItWorks": {
+    "title": "三步驟完成轉帳",
+    "subtitle": "使用 TWQR 掃碼轉帳，比傳統轉帳更簡單",
+    "steps": [
+      {
+        "step": 1,
+        "title": "開啟銀行 App",
+        "description": "打開任何支援 TWQR 的銀行 App，找到「掃碼轉帳」或「掃描 QR Code」功能。",
+        "icon": "Smartphone"
+      },
+      {
+        "step": 2,
+        "title": "掃描 QR Code",
+        "description": "對準收款人的 TWQR 碼掃描，系統會自動帶入銀行代碼、帳號和金額。",
+        "icon": "ScanLine"
+      },
+      {
+        "step": 3,
+        "title": "確認轉帳",
+        "description": "確認收款資訊無誤後按下確認，轉帳即時完成，不需手動輸入任何資料。",
+        "icon": "CheckCircle"
+      }
+    ]
+  },
+  "features": [
+    {
+      "id": "universal",
+      "icon": "Globe",
+      "iconColor": "text-blue-400",
+      "title": "一碼通用",
+      "description": "同一張 QR Code 可被所有支援 TWQR 的銀行 App 掃描，不受銀行限制。"
+    },
+    {
+      "id": "interoperable",
+      "icon": "ArrowLeftRight",
+      "iconColor": "text-green-400",
+      "title": "跨行互通",
+      "description": "收款方和付款方可以使用不同銀行，透過財金資訊公司的跨行清算系統即時完成轉帳。"
+    },
+    {
+      "id": "secure",
+      "icon": "Shield",
+      "iconColor": "text-purple-400",
+      "title": "安全可靠",
+      "description": "所有交易經過銀行端驗證，QR Code 僅包含轉帳必要資訊，不含任何敏感個資。"
+    }
+  ],
+  "faq": {
+    "title": "常見問題",
+    "items": [
+      {
+        "question": "所有銀行 App 都支援 TWQR 嗎？",
+        "answer": "目前台灣大部分銀行 App 都已支援 TWQR 掃碼轉帳功能。PayMe.tw 支援全台 266 間金融機構產生 TWQR 格式的收款碼，涵蓋銀行、郵局、信用合作社及農漁會。",
+        "linkText": "查看支援銀行列表 →",
+        "linkHref": "/banks"
+      },
+      {
+        "question": "TWQR 轉帳需要手續費嗎？",
+        "answer": "TWQR 掃碼轉帳等同於跨行轉帳，手續費依各銀行政策而定。目前多數銀行每月提供數次免費跨行轉帳額度，在免費額度內轉帳不收取手續費。"
+      },
+      {
+        "question": "TWQR 和 Line Pay、街口支付有什麼不同？",
+        "answer": "TWQR 是直接的銀行帳戶對帳戶轉帳，資金即時入帳到銀行帳戶；Line Pay、街口支付等第三方支付則需要額外綁定帳戶、且資金可能先進入電子錢包。TWQR 不需要雙方安裝相同 App，只要有銀行 App 即可。"
+      },
+      {
+        "question": "掃描 TWQR 碼安全嗎？",
+        "answer": "是的。TWQR 碼僅包含收款帳戶資訊和金額，不含任何密碼或敏感資料。實際轉帳需要在您的銀行 App 中經過身份驗證（如密碼、指紋、Face ID）才能完成，資金安全有保障。"
+      },
+      {
+        "question": "PayMe.tw 產生的 QR Code 符合 TWQR 標準嗎？",
+        "answer": "是的。PayMe.tw 完全依照財金資訊公司制定的 TWQR 標準格式產生 QR Code，可被任何支援 TWQR 的銀行 App 正確辨識與使用。"
+      }
+    ]
+  },
+  "cta": {
+    "title": "立即產生 TWQR 收款碼",
+    "description": "免註冊、免下載，選擇銀行輸入帳號即可產生符合 TWQR 標準的收款 QR Code。",
+    "buttonText": "開始使用",
+    "buttonHref": "/"
+  }
+}

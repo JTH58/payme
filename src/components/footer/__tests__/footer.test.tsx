@@ -21,6 +21,12 @@ describe('Footer', () => {
     expect(screen.getByText(/支援銀行/).closest('a')).toHaveAttribute('href', '/banks');
   });
 
+  it('should have a link to /twqr (TWQR 標準)', () => {
+    render(<Footer />);
+    const twqrLink = screen.getByText(/TWQR 標準/);
+    expect(twqrLink.closest('a')).toHaveAttribute('href', '/twqr');
+  });
+
   it('should have a link to /guide (使用教學)', () => {
     render(<Footer />);
     const guideLink = screen.getByText(/使用教學/);

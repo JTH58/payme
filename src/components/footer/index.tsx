@@ -35,6 +35,9 @@ export function Footer({ className, onFeedbackClick }: FooterProps) {
           <Link href="/banks" className="hover:text-white/70 hover:translate-x-0.5 transition-all duration-150">
             支援銀行列表
           </Link>
+          <Link href="/twqr" className="hover:text-white/70 hover:translate-x-0.5 transition-all duration-150">
+            TWQR 標準
+          </Link>
           <Link href="/features" className="hover:text-white/70 hover:translate-x-0.5 transition-all duration-150">
             功能特色
           </Link>

@@ -82,6 +82,9 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
             <Link href="/banks" className={cn(NAV_LINK_CLASS, isActive('/banks') && 'text-white/90 after:w-4/5')}>
               支援銀行
             </Link>
+            <Link href="/twqr" className={cn(NAV_LINK_CLASS, isActive('/twqr') && 'text-white/90 after:w-4/5')}>
+              TWQR 標準
+            </Link>
             <Link href="/features" className={cn(NAV_LINK_CLASS, isActive('/features') && 'text-white/90 after:w-4/5')}>
               功能特色
             </Link>
@@ -141,6 +144,13 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
               onClick={() => setIsMenuOpen(false)}
             >
               支援銀行
+            </Link>
+            <Link
+              href="/twqr"
+              className={cn(MOBILE_LINK_CLASS, isActive('/twqr') && 'text-white bg-white/5 border-l-2 border-blue-400')}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              TWQR 標準
             </Link>
             <Link
               href="/features"
