@@ -60,12 +60,14 @@ export function useAccounts(): UseAccountsReturn {
   }, [accounts, isLoaded]);
 
   const addAccount = useCallback((init?: Partial<Pick<AccountEntry, 'bankCode' | 'accountNumber'>>) => {
+    // Guard: onClick handlers pass event as first arg — ignore non-plain-objects
+    const safeInit = init && typeof init === 'object' && !('nativeEvent' in init) ? init : undefined;
     setAccounts(prev => [...prev, {
       id: generateId(),
       bankCode: '',
       accountNumber: '',
       isShared: true,
-      ...init,
+      ...safeInit,
     }]);
   }, []);
 
