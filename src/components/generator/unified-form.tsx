@@ -480,7 +480,15 @@ export function UnifiedForm({
             id="useItemsCalc"
             className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             checked={useItemsCheckbox}
-            onChange={(e) => setInputMethod(e.target.checked ? 'items' : 'total')}
+            onChange={(e) => {
+              const next = e.target.checked ? 'items' : 'total';
+              setInputMethod(next);
+              // 個人模式從明細切回直接輸入時，清除 items 計算殘留的 '0' 金額
+              // amount 在 personal 模式為選填，留空即可產生 QR
+              if (next === 'total' && subMode === 'personal') {
+                form.setValue('amount', '', { shouldValidate: true });
+              }
+            }}
           />
           <Label htmlFor="useItemsCalc" className="text-sm font-normal cursor-pointer select-none">
             使用明細計算
