@@ -122,6 +122,25 @@ describe('useAccounts', () => {
     expect(result.current.accounts[1].isShared).toBe(true);
   });
 
+  it('should add a new account with initial values', () => {
+    mockMigrate.mockReturnValue([
+      { id: 'a1', bankCode: '004', accountNumber: '1111111111', isShared: true },
+    ]);
+
+    const { result } = renderHook(() => useAccounts());
+
+    act(() => {
+      result.current.addAccount({ bankCode: '812' });
+    });
+
+    expect(result.current.accounts).toHaveLength(2);
+    expect(result.current.accounts[1].bankCode).toBe('812');
+    expect(result.current.accounts[1].accountNumber).toBe('');
+    expect(result.current.accounts[1].isShared).toBe(true);
+    // 原帳戶不應被覆蓋
+    expect(result.current.accounts[0].bankCode).toBe('004');
+  });
+
   it('should remove an account', () => {
     mockMigrate.mockReturnValue([
       { id: 'a1', bankCode: '004', accountNumber: '1111111111', isShared: true },

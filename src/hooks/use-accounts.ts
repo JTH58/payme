@@ -9,7 +9,7 @@ export interface UseAccountsReturn {
   accounts: AccountEntry[];
   sharedAccounts: AccountEntry[];
   primaryAccount: AccountEntry | null;
-  addAccount: () => void;
+  addAccount: (init?: Partial<Pick<AccountEntry, 'bankCode' | 'accountNumber'>>) => void;
   removeAccount: (id: string) => void;
   updateAccount: (id: string, patch: Partial<AccountEntry>) => void;
   toggleShared: (id: string) => void;
@@ -59,12 +59,13 @@ export function useAccounts(): UseAccountsReturn {
     return () => clearTimeout(saveTimerRef.current);
   }, [accounts, isLoaded]);
 
-  const addAccount = useCallback(() => {
+  const addAccount = useCallback((init?: Partial<Pick<AccountEntry, 'bankCode' | 'accountNumber'>>) => {
     setAccounts(prev => [...prev, {
       id: generateId(),
       bankCode: '',
       accountNumber: '',
       isShared: true,
+      ...init,
     }]);
   }, []);
 

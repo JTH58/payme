@@ -680,13 +680,22 @@ describe('Generator Integration Tests', () => {
   // ---------------------------------------------------------------------------
 
   describe('bankCode Pre-fill (7G)', () => {
-    test('應根據 initialBankCode 預填銀行選單', async () => {
+    test('空帳戶時應預填到第一筆帳戶並開啟 AccountSheet', async () => {
       localStorageMock.clear();
 
       render(<Generator initialBankCode="812" />);
 
       await waitFor(() => {
-        expect(screen.getByText('帳戶設定')).toBeInTheDocument();
+        expect(screen.getByText('帳戶管理')).toBeInTheDocument();
+      }, { timeout: 3000 });
+    });
+
+    test('已有帳戶時不應覆蓋既有帳戶，應新增帳戶並開啟 AccountSheet', async () => {
+      // beforeEach 已設定 acc-default (bankCode: 822)
+      render(<Generator initialBankCode="812" />);
+
+      await waitFor(() => {
+        expect(screen.getByText('帳戶管理')).toBeInTheDocument();
       }, { timeout: 3000 });
     });
 

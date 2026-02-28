@@ -164,14 +164,19 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     if (initialBankCode && !isShared && accountsLoaded) {
       const validBank = banks.find(b => b.code === initialBankCode);
       if (validBank) {
-        form.setValue('bankCode', initialBankCode, { shouldValidate: true });
-        if (accounts.length > 0) {
+        const isAllEmpty = accounts.every(acc => !acc.bankCode && !acc.accountNumber);
+        if (isAllEmpty) {
           updateAccount(accounts[0].id, { bankCode: initialBankCode });
+        } else {
+          addAccount({ bankCode: initialBankCode });
         }
+        form.setValue('bankCode', initialBankCode, { shouldValidate: true });
+        form.setValue('accountNumber', '', { shouldValidate: true });
+        setShowAccountSheet(true);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- accounts 故意省略
-  }, [initialBankCode, isShared, accountsLoaded, form, updateAccount]);
+  }, [initialBankCode, isShared, accountsLoaded, form, updateAccount, addAccount]);
 
   const values = form.watch();
 
