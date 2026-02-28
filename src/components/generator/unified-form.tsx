@@ -872,8 +872,8 @@ export function UnifiedForm({
         </div>
       )}
 
-      {/* 6. Action buttons */}
-      <div className="border-t border-white/[0.06] pt-4 space-y-3">
+      {/* 6. Action buttons (host mode only) */}
+      {!isSharedMode && <div className="border-t border-white/[0.06] pt-4 space-y-3">
         <Button
           type="button"
           className="w-full bg-white text-black hover:bg-white/90 active:scale-[0.98] transition-transform font-medium"
@@ -932,7 +932,7 @@ export function UnifiedForm({
             清除全部
           </button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
