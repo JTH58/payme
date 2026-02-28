@@ -80,9 +80,10 @@ export default function TwqrPage() {
           <p className="text-white/60 text-sm mb-6">金管會製作的 TWQR 台灣共用支付碼介紹</p>
           <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-white/10">
             <iframe
-              src="https://www.youtube-nocookie.com/embed/NLTNt8Z0lFQ"
+              src="https://www.youtube.com/embed/NLTNt8Z0lFQ?si=E9iPMqhuaOL6Fhri"
               title="TWQR 台灣共用支付碼介紹 — 金管會"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
               className="absolute inset-0 w-full h-full"
             />
