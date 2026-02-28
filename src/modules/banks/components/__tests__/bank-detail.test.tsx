@@ -2,6 +2,13 @@ import { render, screen } from '@testing-library/react';
 import { BankDetail } from '../bank-detail';
 import { BankExtended } from '../../types';
 
+// Mock ResizeObserver for Radix Dialog (BankFeedbackButton)
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
 const verifiedBank: BankExtended = {
   code: '812',
   name: '台新國際商業銀行',
@@ -88,13 +95,24 @@ describe('BankDetail', () => {
     expect(screen.getByText(/0800-000-123/)).toBeInTheDocument();
   });
 
-  it('should render "我要回報問題" link with bank code in URL', () => {
+  it('should render "我要回報問題" as a button (not external link)', () => {
     render(<BankDetail bank={verifiedBank} />);
-    const reportLink = screen.getByText(/資訊有誤？我要回報問題/);
-    expect(reportLink.closest('a')).toHaveAttribute(
-      'href',
-      expect.stringContaining('812')
-    );
-    expect(reportLink.closest('a')).toHaveAttribute('target', '_blank');
+    const reportButton = screen.getByText(/資訊有誤？我要回報問題/);
+    expect(reportButton.tagName).toBe('BUTTON');
+  });
+
+  it('should render PayMe.tw 介紹 card with /features link', () => {
+    render(<BankDetail bank={verifiedBank} />);
+    expect(screen.getByText('關於 PayMe.tw')).toBeInTheDocument();
+    const link = screen.getByText('了解更多功能 →');
+    expect(link.closest('a')).toHaveAttribute('href', '/features');
+  });
+
+  it('should render TWQR 介紹 card with /twqr link and bank name', () => {
+    render(<BankDetail bank={verifiedBank} />);
+    expect(screen.getByText('什麼是 TWQR？')).toBeInTheDocument();
+    expect(screen.getByText(/讓各家銀行 App 都能掃描/)).toBeInTheDocument();
+    const link = screen.getByText('了解 TWQR 標準 →');
+    expect(link.closest('a')).toHaveAttribute('href', '/twqr');
   });
 });

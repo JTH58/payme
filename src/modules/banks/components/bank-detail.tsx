@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BankExtended, BankStatus } from '../types';
+import { BankFeedbackButton } from './bank-feedback-button';
 
 const STATUS_CONFIG: Record<BankStatus, { icon: string; label: string; color: string }> = {
   no_reports: { icon: '🏦', label: '未收到錯誤回報', color: 'text-white/60' },
@@ -70,15 +71,38 @@ export function BankDetail({ bank }: BankDetailProps) {
         )}
       </div>
 
+      {/* PayMe.tw 介紹 */}
+      <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-blue-400">關於 PayMe.tw</h2>
+        <p className="text-xs text-white/50 leading-relaxed">
+          PayMe.tw 是免費、開源的台灣通用收款碼產生器。支援全台 266 間金融機構，
+          隱私優先、資料不回傳，一鍵產生 TWQR 收款 QR Code。
+        </p>
+        <Link
+          href="/features"
+          className="inline-block text-xs text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          了解更多功能 →
+        </Link>
+      </div>
+
+      {/* TWQR 介紹 */}
+      <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-purple-400">什麼是 TWQR？</h2>
+        <p className="text-xs text-white/50 leading-relaxed">
+          TWQR 是台灣共用支付碼標準，讓各家銀行 App 都能掃描同一張 QR Code 完成轉帳，
+          跨行互通、安全免費。
+        </p>
+        <Link
+          href="/twqr"
+          className="inline-block text-xs text-purple-400 hover:text-purple-300 transition-colors"
+        >
+          了解 TWQR 標準 →
+        </Link>
+      </div>
+
       {/* Report Issue */}
-      <a
-        href={`https://github.com/JTH58/payme/issues/new?title=${encodeURIComponent(`[${bank.code}] ${bank.shortName} 問題回報`)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-white/40 hover:text-white/70 transition-colors text-xs"
-      >
-        資訊有誤？我要回報問題
-      </a>
+      <BankFeedbackButton bankCode={bank.code} bankShortName={bank.shortName} />
 
       {/* CTA */}
       <Link

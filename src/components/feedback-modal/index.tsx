@@ -17,11 +17,13 @@ type Category = 'bug' | 'suggestion' | 'other';
 interface FeedbackModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialCategory?: Category;
+  initialDescription?: string;
 }
 
-export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
-  const [category, setCategory] = useState<Category>('bug');
-  const [description, setDescription] = useState('');
+export function FeedbackModal({ open, onOpenChange, initialCategory, initialDescription }: FeedbackModalProps) {
+  const [category, setCategory] = useState<Category>(initialCategory ?? 'bug');
+  const [description, setDescription] = useState(initialDescription ?? '');
   const [contact, setContact] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -30,8 +32,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const canSubmit = isDescriptionValid && status !== 'loading';
 
   const resetForm = () => {
-    setCategory('bug');
-    setDescription('');
+    setCategory(initialCategory ?? 'bug');
+    setDescription(initialDescription ?? '');
     setContact('');
     setStatus('idle');
     setErrorMessage('');

@@ -48,11 +48,25 @@ export default async function BankDetailPage({ params }: PageProps) {
     },
   };
 
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '首頁', item: 'https://payme.tw/' },
+      { '@type': 'ListItem', position: 2, name: '支援銀行列表', item: 'https://payme.tw/banks' },
+      { '@type': 'ListItem', position: 3, name: bank.name },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <div className="max-w-xl mx-auto px-6 py-12">
         <BankDetail bank={bank} />
