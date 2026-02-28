@@ -888,6 +888,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           : undefined
         }
         onAccountSwitch={handleAccountSwitch}
+        onOpenAccountSheet={() => setShowAccountSheet(true)}
         billTitle={billData?.t}
         memberCount={billData?.m?.length}
         currentBankName={currentBankName}

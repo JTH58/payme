@@ -43,6 +43,7 @@ interface PreviewSheetProps {
   onPasswordChange: (pw: string) => void;
   onToggleShowPassword: () => void;
   // Actions
+  onOpenAccountSheet?: () => void;
   onShare: () => void;
   onDownload: () => void;
   // State
@@ -71,6 +72,7 @@ export function PreviewSheet({
   onPasswordToggle,
   onPasswordChange,
   onToggleShowPassword,
+  onOpenAccountSheet,
   onShare,
   onDownload,
   isCopied,
@@ -121,11 +123,21 @@ export function PreviewSheet({
             ) : (
               <div className="p-4 bg-white rounded-2xl shadow-2xl">
                 <div className="w-[200px] h-[200px] bg-gray-100/50 rounded-lg flex flex-col items-center justify-center text-gray-400 space-y-2 text-center px-4">
-                  <span className="text-xs">
-                    {!form.watch('bankCode') || !form.watch('accountNumber')
-                      ? '⚠️ 缺少銀行帳號'
-                      : '等待輸入...'}
-                  </span>
+                  {!form.watch('bankCode') || !form.watch('accountNumber') ? (
+                    <button
+                      type="button"
+                      className="flex flex-col items-center gap-2 hover:text-gray-600 transition-colors"
+                      onClick={() => {
+                        onOpenChange(false);
+                        onOpenAccountSheet?.();
+                      }}
+                    >
+                      <span className="text-xs font-medium text-orange-700">⚠️ 缺少銀行帳號</span>
+                      <span className="text-[10px] text-blue-500 underline underline-offset-2">前往帳戶設定</span>
+                    </button>
+                  ) : (
+                    <span className="text-xs">等待輸入...</span>
+                  )}
                 </div>
               </div>
             )}
