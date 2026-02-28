@@ -4,7 +4,6 @@ import { createShortLink, ShortenerError } from '../shortener-api';
 jest.mock('../shortener-crypto', () => ({
   encryptForShortener: jest.fn().mockResolvedValue({
     ciphertext: 'mock-ciphertext',
-    serverKey: 'mock-server-key',
     clientKey: 'Ab1x',
   }),
 }));
@@ -29,7 +28,7 @@ describe('shortener-api', () => {
       expect(result).toBe('https://s.payme.tw/abc123#Ab1x');
     });
 
-    test('POST body 應包含 ciphertext 和 serverKey（不含 clientKey）', async () => {
+    test('POST body 應包含 ciphertext 和 mode（不含 clientKey 和 serverKey）', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ shortCode: 'xyz' }),
@@ -44,15 +43,15 @@ describe('shortener-api', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ciphertext: 'mock-ciphertext',
-            serverKey: 'mock-server-key',
             mode: 'simple',
           }),
         })
       );
 
-      // 確認 body 中不含 clientKey
+      // 確認 body 中不含 clientKey 和 serverKey
       const bodyStr = mockFetch.mock.calls[0][1].body;
       expect(bodyStr).not.toContain('clientKey');
+      expect(bodyStr).not.toContain('serverKey');
     });
 
     test('403 錯誤應拋出 ShortenerError', async () => {

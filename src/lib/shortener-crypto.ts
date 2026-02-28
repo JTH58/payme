@@ -6,7 +6,6 @@ import { base64urlEncode, base64urlDecode } from './crypto';
 const CLIENT_KEY_CHARSET =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 const CLIENT_KEY_LENGTH = 4;
-const SERVER_KEY_BYTES = 32;
 const IV_LENGTH = 12;
 const HKDF_SALT = 'payme-shortener-v1';
 const HKDF_INFO = 'aes-256-gcm';
@@ -17,24 +16,10 @@ export function generateClientKey(): string {
   return Array.from(bytes, (b) => CLIENT_KEY_CHARSET[b % CLIENT_KEY_CHARSET.length]).join('');
 }
 
-/** 產生 32 bytes 隨機 serverKey（base64url 編碼，傳給伺服器保管） */
-export function generateServerKey(): string {
-  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(SERVER_KEY_BYTES));
-  return base64urlEncode(bytes);
-}
-
-/** 從 clientKey + serverKey 推導 AES-256-GCM 密鑰 (HKDF-SHA256) */
-export async function deriveFullKey(
-  clientKey: string,
-  serverKeyB64: string
-): Promise<CryptoKey> {
+/** 從 clientKey 推導 AES-256-GCM 密鑰 (HKDF-SHA256) */
+export async function deriveEncKey(clientKey: string): Promise<CryptoKey> {
   const enc = new TextEncoder();
-  const serverKeyBytes = base64urlDecode(serverKeyB64);
-
-  const clientKeyBytes = enc.encode(clientKey);
-  const ikm = new Uint8Array(clientKeyBytes.length + serverKeyBytes.length);
-  ikm.set(clientKeyBytes, 0);
-  ikm.set(serverKeyBytes, clientKeyBytes.length);
+  const ikm = enc.encode(clientKey);
 
   const rawKey = await globalThis.crypto.subtle.importKey(
     'raw',
@@ -96,15 +81,13 @@ export async function decryptPayload(
   return new TextDecoder().decode(plaintext);
 }
 
-/** 一站式加密：產生雙鑰 → 推導密鑰 → 加密 URL */
+/** 一站式加密：產生 clientKey → 推導密鑰 → 加密 URL */
 export async function encryptForShortener(url: string): Promise<{
   ciphertext: string;
-  serverKey: string;
   clientKey: string;
 }> {
   const clientKey = generateClientKey();
-  const serverKey = generateServerKey();
-  const key = await deriveFullKey(clientKey, serverKey);
+  const key = await deriveEncKey(clientKey);
   const ciphertext = await encryptPayload(url, key);
-  return { ciphertext, serverKey, clientKey };
+  return { ciphertext, clientKey };
 }
