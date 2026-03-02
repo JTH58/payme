@@ -348,8 +348,8 @@ describe('useTwqr Hook', () => {
       expect(result.current.form.getValues('comment')).toBe('咖啡');
     });
 
-    test('bank values 跨模式保持一致（fallback path 保留 bank）', () => {
-      // 只有 personal 有完整資料，split/itemized 無存檔
+    test('bank values 跨模式保持一致（bankCode 不從 localStorage 讀取，由 useAccounts 統一管理）', () => {
+      // localStorage 有舊的 bankCode，但 init 不再讀取
       window.localStorage.setItem('payme_data_personal', JSON.stringify({
         bankCode: '004', accountNumber: '9876543210', amount: '100', comment: '',
       }));
@@ -357,30 +357,24 @@ describe('useTwqr Hook', () => {
       const { result } = renderHook(() => useTwqr());
       act(() => { jest.advanceTimersByTime(1000); });
 
-      expect(result.current.form.getValues('bankCode')).toBe('004');
-      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
+      // bankCode/accountNumber 不從 localStorage 讀取，初始為空（由 useAccounts sync 注入）
+      expect(result.current.form.getValues('bankCode')).toBe('');
+      expect(result.current.form.getValues('accountNumber')).toBe('');
+      // amount 仍從 localStorage 正確還原
+      expect(result.current.form.getValues('amount')).toBe('100');
 
-      // 切到 split（無存檔 → fallback path 保留 bank 值）
+      // 切到 split（無存檔 → fallback path，bank 保持當前值）
       act(() => {
         result.current.setSubMode('split');
         jest.advanceTimersByTime(1000);
       });
 
-      expect(result.current.form.getValues('bankCode')).toBe('004');
-      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
-
-      // 切到 itemized（無存檔 → fallback path 保留 bank 值）
-      act(() => {
-        result.current.setSubMode('itemized');
-        jest.advanceTimersByTime(1000);
-      });
-
-      expect(result.current.form.getValues('bankCode')).toBe('004');
-      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
+      expect(result.current.form.getValues('bankCode')).toBe('');
+      expect(result.current.form.getValues('accountNumber')).toBe('');
     });
 
-    test('bank values 跨模式保持一致（savedForm path 也保留 bank）', () => {
-      // personal 有完整資料，split 有舊存檔但 bank 為空
+    test('bank values 跨模式保持一致（savedForm path 也不讀取 bankCode）', () => {
+      // personal 有舊 bankCode（不會被讀取），split 也有舊存檔
       window.localStorage.setItem('payme_data_personal', JSON.stringify({
         bankCode: '004', accountNumber: '9876543210', amount: '100', comment: '',
       }));
@@ -391,18 +385,103 @@ describe('useTwqr Hook', () => {
       const { result } = renderHook(() => useTwqr());
       act(() => { jest.advanceTimersByTime(1000); });
 
-      expect(result.current.form.getValues('bankCode')).toBe('004');
+      // bankCode 不從 localStorage 讀取
+      expect(result.current.form.getValues('bankCode')).toBe('');
 
-      // 切到 split（有存檔但 bank 為空 → 應保留當前 bank，只還原 amount/comment）
+      // 切到 split（有存檔 → 只還原 amount/comment，bank 保持當前值）
       act(() => {
         result.current.setSubMode('split');
         jest.advanceTimersByTime(1000);
       });
 
-      expect(result.current.form.getValues('bankCode')).toBe('004');
-      expect(result.current.form.getValues('accountNumber')).toBe('9876543210');
+      expect(result.current.form.getValues('bankCode')).toBe('');
+      expect(result.current.form.getValues('accountNumber')).toBe('');
       expect(result.current.form.getValues('amount')).toBe('200');
       expect(result.current.form.getValues('comment')).toBe('均分');
+    });
+
+    test('auto-save 不含 bankCode/accountNumber', () => {
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      // 觸發 isFirstRender guard
+      act(() => {
+        result.current.setSubMode('split');
+        jest.advanceTimersByTime(1000);
+      });
+      act(() => {
+        result.current.setSubMode('personal');
+        jest.advanceTimersByTime(1000);
+      });
+
+      const setSpy = jest.spyOn(Storage.prototype, 'setItem');
+      setSpy.mockClear();
+
+      // 觸發 auto-save
+      act(() => {
+        result.current.form.setValue('amount', '777');
+      });
+      act(() => { jest.advanceTimersByTime(500); });
+
+      const writes = setSpy.mock.calls.filter(c => c[0] === 'payme_data_personal');
+      expect(writes.length).toBe(1);
+      const saved = JSON.parse(writes[0][1]);
+      // 只有 amount 和 comment，不含 bankCode/accountNumber
+      expect(saved).toEqual({ amount: '777', comment: '' });
+      expect(saved).not.toHaveProperty('bankCode');
+      expect(saved).not.toHaveProperty('accountNumber');
+
+      setSpy.mockRestore();
+    });
+
+    test('init 忽略 localStorage 中的 stale bankCode', () => {
+      // localStorage 儲存了舊的 bankCode '004'，但 useAccounts 的 primaryAccount 可能是 '822'
+      window.localStorage.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '004', accountNumber: '1111111111', amount: '500', comment: '舊資料',
+      }));
+
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      // bankCode/accountNumber 不從 localStorage 讀取（由 useAccounts sync 注入）
+      expect(result.current.form.getValues('bankCode')).toBe('');
+      expect(result.current.form.getValues('accountNumber')).toBe('');
+      // amount/comment 仍正確還原
+      expect(result.current.form.getValues('amount')).toBe('500');
+      expect(result.current.form.getValues('comment')).toBe('舊資料');
+    });
+
+    test('跨 subMode bankCode 不被污染', () => {
+      // 各 subMode storage 有不同舊 bankCode
+      window.localStorage.setItem('payme_data_personal', JSON.stringify({
+        bankCode: '004', accountNumber: '1111', amount: '100', comment: '',
+      }));
+      window.localStorage.setItem('payme_data_payment', JSON.stringify({
+        bankCode: '013', accountNumber: '2222', amount: '200', comment: '',
+      }));
+      window.localStorage.setItem('payme_data_bill', JSON.stringify({
+        bankCode: '822', accountNumber: '3333', amount: '300', comment: '',
+      }));
+
+      const { result } = renderHook(() => useTwqr());
+      act(() => { jest.advanceTimersByTime(1000); });
+
+      // 初始 personal — bankCode 不從 localStorage 讀取
+      expect(result.current.form.getValues('bankCode')).toBe('');
+
+      // 切到 split — 不會從 payme_data_payment 讀取舊 bankCode '013'
+      act(() => {
+        result.current.setSubMode('split');
+        jest.advanceTimersByTime(1000);
+      });
+      expect(result.current.form.getValues('bankCode')).toBe('');
+
+      // 切到 itemized — 不會從 payme_data_bill 讀取舊 bankCode '822'
+      act(() => {
+        result.current.setSubMode('itemized');
+        jest.advanceTimersByTime(1000);
+      });
+      expect(result.current.form.getValues('bankCode')).toBe('');
     });
 
     test('向後相容遷移：舊 payme_data_payment → personal fallback', () => {

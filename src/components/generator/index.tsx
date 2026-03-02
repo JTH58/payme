@@ -153,12 +153,13 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   // primaryAccount 變化時同步到 form（非分享連結模式）
   useEffect(() => {
     if (isSharedLink || !accountsLoaded) return;
-    if (!primaryAccount?.bankCode || !primaryAccount?.accountNumber) return;
+    if (!primaryAccount) return;
 
-    if (form.getValues('bankCode') !== primaryAccount.bankCode) {
+    // bankCode 與 accountNumber 獨立同步，互不阻擋
+    if (primaryAccount.bankCode && form.getValues('bankCode') !== primaryAccount.bankCode) {
       form.setValue('bankCode', primaryAccount.bankCode, { shouldValidate: true });
     }
-    if (form.getValues('accountNumber') !== primaryAccount.accountNumber) {
+    if (primaryAccount.accountNumber && form.getValues('accountNumber') !== primaryAccount.accountNumber) {
       form.setValue('accountNumber', primaryAccount.accountNumber, { shouldValidate: true });
     }
   }, [primaryAccount, isSharedLink, accountsLoaded, form]);

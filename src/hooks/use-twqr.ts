@@ -160,18 +160,24 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
         const parsedForm = JSON.parse(savedForm);
         // 移除舊的 accounts 欄位（已遷移到 payme_accounts）
         delete parsedForm.accounts;
-
-        const bankCode = isInitialMount ? (parsedForm.bankCode || '') : currentBank;
-        const accountNumber = isInitialMount ? (parsedForm.accountNumber || '') : currentAccount;
+        // 永不從 per-subMode storage 讀取 bankCode/accountNumber（避免雙源不同步）
+        // 這兩個欄位由 useAccounts（payme_accounts）統一管理
+        delete parsedForm.bankCode;
+        delete parsedForm.accountNumber;
 
         form.reset({
-          bankCode,
-          accountNumber,
+          bankCode: currentBank,
+          accountNumber: currentAccount,
           amount: parsedForm.amount || '',
           comment: parsedForm.comment || '',
         });
 
-        const mergedForm = { ...parsedForm, bankCode, accountNumber };
+        const mergedForm = {
+          bankCode: currentBank,
+          accountNumber: currentAccount,
+          amount: parsedForm.amount || '',
+          comment: parsedForm.comment || '',
+        };
         const validation = twqrFormSchema.safeParse(mergedForm);
 
         timers.push(setTimeout(() => {
@@ -222,9 +228,9 @@ export function useTwqr({ initialMode: propMode, initialData, isShared = false }
     const subscription = form.watch((value) => {
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
-        // 只存 bankCode, accountNumber, amount, comment
-        const { bankCode, accountNumber, amount, comment } = value;
-        safeSetItem(SUBMODE_FORM_KEYS[subMode], JSON.stringify({ bankCode, accountNumber, amount, comment }));
+        // bankCode/accountNumber 由 useAccounts 統一管理，不在 per-subMode storage 重複儲存
+        const { amount, comment } = value;
+        safeSetItem(SUBMODE_FORM_KEYS[subMode], JSON.stringify({ amount, comment }));
       }, 400);
     });
 
