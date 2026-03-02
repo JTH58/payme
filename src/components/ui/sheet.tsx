@@ -60,21 +60,14 @@ const SwipeContext = React.createContext<{
 // --- SheetOverlay ---
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> & {
-    dragProgress?: number
-  }
->(({ className, style, dragProgress = 0, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
       "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
-    style={
-      dragProgress > 0
-        ? { ...style, opacity: 1 - dragProgress * 0.5 }
-        : style
-    }
     {...props}
   />
 ))
@@ -95,6 +88,7 @@ const SheetContent = React.forwardRef<
 
   // Build animation class — on swipe dismiss, keep fade-out but remove slide-out
   const isSwipeDismiss = swipe.isAnimating && swipe.translateY > 0
+  const isSnapping = swipe.isAnimating && !isSwipeDismiss
   const closedAnimClass = isSwipeDismiss
     ? "data-[state=closed]:fade-out-0"
     : "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom"
@@ -111,9 +105,18 @@ const SheetContent = React.forwardRef<
         }
       : style ?? {}
 
+  // Overlay opacity: track finger during drag, smooth transition on release
+  const overlayStyle: React.CSSProperties | undefined = swipe.isDragging
+    ? { opacity: 1 - swipe.dragProgress * 0.5 }
+    : isSwipeDismiss
+      ? { opacity: 0, transition: "opacity 300ms ease-out" }
+      : isSnapping
+        ? { transition: "opacity 300ms ease-out" }
+        : undefined
+
   return (
     <SheetPortal>
-      <SheetOverlay dragProgress={swipe.isDragging ? swipe.dragProgress : 0} />
+      <SheetOverlay style={overlayStyle} />
       <DialogPrimitive.Content
         ref={mergedRef}
         className={cn(
