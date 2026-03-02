@@ -3,19 +3,22 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useTwqr } from '@/hooks/use-twqr';
 import { useAccounts } from '@/hooks/use-accounts';
+import { useQrStyle } from '@/hooks/use-qr-style';
 import { Button } from '@/components/ui/button';
 import banks from '@/data/banks.json';
-import { QRCodeSVG } from 'qrcode.react';
 import { Share2, Check, Download, AlertTriangle, Users, Copy, Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { buildShareUrl } from '@/lib/url-builder';
 import { isCryptoAvailable } from '@/lib/crypto';
 import { SEG, getRouteConfig, AppMode, VALID_MODES } from '@/config/routes';
 import { FormSubMode } from '@/config/form-modes';
+import { DEFAULT_QR_STYLE } from '@/config/qr-style';
 import { AccountSwitcher } from './account-switcher';
-import { QrBrandCard, QR_CENTER_LABEL } from './qr-brand-card';
+import { QrBrandCard } from './qr-brand-card';
+import { StyledQrCode } from './styled-qr-code';
 import { ShareConfirmDialog } from './share-confirm-dialog';
 import { UnifiedForm } from './unified-form';
 import { PreviewSheet } from './preview-sheet';
+import { QrStyleSheet } from './qr-style-sheet';
 
 import {
   Dialog,
@@ -63,9 +66,11 @@ interface GeneratorProps {
   initialData?: CompressedData | null;
   isShared?: boolean;
   initialBankCode?: string | null;
+  qrStyleSheetOpen?: boolean;
+  onQrStyleSheetOpenChange?: (open: boolean) => void;
 }
 
-export function Generator({ initialMode, initialData, isShared = false, initialBankCode }: GeneratorProps) {
+export function Generator({ initialMode, initialData, isShared = false, initialBankCode, qrStyleSheetOpen, onQrStyleSheetOpenChange }: GeneratorProps) {
   const {
     form,
     qrString,
@@ -119,6 +124,15 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const [showTemplateSheet, setShowTemplateSheet] = useState(false);
   const [showPreviewSheet, setShowPreviewSheet] = useState(false);
   const [showFirstVisit, setShowFirstVisit] = useState(false);
+  const [showStyleSheet, setShowStyleSheet] = useState(false);
+
+  // QR style customization
+  const {
+    style: qrStyle,
+    applyPreset: applyQrPreset,
+    updateField: updateQrField,
+    activePresetId: qrPresetId,
+  } = useQrStyle();
 
   const qrCardRef = useRef<HTMLDivElement>(null);
   const plaintextFallbackRef = useRef<string>('');
@@ -763,20 +777,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
             <DialogTitle className="sr-only">QR Code 全螢幕檢視</DialogTitle>
             <div className="flex flex-col items-center">
               <div className="relative p-3 sm:p-6 md:p-8 bg-white rounded-3xl shadow-glow-white">
-                <QRCodeSVG
-                  value={qrString}
-                  size={300}
-                  level="Q"
-                  includeMargin={false}
-                  imageSettings={{
-                    src: QR_CENTER_LABEL,
-                    x: undefined,
-                    y: undefined,
-                    height: 24,
-                    width: 90,
-                    excavate: true,
-                  }}
-                />
+                <StyledQrCode data={qrString} style={DEFAULT_QR_STYLE} size={300} />
               </div>
               <p className="mt-6 text-white/50 text-sm">點擊 ✕ 或外部區域關閉</p>
             </div>
@@ -893,6 +894,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         subMode={subMode}
         qrString={qrString}
         currentShareUrl={currentShareUrl}
+        qrStyle={qrStyle}
+        onOpenStyleSheet={() => setShowStyleSheet(true)}
         sharedAccounts={sharedAccounts.length > 1
           ? sharedAccounts.map(acc => ({ b: acc.bankCode, a: acc.accountNumber }))
           : undefined
@@ -923,20 +926,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           <DialogTitle className="sr-only">QR Code 全螢幕檢視</DialogTitle>
           <div className="flex flex-col items-center">
             <div className="relative p-3 sm:p-6 md:p-8 bg-white rounded-3xl shadow-glow-white">
-              <QRCodeSVG
-                value={qrString}
-                size={300}
-                level="Q"
-                includeMargin={false}
-                imageSettings={{
-                  src: QR_CENTER_LABEL,
-                  x: undefined,
-                  y: undefined,
-                  height: 24,
-                  width: 90,
-                  excavate: true,
-                }}
-              />
+              <StyledQrCode data={qrString} style={qrStyle} size={300} />
             </div>
             <p className="mt-6 text-white/50 text-sm">點擊 ✕ 或外部區域關閉</p>
           </div>
@@ -969,6 +959,19 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         open={showTemplateSheet}
         onOpenChange={setShowTemplateSheet}
         onSelect={handleTemplateSelect}
+      />
+
+      <QrStyleSheet
+        open={showStyleSheet || !!qrStyleSheetOpen}
+        onOpenChange={(open) => {
+          setShowStyleSheet(open);
+          onQrStyleSheetOpenChange?.(open);
+        }}
+        style={qrStyle}
+        activePresetId={qrPresetId}
+        qrPreviewData={qrString || 'https://payme.tw'}
+        onApplyPreset={applyQrPreset}
+        onUpdateField={updateQrField}
       />
 
       <TemplateSubmitModal

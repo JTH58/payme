@@ -16,9 +16,9 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/',
 }));
 
-// 2. Mock QRCodeSVG (避免 Canvas/SVG 渲染問題)
-jest.mock('qrcode.react', () => ({
-  QRCodeSVG: ({ value }: { value: string }) => <div data-testid="qr-code" data-value={value}>QR: {value}</div>,
+// 2. Mock StyledQrCode (replaces old qrcode.react mock)
+jest.mock('../styled-qr-code', () => ({
+  StyledQrCode: ({ data }: { data: string }) => <div data-testid="qr-code" data-value={data}>QR: {data}</div>,
 }));
 
 // 2b. Mock html-to-image
@@ -59,6 +59,12 @@ jest.mock('../qr-brand-card', () => {
   MockQrBrandCard.displayName = 'MockQrBrandCard';
   return { QrBrandCard: MockQrBrandCard };
 });
+
+// 2d2. Mock QrStyleSheet
+jest.mock('../qr-style-sheet', () => ({
+  QrStyleSheet: ({ open }: { open: boolean }) =>
+    open ? <div data-testid="qr-style-sheet">QrStyleSheet</div> : null,
+}));
 
 // 2e. Mock PreviewSheet (暴露 props 供整合測試驗證)
 jest.mock('../preview-sheet', () => ({

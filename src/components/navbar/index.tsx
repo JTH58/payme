@@ -30,9 +30,10 @@ const MOBILE_LINK_CLASS = "flex items-center gap-3 text-sm text-white/70 hover:t
 interface NavbarProps {
   className?: string;
   onBackupClick?: () => void;
+  onQrStyleClick?: () => void;
 }
 
-export function Navbar({ className, onBackupClick }: NavbarProps) {
+export function Navbar({ className, onBackupClick, onQrStyleClick }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -117,7 +118,7 @@ export function Navbar({ className, onBackupClick }: NavbarProps) {
             </a>
           </div>
 
-          {onBackupClick && <SettingsMenu onBackupClick={onBackupClick} />}
+          {onBackupClick && <SettingsMenu onBackupClick={onBackupClick} onQrStyleClick={onQrStyleClick} />}
 
           <PwaShield />
 

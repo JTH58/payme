@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
   Sheet,
@@ -12,10 +12,11 @@ import { Button } from '@/components/ui/button';
 import { TwqrFormValues } from '@/modules/core/utils/validators';
 import { CompactAccount } from '@/types/bill';
 import { FormSubMode } from '@/config/form-modes';
+import type { QrStyleConfig } from '@/types/qr-style';
 import { AccountSwitcher } from './account-switcher';
 import { QrBrandCard } from './qr-brand-card';
 import {
-  Share2, Check, Download, Lock, Eye, EyeOff,
+  Share2, Check, Download, Lock, Eye, EyeOff, Palette,
 } from 'lucide-react';
 import { isCryptoAvailable } from '@/lib/crypto';
 
@@ -27,6 +28,9 @@ interface PreviewSheetProps {
   // QR data
   qrString: string;
   currentShareUrl: string;
+  // QR style
+  qrStyle?: QrStyleConfig;
+  onOpenStyleSheet?: () => void;
   // Account switching
   sharedAccounts?: CompactAccount[];
   onAccountSwitch?: (bankCode: string, accountNumber: string) => void;
@@ -61,6 +65,8 @@ export function PreviewSheet({
   subMode,
   qrString,
   currentShareUrl,
+  qrStyle,
+  onOpenStyleSheet,
   sharedAccounts,
   onAccountSwitch,
   billTitle,
@@ -110,6 +116,7 @@ export function PreviewSheet({
                   ref={qrCardRef}
                   variant={isItemized ? 'share' : 'payment'}
                   qrValue={isItemized ? currentShareUrl : qrString}
+                  qrStyle={qrStyle}
                   {...(isItemized ? {
                     billTitle: billTitle || '',
                     billTotal: form.watch('amount') || '',
@@ -140,6 +147,18 @@ export function PreviewSheet({
                   )}
                 </div>
               </div>
+            )}
+
+            {/* Customize Style Button */}
+            {hasQr && onOpenStyleSheet && (
+              <button
+                type="button"
+                onClick={onOpenStyleSheet}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-sm text-white/70 hover:text-white transition-all duration-150"
+              >
+                <Palette className="w-3.5 h-3.5" />
+                自訂樣式
+              </button>
             )}
           </div>
 
