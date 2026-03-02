@@ -6,9 +6,8 @@ import { useAccounts } from '@/hooks/use-accounts';
 import { useQrStyle } from '@/hooks/use-qr-style';
 import { Button } from '@/components/ui/button';
 import banks from '@/data/banks.json';
-import { Share2, Check, Download, AlertTriangle, Users, Copy, Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react';
+import { Share2, Check, Download, AlertTriangle, Users, Copy } from 'lucide-react';
 import { buildShareUrl } from '@/lib/url-builder';
-import { isCryptoAvailable } from '@/lib/crypto';
 import { SEG, getRouteConfig, AppMode, VALID_MODES } from '@/config/routes';
 import { FormSubMode } from '@/config/form-modes';
 import { DEFAULT_QR_STYLE } from '@/config/qr-style';
@@ -114,12 +113,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const [accountCopyError, setAccountCopyError] = useState('');
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPasswordEnabled, setIsPasswordEnabled] = useState(false);
-  const [sharePassword, setSharePassword] = useState('');
-  const [showSharePassword, setShowSharePassword] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showTemplateSubmit, setShowTemplateSubmit] = useState(false);
-  const [showEncryptionFailDialog, setShowEncryptionFailDialog] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [showAccountSheet, setShowAccountSheet] = useState(false);
   const [showTemplateSheet, setShowTemplateSheet] = useState(false);
@@ -136,7 +131,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   } = useQrStyle();
 
   const qrCardRef = useRef<HTMLDivElement>(null);
-  const plaintextFallbackRef = useRef<string>('');
   const pendingShareUrlRef = useRef<string>('');
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const accountCopyTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -148,8 +142,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     simpleHash?: string;
     billHash?: string;
   } | null>(null);
-  const cryptoAvailable = isCryptoAvailable();
-
   // Cleanup all timeout refs on unmount
   useEffect(() => {
     return () => {
@@ -237,15 +229,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     }
 
     templateSnapshotRef.current = snapshot;
-  };
-
-  const handlePasswordToggle = () => {
-    const next = !isPasswordEnabled;
-    setIsPasswordEnabled(next);
-    if (!next) {
-      setSharePassword('');
-      setShowSharePassword(false);
-    }
   };
 
   // 即時計算 Share URL
@@ -424,7 +407,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     }
   }, [form, showDownloadSuccess]);
 
-  const executeShare = useCallback(async (shareUrl: string) => {
+  const executeShare = useCallback(async (shareUrl: string, passwordUsed: boolean) => {
     if (!sharePayload) return;
 
     const { bankCode, accountNumber, amount, comment } = form.getValues();
@@ -456,10 +439,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
       if (comment) shareText += `\n備註：${comment} ${authorCredit}`;
     }
 
-    const trimmedSharePassword = sharePassword.trim();
-    const passwordHint = (isPasswordEnabled && trimmedSharePassword)
-      ? '\n🔒 此連結需要密碼才能查看'
-      : '';
+    const passwordHint = passwordUsed ? '\n🔒 此連結需要密碼才能查看' : '';
     const fullShareContent = `${shareText}${passwordHint}\n\n收款連結：\n${shareUrl}`;
 
     const shareData = {
@@ -517,31 +497,22 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     } else {
       await copyToClipboard();
     }
-  }, [sharePayload, form, isTemplateActive, activeTemplate, mode, billData, sharePassword, isPasswordEnabled]);
+  }, [sharePayload, form, isTemplateActive, activeTemplate, mode, billData]);
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (!sharePayload) return;
-
-    let shareUrl: string;
-    const trimmedSharePassword = sharePassword.trim();
-    try {
-      shareUrl = (isPasswordEnabled && trimmedSharePassword)
-        ? await buildShareUrl(mode, sharePathParams, sharePayload, trimmedSharePassword)
-        : buildShareUrl(mode, sharePathParams, sharePayload);
-    } catch (err) {
-      console.error('加密失敗', err);
-      plaintextFallbackRef.current = buildShareUrl(mode, sharePathParams, sharePayload) as string;
-      setShowEncryptionFailDialog(true);
-      return;
-    }
-
-    pendingShareUrlRef.current = shareUrl;
+    pendingShareUrlRef.current = currentShareUrl;
     setShowShareDialog(true);
   };
 
-  const handleConfirmShare = useCallback(async (finalUrl: string) => {
-    await executeShare(finalUrl);
+  const handleConfirmShare = useCallback(async (finalUrl: string, passwordUsed: boolean) => {
+    await executeShare(finalUrl, passwordUsed);
   }, [executeShare]);
+
+  const buildEncryptedUrl = useCallback(async (password: string) => {
+    if (!sharePayload) throw new Error('No share payload');
+    return buildShareUrl(mode, sharePathParams, sharePayload, password);
+  }, [mode, sharePathParams, sharePayload]);
 
   const handleAccountSwitch = (b: string, a: string) => {
     form.setValue('bankCode', b, { shouldValidate: true });
@@ -921,12 +892,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         billTitle={billData?.t}
         memberCount={billData?.m?.length}
         currentBankName={currentBankName}
-        isPasswordEnabled={isPasswordEnabled}
-        sharePassword={sharePassword}
-        showSharePassword={showSharePassword}
-        onPasswordToggle={handlePasswordToggle}
-        onPasswordChange={setSharePassword}
-        onToggleShowPassword={() => setShowSharePassword(!showSharePassword)}
         onShare={handleShare}
         onDownload={handleDownload}
         isCopied={isCopied}
@@ -954,8 +919,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         onOpenChange={setShowShareDialog}
         shareText={shareTextPreview}
         shareUrl={pendingShareUrlRef.current}
-        passwordHint={(isPasswordEnabled && sharePassword.trim()) ? '🔒 此連結需要密碼才能查看' : ''}
         shortenerMode={mode === 'bill' ? 'bill' : 'simple'}
+        buildEncryptedUrl={buildEncryptedUrl}
         onConfirmShare={handleConfirmShare}
       />
 
@@ -1005,44 +970,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         }}
       />
 
-      <Dialog open={showEncryptionFailDialog} onOpenChange={setShowEncryptionFailDialog}>
-        <DialogContent className="sm:max-w-md border-orange-500/20">
-          <DialogHeader>
-            <div className="flex items-center gap-2 text-orange-500 mb-2">
-              <ShieldAlert className="h-6 w-6" />
-              <DialogTitle className="text-xl">加密失敗</DialogTitle>
-            </div>
-            <DialogDescription asChild>
-              <div className="text-left space-y-3 pt-2 text-base text-muted-foreground">
-                <p>連結加密過程發生錯誤，無法產生加密連結。</p>
-                <p className="text-sm">
-                  您可以選擇以<span className="text-orange-500 font-semibold">未加密方式</span>分享，
-                  但連結內容將不受密碼保護。
-                </p>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4 flex gap-2 sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowEncryptionFailDialog(false)}
-            >
-              取消
-            </Button>
-            <Button
-              type="button"
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-              onClick={() => {
-                setShowEncryptionFailDialog(false);
-                executeShare(plaintextFallbackRef.current);
-              }}
-            >
-              以未加密方式分享
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

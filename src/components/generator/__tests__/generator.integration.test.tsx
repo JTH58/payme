@@ -36,11 +36,26 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 
 // 2c. Mock ShareConfirmDialog (避免 Dialog portal 在整合測試中的複雜性)
 jest.mock('../share-confirm-dialog', () => ({
-  ShareConfirmDialog: ({ open, shareUrl, onConfirmShare }: { open: boolean; shareUrl: string; onConfirmShare: (url: string) => void }) =>
+  ShareConfirmDialog: ({ open, shareUrl, buildEncryptedUrl, onConfirmShare }: {
+    open: boolean;
+    shareUrl: string;
+    buildEncryptedUrl?: (password: string) => Promise<string>;
+    onConfirmShare: (url: string, passwordUsed: boolean) => void;
+  }) =>
     open ? (
       <div data-testid="share-confirm-dialog" data-url={shareUrl}>
         ShareConfirmDialog
-        <button data-testid="mock-confirm-share" onClick={() => onConfirmShare(shareUrl)}>確認分享</button>
+        <button data-testid="mock-confirm-share" onClick={() => onConfirmShare(shareUrl, false)}>確認分享</button>
+        {buildEncryptedUrl && (
+          <button data-testid="mock-encrypt-share" onClick={async () => {
+            try {
+              const encrypted = await buildEncryptedUrl('testPassword');
+              onConfirmShare(encrypted, true);
+            } catch {
+              // ignore
+            }
+          }}>加密分享</button>
+        )}
       </div>
     ) : null,
 }));
@@ -71,8 +86,6 @@ jest.mock('../preview-sheet', () => ({
   PreviewSheet: ({
     open, onOpenChange, form, subMode, qrString, currentShareUrl,
     sharedAccounts, onAccountSwitch, billTitle, memberCount, currentBankName,
-    isPasswordEnabled, sharePassword, showSharePassword,
-    onPasswordToggle, onPasswordChange, onToggleShowPassword,
     onShare, onDownload, isCopied, isDownloaded, copyError, qrCardRef,
   }: any) =>
     open ? (
@@ -103,17 +116,6 @@ jest.mock('../preview-sheet', () => ({
             data-member-count={memberCount || 0}>
             QrBrandCard
           </div>
-        )}
-
-        {/* Password toggle */}
-        <button data-testid="password-toggle" onClick={onPasswordToggle}>設定密碼保護</button>
-        {isPasswordEnabled && (
-          <input
-            data-testid="password-input"
-            placeholder="輸入分享密碼"
-            value={sharePassword}
-            onChange={(e) => onPasswordChange(e.target.value)}
-          />
         )}
 
         {/* Share + Download */}
@@ -601,18 +603,12 @@ describe('Generator Integration Tests', () => {
       // 開啟 PreviewSheet
       await openPreview(user);
 
-      // 點擊密碼 toggle
-      await user.click(screen.getByTestId('password-toggle'));
-
-      // 輸入密碼
-      const passwordInput = screen.getByTestId('password-input');
-      await user.type(passwordInput, 'mySecret123');
-
-      // 點擊分享
+      // 點擊分享 → 開啟 ShareConfirmDialog
       await user.click(screen.getByTestId('share-btn'));
 
-      const confirmBtn = await screen.findByTestId('mock-confirm-share');
-      await user.click(confirmBtn);
+      // 使用 mock 加密分享按鈕（透過 buildEncryptedUrl callback）
+      const encryptBtn = await screen.findByTestId('mock-encrypt-share');
+      await user.click(encryptBtn);
 
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
@@ -632,6 +628,7 @@ describe('Generator Integration Tests', () => {
 
       await user.click(screen.getByTestId('share-btn'));
 
+      // 使用 mock 確認分享按鈕（不加密）
       const confirmBtn = await screen.findByTestId('mock-confirm-share');
       await user.click(confirmBtn);
 
@@ -642,7 +639,8 @@ describe('Generator Integration Tests', () => {
     });
 
     test('密碼保護 Round-trip：加密 → 解密 → 資料一致', async () => {
-      const PASSWORD = 'testPass456';
+      // Note: The mock ShareConfirmDialog uses 'testPassword' as the password
+      const PASSWORD = 'testPassword';
       const user = userEvent.setup();
       render(<Generator />);
 
@@ -652,17 +650,12 @@ describe('Generator Integration Tests', () => {
       // 開啟 PreviewSheet
       await openPreview(user);
 
-      // 開啟密碼 toggle
-      await user.click(screen.getByTestId('password-toggle'));
-
-      // 輸入密碼
-      await user.type(screen.getByTestId('password-input'), PASSWORD);
-
-      // 分享
+      // 分享 → 開啟 ShareConfirmDialog
       await user.click(screen.getByTestId('share-btn'));
 
-      const confirmBtn = await screen.findByTestId('mock-confirm-share');
-      await user.click(confirmBtn);
+      // 使用 mock 加密分享按鈕
+      const encryptBtn = await screen.findByTestId('mock-encrypt-share');
+      await user.click(encryptBtn);
 
       await waitFor(() => {
         expect(capturedShareUrl).not.toBeNull();
