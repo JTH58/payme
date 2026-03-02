@@ -91,9 +91,9 @@ describe("useSwipeToDismiss", () => {
     })
 
     expect(onDismiss).toHaveBeenCalledTimes(1)
-    expect(result.current.translateY).toBe(0)
-    expect(result.current.isDragging).toBe(false)
-    expect(result.current.isAnimating).toBe(false)
+    // State preserved during Radix exit animation (not reset until re-open)
+    expect(result.current.isAnimating).toBe(true)
+    expect(result.current.translateY).toBeGreaterThan(0)
   })
 
   test("should snap back when drag does not exceed threshold", () => {
@@ -168,6 +168,45 @@ describe("useSwipeToDismiss", () => {
 
     expect(result.current.isDragging).toBe(false)
     expect(result.current.translateY).toBe(0)
+  })
+
+  test("should reset stale dismiss state on re-open (enabled: false → true)", () => {
+    const onDismiss = jest.fn()
+    const { result, rerender } = renderHook(
+      (props: { enabled: boolean; onDismiss: () => void }) =>
+        useSwipeToDismiss(props),
+      {
+        initialProps: { enabled: true, onDismiss },
+      }
+    )
+
+    // Swipe to dismiss
+    act(() => {
+      result.current.headerHandlers.onTouchStart(mockTouchEvent(100, 100))
+    })
+    act(() => {
+      result.current.contentHandlers.onTouchMove(mockTouchEvent(100, 200))
+    })
+    act(() => {
+      result.current.contentHandlers.onTouchEnd()
+    })
+    act(() => {
+      jest.advanceTimersByTime(300)
+    })
+
+    // Dismiss fired, state preserved for Radix exit
+    expect(onDismiss).toHaveBeenCalledTimes(1)
+    expect(result.current.isAnimating).toBe(true)
+
+    // Simulate Radix close → enabled=false (state preserved)
+    rerender({ enabled: false, onDismiss })
+    expect(result.current.isAnimating).toBe(true)
+
+    // Re-open → stale state should be cleared
+    rerender({ enabled: true, onDismiss })
+    expect(result.current.translateY).toBe(0)
+    expect(result.current.isDragging).toBe(false)
+    expect(result.current.isAnimating).toBe(false)
   })
 
   test("should reset state when enabled changes from true to false", () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 type SwipeState = "IDLE" | "MAYBE_DRAG" | "DRAGGING" | "DISMISSING" | "SNAPPING"
 
@@ -58,9 +58,20 @@ export function useSwipeToDismiss({
     setState(newState)
   }, [])
 
-  // Reset when disabled
-  useEffect(() => {
+  // Reset state on open/close transitions
+  // useLayoutEffect prevents single-frame flash on re-open
+  useLayoutEffect(() => {
     if (!enabled) {
+      // During swipe dismiss, preserve off-screen state for Radix exit animation
+      if (stateRef.current === "DISMISSING") return
+
+      updateState("IDLE")
+      setTranslateY(0)
+      startYRef.current = 0
+      currentYRef.current = 0
+      isHeaderTouchRef.current = false
+    } else if (stateRef.current !== "IDLE") {
+      // On re-open: clear stale dismiss state before paint
       updateState("IDLE")
       setTranslateY(0)
       startYRef.current = 0
@@ -168,9 +179,7 @@ export function useSwipeToDismiss({
 
       setTimeout(() => {
         onDismissRef.current()
-        // Reset after dismiss callback
-        updateState("IDLE")
-        setTranslateY(0)
+        // State preserved for Radix exit animation — reset happens on next open
       }, ANIMATION_DURATION)
     } else {
       // Snap back
