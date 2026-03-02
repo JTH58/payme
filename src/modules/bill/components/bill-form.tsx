@@ -30,9 +30,9 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
   const [newMemberName, setNewMemberName] = useState('');
   const [duplicateError, setDuplicateError] = useState('');
 
-  // 項目列表
+  // 項目列表（預設全選所有成員）
   const [items, setItems] = useState<BillItem[]>(initialData?.i || [
-    { n: '', p: 0, o: [] } // 預設空項目，無分配者
+    { n: '', p: 0, o: members.map((_, i) => i) }
   ]);
 
   const [helpOpen, setHelpOpen] = useState(false);

@@ -10,11 +10,6 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-// Mock qrcode.react
-jest.mock('qrcode.react', () => ({
-  QRCodeSVG: () => null,
-}));
-
 describe('useTwqr Hook', () => {
   
   beforeEach(() => {

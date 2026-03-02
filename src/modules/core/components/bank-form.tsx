@@ -9,6 +9,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import banks from '@/data/banks.json';
 import { cn } from '@/lib/utils';
 import type { AccountEntry } from '@/hooks/use-accounts';
+import { isAccountComplete } from '@/modules/core/utils/validators';
 
 interface BankFormProps {
   accounts: AccountEntry[];
@@ -37,7 +38,7 @@ export function BankForm({
   sharedLinkAccountNumber,
   alwaysExpanded = false,
 }: BankFormProps) {
-  const hasAccounts = accounts.some(acc => acc.bankCode && acc.accountNumber);
+  const hasAccounts = accounts.some(acc => isAccountComplete(acc.bankCode, acc.accountNumber));
   const [isExpanded, setIsExpanded] = useState(!hasAccounts);
 
   // 分享連結模式 — 唯讀卡片
@@ -110,6 +111,11 @@ export function BankForm({
                     onChange={(e) => onUpdateAccount(account.id, { accountNumber: e.target.value })}
                     className={cn("font-mono tracking-wide h-10")}
                   />
+                  {account.accountNumber && !/^\d{10,16}$/.test(account.accountNumber) && (
+                    <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">
+                      帳號必須為 10-16 碼數字
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="pt-3">
@@ -230,6 +236,11 @@ export function BankForm({
                       onChange={(e) => onUpdateAccount(account.id, { accountNumber: e.target.value })}
                       className={cn("font-mono tracking-wide h-10")}
                     />
+                    {account.accountNumber && !/^\d{10,16}$/.test(account.accountNumber) && (
+                      <p className="text-xs text-red-400 animate-in fade-in slide-in-from-top-1 duration-200">
+                        帳號必須為 10-16 碼數字
+                      </p>
+                    )}
                   </div>
                 </div>
 

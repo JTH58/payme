@@ -82,6 +82,7 @@ function HomeContent() {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [isBackupImportOpen, setIsBackupImportOpen] = useState(false);
+  const [isQrStyleOpen, setIsQrStyleOpen] = useState(false);
 
   const handleDecrypted = useCallback((data: CompressedData) => {
     setDecryptedData(data);
@@ -138,6 +139,7 @@ function HomeContent() {
           !isMounted && "-translate-y-4 opacity-0"
         )}
         onBackupClick={() => setIsBackupOpen(true)}
+        onQrStyleClick={() => setIsQrStyleOpen(true)}
       />
 
       <main className="relative z-10 flex-1 flex flex-col items-center w-full max-w-7xl mx-auto px-4 pt-12 md:pt-20 pb-20">
@@ -221,6 +223,8 @@ function HomeContent() {
                 initialData={decryptedData || decodedData}
                 isShared={!!(decryptedData || decodedData)}
                 initialBankCode={bankCode}
+                qrStyleSheetOpen={isQrStyleOpen}
+                onQrStyleSheetOpenChange={setIsQrStyleOpen}
               />
             )}
           </Suspense>

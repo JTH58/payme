@@ -1,20 +1,24 @@
 "use client";
 
 import React, { forwardRef, useState, useEffect } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
+import type { QrStyleConfig } from '@/types/qr-style';
+import { DEFAULT_QR_STYLE } from '@/config/qr-style';
+import { StyledQrCode } from './styled-qr-code';
 
 /** QR 中央品牌文字 — 向量 SVG，不模糊、不需載入外部資源 */
 export const QR_CENTER_LABEL = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="48">' +
+  '<rect width="180" height="48" rx="4" fill="white"/>' +
   '<text x="90" y="24" dominant-baseline="central" text-anchor="middle" ' +
-  'font-family="system-ui,-apple-system,sans-serif" font-size="36" font-weight="700" fill="#374151">' +
+  'font-family="system-ui,-apple-system,sans-serif" font-size="34" font-weight="700" fill="#374151">' +
   'PayMe.TW</text></svg>'
 )}`;
 
 interface QrBrandCardProps {
   variant: 'payment' | 'share';
   qrValue: string;
+  qrStyle?: QrStyleConfig;
   // Payment variant props
   bankName?: string;
   accountNumber?: string;
@@ -25,8 +29,9 @@ interface QrBrandCardProps {
 }
 
 export const QrBrandCard = forwardRef<HTMLDivElement, QrBrandCardProps>(
-  ({ variant, qrValue, bankName, accountNumber, billTitle, billTotal, memberCount }, ref) => {
+  ({ variant, qrValue, qrStyle, bankName, accountNumber, billTitle, billTotal, memberCount }, ref) => {
     const [hasAnimated, setHasAnimated] = useState(false);
+    const effectiveStyle = qrStyle ?? DEFAULT_QR_STYLE;
 
     useEffect(() => {
       setHasAnimated(true);
@@ -63,20 +68,7 @@ export const QrBrandCard = forwardRef<HTMLDivElement, QrBrandCardProps>(
         )}
 
         {/* QR Code */}
-        <QRCodeSVG
-          value={qrValue}
-          size={200}
-          level="Q"
-          includeMargin={false}
-          imageSettings={{
-            src: QR_CENTER_LABEL,
-            x: undefined,
-            y: undefined,
-            height: 16,
-            width: 60,
-            excavate: true,
-          }}
-        />
+        <StyledQrCode data={qrValue} style={effectiveStyle} size={200} />
 
         {/* Brand footer */}
         <p className="text-[10px] text-gray-400 tracking-widest">

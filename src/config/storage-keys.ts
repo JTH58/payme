@@ -15,6 +15,7 @@ export const STORAGE_KEY = {
   hasVisited: 'payme_has_visited',
   useShortUrl: 'payme_use_short_url',
   lastSubMode: 'payme_last_sub_mode',
+  qrStyle: 'payme_qr_style',
 } as const;
 
 /**

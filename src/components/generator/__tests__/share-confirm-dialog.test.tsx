@@ -30,22 +30,35 @@ jest.mock('@/lib/safe-storage', () => ({
   safeSetItem: (...args: unknown[]) => mockSafeSetItem(...args),
 }));
 
+// Mock isCryptoAvailable
+const mockIsCryptoAvailable = jest.fn().mockReturnValue(true);
+jest.mock('@/lib/crypto', () => ({
+  isCryptoAvailable: () => mockIsCryptoAvailable(),
+}));
+
 beforeEach(() => {
   mockCreateShortLink.mockReset();
   mockSafeGetItem.mockReset();
   mockSafeSetItem.mockReset();
+  mockIsCryptoAvailable.mockReturnValue(true);
 });
 
 describe('ShareConfirmDialog', () => {
+  const mockBuildEncryptedUrl = jest.fn();
+
   const defaultProps = {
     open: true,
     onOpenChange: jest.fn(),
     shareText: '銀行：822 中國信託\n帳號：123456789012\n金額：500 元',
     shareUrl: 'https://payme.tw/pay/test#/?data=0abc123',
-    passwordHint: '',
     shortenerMode: 'simple' as const,
+    buildEncryptedUrl: mockBuildEncryptedUrl,
     onConfirmShare: jest.fn(),
   };
+
+  beforeEach(() => {
+    mockBuildEncryptedUrl.mockReset();
+  });
 
   // ---------------------------------------------------------------------------
   // Dialog 渲染
@@ -71,25 +84,140 @@ describe('ShareConfirmDialog', () => {
       render(<ShareConfirmDialog {...defaultProps} />);
       expect(screen.getByText(defaultProps.shareUrl)).toBeInTheDocument();
     });
+  });
 
-    test('有密碼提示時應顯示', () => {
-      render(<ShareConfirmDialog {...defaultProps} passwordHint="🔒 此連結需要密碼才能查看" />);
-      expect(screen.getByText(/密碼才能查看/)).toBeInTheDocument();
-    });
-
-    test('無密碼提示時不應顯示', () => {
+  // ---------------------------------------------------------------------------
+  // 情境幫助（目前暫時隱藏）
+  // ---------------------------------------------------------------------------
+  describe('情境幫助', () => {
+    test('「如何使用？」幫助按鈕暫時隱藏', () => {
       render(<ShareConfirmDialog {...defaultProps} />);
-      expect(screen.queryByText(/密碼/)).not.toBeInTheDocument();
+      // 目前 TODO: 暫時隱藏，待 guide 內容完善後恢復
+      expect(screen.queryByText('如何使用？')).not.toBeInTheDocument();
     });
   });
 
   // ---------------------------------------------------------------------------
-  // 情境幫助
+  // 密碼保護 UI
   // ---------------------------------------------------------------------------
-  describe('情境幫助', () => {
-    test('應渲染「如何使用？」幫助按鈕', () => {
+  describe('密碼保護 UI', () => {
+    test('應顯示密碼 toggle 按鈕', () => {
       render(<ShareConfirmDialog {...defaultProps} />);
-      expect(screen.getByText('如何使用？')).toBeInTheDocument();
+      expect(screen.getByText('設定密碼保護')).toBeInTheDocument();
+    });
+
+    test('點擊 toggle 後應顯示密碼輸入欄', async () => {
+      render(<ShareConfirmDialog {...defaultProps} />);
+      fireEvent.click(screen.getByText('設定密碼保護'));
+      expect(screen.getByPlaceholderText('輸入分享密碼')).toBeInTheDocument();
+    });
+
+    test('密碼啟用但空白時確認按鈕應 disabled', () => {
+      render(<ShareConfirmDialog {...defaultProps} />);
+      fireEvent.click(screen.getByText('設定密碼保護'));
+      const confirmBtn = screen.getByRole('button', { name: /確認分享/i });
+      expect(confirmBtn).toBeDisabled();
+    });
+
+    test('密碼輸入後確認按鈕應啟用', async () => {
+      const user = userEvent.setup();
+      render(<ShareConfirmDialog {...defaultProps} />);
+      fireEvent.click(screen.getByText('設定密碼保護'));
+      await user.type(screen.getByPlaceholderText('輸入分享密碼'), 'secret123');
+      const confirmBtn = screen.getByRole('button', { name: /確認分享/i });
+      expect(confirmBtn).not.toBeDisabled();
+    });
+
+    test('crypto 不可用時 toggle 應 disabled', () => {
+      mockIsCryptoAvailable.mockReturnValue(false);
+      render(<ShareConfirmDialog {...defaultProps} />);
+      const toggleBtn = screen.getByText('設定密碼保護').closest('button')!;
+      expect(toggleBtn).toBeDisabled();
+      expect(screen.getByText(/瀏覽器不支援加密/)).toBeInTheDocument();
+    });
+
+    test('沒有 buildEncryptedUrl 時 toggle 應 disabled', () => {
+      render(<ShareConfirmDialog {...defaultProps} buildEncryptedUrl={undefined} />);
+      const toggleBtn = screen.getByText('設定密碼保護').closest('button')!;
+      expect(toggleBtn).toBeDisabled();
+    });
+
+    test('關閉 dialog 後再開啟密碼 state 應重置', async () => {
+      const { rerender } = render(<ShareConfirmDialog {...defaultProps} />);
+
+      // 啟用密碼
+      fireEvent.click(screen.getByText('設定密碼保護'));
+      expect(screen.getByPlaceholderText('輸入分享密碼')).toBeInTheDocument();
+
+      // 關閉
+      fireEvent.click(screen.getByRole('button', { name: /取消/i }));
+
+      // 重新開啟
+      rerender(<ShareConfirmDialog {...defaultProps} open={false} />);
+      rerender(<ShareConfirmDialog {...defaultProps} open={true} />);
+
+      // 密碼輸入欄不應存在
+      expect(screen.queryByPlaceholderText('輸入分享密碼')).not.toBeInTheDocument();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 密碼加密確認流程
+  // ---------------------------------------------------------------------------
+  describe('密碼加密確認流程', () => {
+    test('密碼啟用 → 確認後應呼叫 buildEncryptedUrl 並回傳加密 URL', async () => {
+      const user = userEvent.setup();
+      mockBuildEncryptedUrl.mockResolvedValueOnce('https://payme.tw/pay/test#/?data=1encrypted');
+      const onConfirmShare = jest.fn();
+      render(<ShareConfirmDialog {...defaultProps} onConfirmShare={onConfirmShare} />);
+
+      // 啟用密碼
+      fireEvent.click(screen.getByText('設定密碼保護'));
+      await user.type(screen.getByPlaceholderText('輸入分享密碼'), 'myPass');
+
+      // 確認
+      fireEvent.click(screen.getByRole('button', { name: /確認分享/i }));
+
+      await waitFor(() => {
+        expect(mockBuildEncryptedUrl).toHaveBeenCalledWith('myPass');
+        expect(onConfirmShare).toHaveBeenCalledWith('https://payme.tw/pay/test#/?data=1encrypted', true);
+      });
+    });
+
+    test('加密失敗時應顯示錯誤訊息及 fallback 按鈕', async () => {
+      const user = userEvent.setup();
+      mockBuildEncryptedUrl.mockRejectedValueOnce(new Error('加密失敗'));
+      render(<ShareConfirmDialog {...defaultProps} />);
+
+      fireEvent.click(screen.getByText('設定密碼保護'));
+      await user.type(screen.getByPlaceholderText('輸入分享密碼'), 'myPass');
+      fireEvent.click(screen.getByRole('button', { name: /確認分享/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('加密失敗')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /以未加密方式分享/i })).toBeInTheDocument();
+      });
+    });
+
+    test('點擊「以未加密方式分享」應以原始 URL + passwordUsed=false 分享', async () => {
+      const user = userEvent.setup();
+      mockBuildEncryptedUrl.mockRejectedValueOnce(new Error('加密失敗'));
+      const onConfirmShare = jest.fn();
+      render(<ShareConfirmDialog {...defaultProps} onConfirmShare={onConfirmShare} />);
+
+      fireEvent.click(screen.getByText('設定密碼保護'));
+      await user.type(screen.getByPlaceholderText('輸入分享密碼'), 'myPass');
+      fireEvent.click(screen.getByRole('button', { name: /確認分享/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /以未加密方式分享/i })).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: /以未加密方式分享/i }));
+
+      await waitFor(() => {
+        expect(onConfirmShare).toHaveBeenCalledWith(defaultProps.shareUrl, false);
+      });
     });
   });
 
@@ -158,7 +286,7 @@ describe('ShareConfirmDialog', () => {
       fireEvent.click(confirmBtn);
 
       await waitFor(() => {
-        expect(onConfirmShare).toHaveBeenCalledWith(defaultProps.shareUrl);
+        expect(onConfirmShare).toHaveBeenCalledWith(defaultProps.shareUrl, false);
       });
     });
   });
@@ -181,7 +309,7 @@ describe('ShareConfirmDialog', () => {
 
       await waitFor(() => {
         expect(mockCreateShortLink).toHaveBeenCalledWith(defaultProps.shareUrl, 'simple');
-        expect(onConfirmShare).toHaveBeenCalledWith('https://s.payme.tw/abc#Xy1z');
+        expect(onConfirmShare).toHaveBeenCalledWith('https://s.payme.tw/abc#Xy1z', false);
       });
     });
   });
@@ -255,7 +383,7 @@ describe('ShareConfirmDialog', () => {
       fireEvent.click(screen.getByRole('button', { name: /使用完整網址分享/i }));
 
       await waitFor(() => {
-        expect(onConfirmShare).toHaveBeenCalledWith(defaultProps.shareUrl);
+        expect(onConfirmShare).toHaveBeenCalledWith(defaultProps.shareUrl, false);
       });
     });
   });

@@ -2,10 +2,10 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { QrBrandCard } from '../qr-brand-card';
 
-// Mock QRCodeSVG
-jest.mock('qrcode.react', () => ({
-  QRCodeSVG: ({ value }: { value: string }) =>
-    <div data-testid="qr-code" data-value={value}>QR: {value}</div>,
+// Mock StyledQrCode (replaces old qrcode.react mock)
+jest.mock('../styled-qr-code', () => ({
+  StyledQrCode: ({ data }: { data: string }) =>
+    <div data-testid="qr-code" data-value={data}>QR: {data}</div>,
 }));
 
 describe('QrBrandCard', () => {

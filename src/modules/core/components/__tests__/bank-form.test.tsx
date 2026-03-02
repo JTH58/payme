@@ -154,4 +154,57 @@ describe('BankForm Component', () => {
       expect(screen.getByText('收款帳戶管理')).toBeInTheDocument();
     });
   });
+
+  describe('Incomplete account (帳號位數不足)', () => {
+    test('帳號不足 10 碼時 hasAccounts 為 false，表單保持展開', () => {
+      const incompleteAccounts: AccountEntry[] = [
+        { id: 'inc', bankCode: '822', accountNumber: '1234567', isShared: true },
+      ];
+      render(
+        <BankForm
+          {...defaultProps}
+          accounts={incompleteAccounts}
+          primaryAccount={incompleteAccounts[0]}
+          sharedAccounts={incompleteAccounts}
+        />
+      );
+
+      // 應展開而非摺疊摘要
+      expect(screen.getByText('收款帳戶管理')).toBeInTheDocument();
+      expect(screen.queryByText('分享帳戶')).not.toBeInTheDocument();
+    });
+
+    test('帳號不足時顯示 inline 驗證提示', () => {
+      const incompleteAccounts: AccountEntry[] = [
+        { id: 'inc', bankCode: '822', accountNumber: '1234567', isShared: true },
+      ];
+      render(
+        <BankForm
+          {...defaultProps}
+          accounts={incompleteAccounts}
+          primaryAccount={incompleteAccounts[0]}
+          sharedAccounts={incompleteAccounts}
+        />
+      );
+
+      expect(screen.getByText('帳號必須為 10-16 碼數字')).toBeInTheDocument();
+    });
+
+    test('bankCode 非 3 碼時 hasAccounts 為 false，表單保持展開', () => {
+      const badBankAccounts: AccountEntry[] = [
+        { id: 'bad', bankCode: '82', accountNumber: '1234567890', isShared: true },
+      ];
+      render(
+        <BankForm
+          {...defaultProps}
+          accounts={badBankAccounts}
+          primaryAccount={badBankAccounts[0]}
+          sharedAccounts={badBankAccounts}
+        />
+      );
+
+      expect(screen.getByText('收款帳戶管理')).toBeInTheDocument();
+      expect(screen.queryByText('分享帳戶')).not.toBeInTheDocument();
+    });
+  });
 });
