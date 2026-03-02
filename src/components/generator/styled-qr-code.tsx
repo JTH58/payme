@@ -73,6 +73,7 @@ function buildOptions(data: string, style: QrStyleConfig, size: number): Options
       hideBackgroundDots: true,
       imageSize: 0.35,
       margin: 2,
+      saveAsBlob: false,
     };
   }
 
