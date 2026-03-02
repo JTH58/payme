@@ -5,6 +5,7 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
+  SheetBody,
   SheetTitle,
   SheetDescription,
 } from '../sheet';
@@ -50,7 +51,7 @@ describe('Sheet', () => {
   });
 
   test('should render drag handle in header', () => {
-    const { container } = render(
+    render(
       <Sheet open={true} onOpenChange={() => {}}>
         <SheetContent>
           <SheetHeader>
@@ -105,5 +106,65 @@ describe('Sheet', () => {
     // Radix may or may not fire onOpenChange depending on implementation
     // The key test is that the component doesn't crash
     expect(screen.getByText('Click Outside')).toBeInTheDocument();
+  });
+
+  // --- New tests for swipe-to-dismiss integration ---
+
+  test('should render drag handle with default bg-white/20 style', () => {
+    render(
+      <Sheet open={true} onOpenChange={() => {}}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Handle Style</SheetTitle>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    );
+
+    const handles = document.body.querySelectorAll('.rounded-full');
+    const dragHandle = Array.from(handles).find(el =>
+      el.classList.contains('w-10') && el.classList.contains('h-1')
+    );
+    expect(dragHandle).toBeTruthy();
+    // Default state: should have bg-white/20 (not dragging)
+    expect(dragHandle!.classList.contains('bg-white/20')).toBe(true);
+  });
+
+  test('SheetBody should accept and forward ref', () => {
+    const ref = React.createRef<HTMLDivElement>();
+
+    render(
+      <Sheet open={true} onOpenChange={() => {}}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Ref Test</SheetTitle>
+          </SheetHeader>
+          <SheetBody ref={ref}>
+            <p>Body Content</p>
+          </SheetBody>
+        </SheetContent>
+      </Sheet>
+    );
+
+    expect(ref.current).toBeInstanceOf(HTMLDivElement);
+    expect(screen.getByText('Body Content')).toBeInTheDocument();
+  });
+
+  test('SheetContent should have data-dragging attribute only when dragging', () => {
+    render(
+      <Sheet open={true} onOpenChange={() => {}}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Dragging Test</SheetTitle>
+          </SheetHeader>
+        </SheetContent>
+      </Sheet>
+    );
+
+    // Find the content element (Radix Dialog Content)
+    const content = document.querySelector('[role="dialog"]');
+    expect(content).toBeTruthy();
+    // Not dragging by default — attribute should not be present
+    expect(content!.hasAttribute('data-dragging')).toBe(false);
   });
 });

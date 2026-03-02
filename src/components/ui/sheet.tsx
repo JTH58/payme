@@ -5,8 +5,43 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useSwipeToDismiss } from "@/hooks/use-swipe-dismiss"
 
-const Sheet = DialogPrimitive.Root
+// --- Utility: merge refs ---
+function useMergedRef<T>(
+  ...refs: (React.Ref<T> | undefined)[]
+): React.RefCallback<T> {
+  return React.useCallback(
+    (node: T | null) => {
+      refs.forEach((ref) => {
+        if (typeof ref === "function") {
+          ref(node)
+        } else if (ref && typeof ref === "object") {
+          ;(ref as React.MutableRefObject<T | null>).current = node
+        }
+      })
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    refs
+  )
+}
+
+// --- SheetContext: pass open/onOpenChange to SheetContent ---
+const SheetContext = React.createContext<{
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}>({})
+
+const Sheet: React.FC<DialogPrimitive.DialogProps> = ({
+  onOpenChange,
+  open,
+  ...props
+}) => (
+  <SheetContext.Provider value={{ onOpenChange, open }}>
+    <DialogPrimitive.Root onOpenChange={onOpenChange} open={open} {...props} />
+  </SheetContext.Provider>
+)
+Sheet.displayName = "Sheet"
 
 const SheetTrigger = DialogPrimitive.Trigger
 
@@ -14,70 +49,151 @@ const SheetPortal = DialogPrimitive.Portal
 
 const SheetClose = DialogPrimitive.Close
 
+// --- SwipeContext: distribute swipe refs/handlers to children ---
+const SwipeContext = React.createContext<{
+  bodyRef: React.RefObject<HTMLDivElement | null>
+  headerHandlers: { onTouchStart: (e: React.TouchEvent) => void }
+  isDragging: boolean
+  dragProgress: number
+} | null>(null)
+
+// --- SheetOverlay ---
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> & {
+    dragProgress?: number
+  }
+>(({ className, style, dragProgress = 0, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
       "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
+    style={
+      dragProgress > 0
+        ? { ...style, opacity: 1 - dragProgress * 0.5 }
+        : style
+    }
     {...props}
   />
 ))
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+// --- SheetContent ---
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-2xl bg-black/90 backdrop-blur-xl border-t border-white/10 shadow-lg pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className="absolute right-2 top-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-white/60">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </SheetPortal>
-))
+>(({ className, children, style, ...props }, ref) => {
+  const { open, onOpenChange } = React.useContext(SheetContext)
+  const swipe = useSwipeToDismiss({
+    enabled: !!open,
+    onDismiss: () => onOpenChange?.(false),
+  })
+
+  const mergedRef = useMergedRef(ref, swipe.contentRef)
+
+  // Build animation class — on swipe dismiss, keep fade-out but remove slide-out
+  const isSwipeDismiss = swipe.isAnimating && swipe.translateY > 0
+  const closedAnimClass = isSwipeDismiss
+    ? "data-[state=closed]:fade-out-0"
+    : "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom"
+
+  // Build inline style for drag transform
+  const dragStyle: React.CSSProperties =
+    swipe.isDragging || swipe.isAnimating
+      ? {
+          ...style,
+          transform: `translateY(${swipe.translateY}px)`,
+          transition: swipe.isDragging
+            ? "none"
+            : "transform 300ms ease-out",
+        }
+      : style ?? {}
+
+  return (
+    <SheetPortal>
+      <SheetOverlay dragProgress={swipe.isDragging ? swipe.dragProgress : 0} />
+      <DialogPrimitive.Content
+        ref={mergedRef}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-2xl bg-black/90 backdrop-blur-xl border-t border-white/10 shadow-lg pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom",
+          closedAnimClass,
+          className
+        )}
+        style={dragStyle}
+        data-dragging={swipe.isDragging || undefined}
+        onTouchStart={swipe.contentHandlers.onTouchStart}
+        onTouchMove={swipe.contentHandlers.onTouchMove}
+        onTouchEnd={swipe.contentHandlers.onTouchEnd}
+        {...props}
+      >
+        <SwipeContext.Provider
+          value={{
+            bodyRef: swipe.bodyRef,
+            headerHandlers: swipe.headerHandlers,
+            isDragging: swipe.isDragging,
+            dragProgress: swipe.dragProgress,
+          }}
+        >
+          {children}
+        </SwipeContext.Provider>
+        <DialogPrimitive.Close className="absolute right-2 top-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-white/60">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </SheetPortal>
+  )
+})
 SheetContent.displayName = DialogPrimitive.Content.displayName
 
+// --- SheetHeader ---
 const SheetHeader = ({
   className,
   children,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("flex-shrink-0 flex flex-col items-center space-y-3 text-center px-6 pt-6 pb-4 border-b border-white/10", className)}
-    {...props}
-  >
-    {/* Drag handle */}
-    <div className="w-10 h-1 rounded-full bg-white/20" />
-    {children && <div className="w-full space-y-1.5">{children}</div>}
-  </div>
-)
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const swipeCtx = React.useContext(SwipeContext)
+
+  return (
+    <div
+      className={cn(
+        "flex-shrink-0 flex flex-col items-center space-y-3 text-center px-6 pt-6 pb-4 border-b border-white/10",
+        className
+      )}
+      {...props}
+      onTouchStart={swipeCtx?.headerHandlers.onTouchStart}
+    >
+      {/* Drag handle */}
+      <div
+        className={cn(
+          "w-10 h-1 rounded-full transition-colors",
+          swipeCtx?.isDragging ? "bg-white/60" : "bg-white/20"
+        )}
+      />
+      {children && <div className="w-full space-y-1.5">{children}</div>}
+    </div>
+  )
+}
 SheetHeader.displayName = "SheetHeader"
 
-const SheetBody = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("flex-1 overflow-y-auto px-6 py-4", className)}
-    {...props}
-  />
-)
+// --- SheetBody ---
+const SheetBody = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+  const swipeCtx = React.useContext(SwipeContext)
+  const mergedRef = useMergedRef(ref, swipeCtx?.bodyRef)
+
+  return (
+    <div
+      ref={mergedRef}
+      className={cn("flex-1 overflow-y-auto px-6 py-4", className)}
+      {...props}
+    />
+  )
+})
 SheetBody.displayName = "SheetBody"
 
 const SheetTitle = React.forwardRef<
