@@ -17,6 +17,7 @@ interface SwipeResult {
   isDragging: boolean
   isAnimating: boolean
   dragProgress: number
+  dismiss: () => void
   headerHandlers: { onTouchStart: (e: React.TouchEvent) => void }
   contentHandlers: {
     onTouchStart: (e: React.TouchEvent) => void
@@ -157,6 +158,18 @@ export function useSwipeToDismiss({
     [updateState, isInBody, canDragFromBody]
   )
 
+  // Programmatic dismiss — shared by swipe touchEnd, overlay click, and X button
+  const dismiss = useCallback(() => {
+    if (stateRef.current === "DISMISSING" || stateRef.current === "SNAPPING") return
+    updateState("DISMISSING")
+    const contentHeight = contentRef.current?.offsetHeight ?? 500
+    setTranslateY(contentHeight)
+
+    setTimeout(() => {
+      onDismissRef.current()
+    }, ANIMATION_DURATION)
+  }, [updateState])
+
   const handleTouchEnd = useCallback(() => {
     if (!enabledRef.current) return
 
@@ -171,16 +184,7 @@ export function useSwipeToDismiss({
     const deltaY = currentYRef.current - startYRef.current
 
     if (deltaY >= thresholdRef.current) {
-      // Dismiss
-      updateState("DISMISSING")
-      // Animate to full height then dismiss
-      const contentHeight = contentRef.current?.offsetHeight ?? 500
-      setTranslateY(contentHeight)
-
-      setTimeout(() => {
-        onDismissRef.current()
-        // State preserved for Radix exit animation — reset happens on next open
-      }, ANIMATION_DURATION)
+      dismiss()
     } else {
       // Snap back
       updateState("SNAPPING")
@@ -221,6 +225,7 @@ export function useSwipeToDismiss({
     isDragging,
     isAnimating,
     dragProgress,
+    dismiss,
     headerHandlers: {
       onTouchStart: handleTouchStartHeader,
     },

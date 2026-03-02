@@ -134,6 +134,14 @@ const SheetContent = React.forwardRef<
         onTouchStart={swipe.contentHandlers.onTouchStart}
         onTouchMove={swipe.contentHandlers.onTouchMove}
         onTouchEnd={swipe.contentHandlers.onTouchEnd}
+        onInteractOutside={(e) => {
+          e.preventDefault()
+          swipe.dismiss()
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault()
+          swipe.dismiss()
+        }}
         {...props}
       >
         <SwipeContext.Provider
@@ -146,10 +154,14 @@ const SheetContent = React.forwardRef<
         >
           {children}
         </SwipeContext.Provider>
-        <DialogPrimitive.Close className="absolute right-2 top-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-white/60">
+        <button
+          type="button"
+          onClick={() => swipe.dismiss()}
+          className="absolute right-2 top-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-white/60"
+        >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
+        </button>
       </DialogPrimitive.Content>
     </SheetPortal>
   )
