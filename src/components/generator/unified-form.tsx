@@ -170,17 +170,18 @@ export function UnifiedForm({
   );
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // ─── Bill state (itemized mode) ───────────────────
+  const [members, setMembers] = useState<string[]>(initialBillData?.m || ['我']);
+
   // ─── Items state (personal/split + items mode, or itemized) ────
+  // 預設項目全選所有成員（避免初次渲染時 o: [] 顯示為未選取）
   const [items, setItems] = useState<BillItem[]>(
-    initialBillData?.i || [{ n: '', p: 0, o: [] }]
+    initialBillData?.i || [{ n: '', p: 0, o: members.map((_, i) => i) }]
   );
   const itemInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const dirtyItemsRef = useRef<Set<number>>(
     new Set(initialBillData?.i ? initialBillData.i.map((_, idx) => idx) : [])
   );
-
-  // ─── Bill state (itemized mode) ───────────────────
-  const [members, setMembers] = useState<string[]>(initialBillData?.m || ['我']);
   const [newMemberName, setNewMemberName] = useState('');
   const [duplicateError, setDuplicateError] = useState('');
   const [title, setTitle] = useState(initialBillData?.t || '');
@@ -234,7 +235,8 @@ export function UnifiedForm({
     // 進入 itemized 且 billData 已就緒 → 同步一次
     if (subMode === 'itemized' && initialBillData && syncedForSubModeRef.current !== 'itemized') {
       syncedForSubModeRef.current = 'itemized';
-      setItems(initialBillData.i || [{ n: '', p: 0, o: [] }]);
+      const defaultMembers = initialBillData.m || ['我'];
+      setItems(initialBillData.i || [{ n: '', p: 0, o: defaultMembers.map((_: string, i: number) => i) }]);
       setMembers(initialBillData.m || ['我']);
       setTitle(initialBillData.t || '');
       setHasServiceCharge(initialBillData.s || false);
@@ -446,7 +448,7 @@ export function UnifiedForm({
     setTotalAmount('');
     setPeopleCount(2);
     setHasServiceCharge(false);
-    setItems([{ n: '', p: 0, o: [] }]);
+    setItems([{ n: '', p: 0, o: [0] }]);
     setMembers(['我']);
     setNewMemberName('');
     setTitle('');
