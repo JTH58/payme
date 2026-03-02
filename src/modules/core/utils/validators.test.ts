@@ -1,4 +1,41 @@
-import { twqrFormSchema } from './validators';
+import { twqrFormSchema, isAccountComplete } from './validators';
+
+describe('isAccountComplete', () => {
+  test('bankCode 3碼 + accountNumber 10碼 → true', () => {
+    expect(isAccountComplete('822', '1234567890')).toBe(true);
+  });
+
+  test('bankCode 3碼 + accountNumber 16碼 → true', () => {
+    expect(isAccountComplete('004', '1234567890123456')).toBe(true);
+  });
+
+  test('bankCode 非3碼 → false', () => {
+    expect(isAccountComplete('82', '1234567890')).toBe(false);
+    expect(isAccountComplete('8222', '1234567890')).toBe(false);
+  });
+
+  test('bankCode 含非數字 → false', () => {
+    expect(isAccountComplete('ABC', '1234567890')).toBe(false);
+  });
+
+  test('accountNumber 不足10碼 → false', () => {
+    expect(isAccountComplete('822', '1234567')).toBe(false);
+  });
+
+  test('accountNumber 超過16碼 → false', () => {
+    expect(isAccountComplete('822', '12345678901234567')).toBe(false);
+  });
+
+  test('accountNumber 含非數字 → false', () => {
+    expect(isAccountComplete('822', '12345abcde')).toBe(false);
+  });
+
+  test('空字串 → false', () => {
+    expect(isAccountComplete('', '')).toBe(false);
+    expect(isAccountComplete('822', '')).toBe(false);
+    expect(isAccountComplete('', '1234567890')).toBe(false);
+  });
+});
 
 describe('TWQR Validator Schema', () => {
   

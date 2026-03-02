@@ -55,3 +55,8 @@ export const twqrFormSchema = z.object({
 });
 
 export type TwqrFormValues = z.infer<typeof twqrFormSchema>;
+
+/** 帳號是否符合 QR 生成的最低要求（bankCode 3碼 + accountNumber 10-16碼） */
+export function isAccountComplete(bankCode: string, accountNumber: string): boolean {
+  return /^\d{3}$/.test(bankCode) && /^\d{10,16}$/.test(accountNumber);
+}

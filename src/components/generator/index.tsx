@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BankForm } from '@/modules/core/components/bank-form';
+import { isAccountComplete } from '@/modules/core/utils/validators';
 import { BillViewer } from '@/modules/bill/components/bill-viewer';
 import { BillData, BillItem, SimpleData, CompressedData } from '@/types/bill';
 import { Template } from '@/types/template';
@@ -735,14 +736,29 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
                         <span className="text-xs">等待選擇身份...</span>
                       </>
                     ) : (
-                      !form.watch('bankCode') || !form.watch('accountNumber') ? (
-                        <>
-                          <AlertTriangle className="w-8 h-8 opacity-50 text-orange-500" />
-                          <span className="text-xs font-medium text-orange-700">缺少銀行帳號</span>
-                        </>
-                      ) : (
-                        "等待輸入..."
-                      )
+                      (() => {
+                        const bc = form.watch('bankCode');
+                        const an = form.watch('accountNumber');
+                        if (!bc || !an) {
+                          return (
+                            <>
+                              <AlertTriangle className="w-8 h-8 opacity-50 text-orange-500" />
+                              <span className="text-xs font-medium text-orange-700">缺少銀行帳號</span>
+                            </>
+                          );
+                        }
+                        if (!isAccountComplete(bc, an)) {
+                          return (
+                            <>
+                              <AlertTriangle className="w-8 h-8 opacity-50 text-orange-500" />
+                              <span className="text-xs font-medium text-orange-700">
+                                {!/^\d{3}$/.test(bc) ? '銀行代碼格式不正確' : '帳號必須為 10-16 碼數字'}
+                              </span>
+                            </>
+                          );
+                        }
+                        return <span className="text-xs">等待輸入...</span>;
+                      })()
                     )}
                   </div>
                 </div>
