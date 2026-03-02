@@ -96,13 +96,18 @@ const SheetContent = React.forwardRef<
   // Build inline style for drag transform
   const dragStyle: React.CSSProperties =
     swipe.isDragging || swipe.isAnimating
-      ? {
+      ? ({
           ...style,
           transform: `translateY(${swipe.translateY}px)`,
           transition: swipe.isDragging
             ? "none"
             : "transform 300ms ease-out",
-        }
+          // Pin Radix exit animation's end-position to current translateY
+          // so animate-out doesn't pull the sheet back up
+          ...(isSwipeDismiss && {
+            '--tw-exit-translate-y': `${swipe.translateY}px`,
+          }),
+        } as React.CSSProperties)
       : style ?? {}
 
   // Overlay opacity: track finger during drag, smooth transition on release
