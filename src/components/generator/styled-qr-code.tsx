@@ -90,24 +90,37 @@ export function StyledQrCode({ data, style, size = 200, className }: StyledQrCod
   const containerRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<InstanceType<typeof import('qr-code-styling').default> | null>(null);
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState(false);
 
   // Dynamic import + initial render
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
-      const QRCodeStyling = (await import('qr-code-styling')).default;
-      if (cancelled) return;
+      try {
+        const mod = await import('qr-code-styling');
+        const QRCodeStyling = mod.default;
+        if (cancelled) return;
 
-      const opts = buildOptions(data, style, size);
-      const qr = new QRCodeStyling(opts);
-      qrRef.current = qr;
+        if (!QRCodeStyling) {
+          console.error('[StyledQrCode] qr-code-styling default export is undefined');
+          setError(true);
+          return;
+        }
 
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-        qr.append(containerRef.current);
+        const opts = buildOptions(data, style, size);
+        const qr = new QRCodeStyling(opts);
+        qrRef.current = qr;
+
+        if (containerRef.current) {
+          containerRef.current.innerHTML = '';
+          qr.append(containerRef.current);
+        }
+        setReady(true);
+      } catch (err) {
+        console.error('[StyledQrCode] Failed to initialize:', err);
+        if (!cancelled) setError(true);
       }
-      setReady(true);
     })();
 
     return () => { cancelled = true; };
@@ -118,9 +131,25 @@ export function StyledQrCode({ data, style, size = 200, className }: StyledQrCod
   useEffect(() => {
     if (!ready || !qrRef.current) return;
 
-    const opts = buildOptions(data, style, size);
-    qrRef.current.update(opts);
+    try {
+      const opts = buildOptions(data, style, size);
+      qrRef.current.update(opts);
+    } catch (err) {
+      console.error('[StyledQrCode] Failed to update:', err);
+    }
   }, [data, style, size, ready]);
+
+  if (error) {
+    // Fallback: plain text indication for debugging
+    return (
+      <div
+        className={className}
+        style={{ width: size, height: size, lineHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f3f4f6', borderRadius: 8 }}
+      >
+        <span style={{ fontSize: 12, color: '#9ca3af' }}>QR 載入失敗</span>
+      </div>
+    );
+  }
 
   return (
     <div
