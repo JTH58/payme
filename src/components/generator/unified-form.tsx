@@ -14,7 +14,7 @@ import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
 import { STORAGE_KEY } from '@/config/storage-keys';
 import {
   Minus, Plus, Trash2, User, UserPlus, X,
-  FileUp, Info, Sparkles,
+  FileUp, Info, Sparkles, ChevronDown,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────
@@ -183,6 +183,20 @@ export function UnifiedForm({
   const [newMemberName, setNewMemberName] = useState('');
   const [duplicateError, setDuplicateError] = useState('');
   const [title, setTitle] = useState(initialBillData?.t || '');
+
+  // ─── Personal mode collapsible ──────────────────
+  const [personalExpanded, setPersonalExpanded] = useState(() => {
+    if (isSharedMode) return true;
+    return safeGetItem(STORAGE_KEY.personalExpanded) === 'true';
+  });
+
+  const togglePersonalExpanded = useCallback(() => {
+    setPersonalExpanded(prev => {
+      const next = !prev;
+      safeSetItem(STORAGE_KEY.personalExpanded, next.toString());
+      return next;
+    });
+  }, []);
 
   // ─── Comment (personal/split only) ────────────────
   // In itemized mode, comment is auto-generated
@@ -455,7 +469,37 @@ export function UnifiedForm({
       {/* 1. Sub-mode selector */}
       <SubModeSelector value={subMode} onChange={onSubModeChange} />
 
-      <div className="border-t border-white/[0.06]" />
+      {/* Divider / Personal collapsible toggle */}
+      {subMode === 'personal' && !isSharedMode ? (
+        personalExpanded ? (
+          <button
+            type="button"
+            onClick={togglePersonalExpanded}
+            className="w-full flex items-center justify-center gap-2 text-xs text-white/40 hover:text-white/60 transition-colors"
+          >
+            <div className="flex-1 border-t border-dashed border-white/[0.06]" />
+            <span className="flex items-center gap-1 shrink-0">
+              收合設定
+              <ChevronDown className="w-3 h-3 rotate-180" />
+            </span>
+            <div className="flex-1 border-t border-dashed border-white/[0.06]" />
+          </button>
+        ) : (
+          <Button
+            type="button"
+            className="w-full bg-white/10 hover:bg-white/15 text-white/70 h-8 text-xs"
+            onClick={togglePersonalExpanded}
+          >
+            設定更多內容
+          </Button>
+        )
+      ) : (
+        <div className="border-t border-white/[0.06]" />
+      )}
+
+      <div className={cn(subMode === 'personal' && !isSharedMode && !personalExpanded && "-mt-5")}>
+      <AnimatedCollapse open={subMode !== 'personal' || !!isSharedMode || personalExpanded}>
+        <div className="space-y-5">
 
       {/* 2. Checkbox: 使用明細計算 (personal/split only) */}
       {showCheckbox && (
@@ -857,11 +901,15 @@ export function UnifiedForm({
         </div>
       )}
 
+        </div>
+      </AnimatedCollapse>
+      </div>
+
       {/* 6. Action buttons (host mode only) */}
-      {!isSharedMode && <div className="border-t border-white/[0.06] pt-4 space-y-3">
+      {!isSharedMode && <div className={cn("space-y-3", (subMode !== 'personal' || personalExpanded || isSharedMode) && "border-t border-white/[0.06] pt-4")}>
         <Button
           type="button"
-          className="w-full bg-white text-black hover:bg-white/90 active:scale-[0.98] transition-transform font-medium"
+          className="w-full h-11 gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium active:scale-[0.98] transition-transform"
           onClick={handleConfirm}
         >
           產生收款碼及連結
