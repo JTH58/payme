@@ -169,7 +169,7 @@ export function BackupDialog({ open, onOpenChange }: BackupDialogProps) {
                   setImportError(null);
                 }}
                 placeholder="點擊「產生備份」取得文字，或貼上之前的備份文字"
-                className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono resize-none"
+                className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-base font-mono resize-none"
                 aria-label="備份文字"
               />
               <div className="flex gap-2">

@@ -111,7 +111,7 @@ export function TemplateSubmitModal({ open, onOpenChange, formState }: TemplateS
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 placeholder="您的暱稱或名字"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
               />
             </div>
 
@@ -126,7 +126,7 @@ export function TemplateSubmitModal({ open, onOpenChange, formState }: TemplateS
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="補充說明此模板的使用場景"
                 rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-y"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base min-h-[80px] resize-y"
               />
             </div>
 

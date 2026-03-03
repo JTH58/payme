@@ -113,7 +113,7 @@ export function FeedbackModal({ open, onOpenChange, initialCategory, initialDesc
                 id="feedback-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as Category)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
               >
                 <option value="bug">Bug 回報</option>
                 <option value="suggestion">功能建議</option>
@@ -132,7 +132,7 @@ export function FeedbackModal({ open, onOpenChange, initialCategory, initialDesc
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="請詳細描述您遇到的問題或建議（至少 10 字）"
                 rows={4}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[100px] resize-y"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base min-h-[100px] resize-y"
               />
               {description.length > 0 && !isDescriptionValid && (
                 <p className="text-xs text-destructive">至少需要 10 個字元</p>
@@ -150,7 +150,7 @@ export function FeedbackModal({ open, onOpenChange, initialCategory, initialDesc
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder="Email、Threads 或其他聯絡方式"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
               />
             </div>
 

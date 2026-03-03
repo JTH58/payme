@@ -210,7 +210,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
               value={newMemberName}
               onChange={(e) => setNewMemberName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
-              className="h-10 text-sm"
+              className="h-10"
               aria-label="新增成員名稱"
             />
             <Button size="sm" variant="outline" onClick={addMember} type="button">
@@ -240,7 +240,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
                     ref={(el) => { itemInputRefs.current[idx] = el; }}
                     value={item.n}
                     onChange={(e) => updateItem(idx, 'n', e.target.value)}
-                    className="h-10 text-sm flex-1 bg-white/5 border-white/10 focus:border-white/30 focus:bg-white/10 placeholder:text-white/20 transition-all duration-200"
+                    className="h-10 flex-1 bg-white/5 border-white/10 focus:border-white/30 focus:bg-white/10 placeholder:text-white/20 transition-all duration-200"
                     placeholder="項目名稱"
                     aria-label={`項目 ${idx + 1} 名稱`}
                   />
@@ -252,7 +252,7 @@ export function BillForm({ form, onBillDataChange, initialData }: BillFormProps)
                       inputMode="numeric"
                       value={item.p || ''}
                       onChange={(e) => updateItem(idx, 'p', Number(e.target.value))}
-                      className="h-10 text-sm pl-6 bg-white/10 border-white/20 focus:bg-white/20 text-right font-medium placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all duration-200"
+                      className="h-10 pl-6 bg-white/10 border-white/20 focus:bg-white/20 text-right font-medium placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-all duration-200"
                       placeholder="0"
                       aria-label={`項目 ${idx + 1} 金額`}
                     />
