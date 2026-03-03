@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Generator } from "@/components/generator";
-import { ShieldCheck, Zap, AlertTriangle, Download, Trash2 } from "lucide-react";
+import { Zap, AlertTriangle, Download, Trash2 } from "lucide-react";
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { useUrlParser } from '@/hooks/use-url-parser';
@@ -155,22 +155,18 @@ function HomeContent() {
           isMounted ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
         )}>
 
-          {/* Trust Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium backdrop-blur-sm">
-            <ShieldCheck size={12} />
-            <span>Privacy First • TWQR Supported • Open Source</span>
-          </div>
-
           {/* Main Title */}
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40 pb-2">
-              PayMe.TW • 收款工具
+              台灣TWQR • 通用收款/分帳工具
             </h1>
-            <div className="text-sm text-white/40 max-w-md mx-auto grid grid-cols-2 gap-x-3 sm:gap-x-6 gap-y-1">
+            <div className="text-sm text-white/40 max-w-lg mx-auto grid grid-cols-2 sm:grid-cols-3 gap-x-3 sm:gap-x-6 gap-y-1">
               <span>• 符合 TWQR 規則</span>
               <span>• 本地運算不上傳</span>
               <span>• 支援多帳戶分享</span>
               <span>• 輕鬆收款／分帳</span>
+              <span>• 公開專案原始碼</span>
+              <span>• 支援台灣各銀行</span>
             </div>
           </div>
 
