@@ -63,8 +63,8 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <Command disablePointerSelection>
           <CommandInput placeholder="搜尋銀行名稱或代碼..." />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
