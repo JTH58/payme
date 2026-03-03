@@ -277,7 +277,7 @@ function ColorInput({ value, onChange, label }: { value: string; onChange: (c: s
           const v = e.target.value;
           if (/^#[0-9A-Fa-f]{0,6}$/.test(v)) onChange(v);
         }}
-        className="glass-input h-8 rounded-lg w-24 px-2 text-xs font-mono uppercase outline-none"
+        className="glass-input h-8 rounded-lg w-24 px-2 text-base font-mono uppercase outline-none"
         placeholder={label}
         maxLength={7}
       />

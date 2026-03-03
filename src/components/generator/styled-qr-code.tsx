@@ -39,6 +39,7 @@ function buildOptions(data: string, style: QrStyleConfig, size: number): Options
     dotsOptions: {
       type: mapDotType(style.dotStyle),
       color: dotColor,
+      gradient: undefined,
     },
     cornersSquareOptions: {
       type: mapCornerSquareType(style.eyeStyle),
