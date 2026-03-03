@@ -37,6 +37,8 @@ import { TemplateSubmitModal } from '@/components/template-submit-modal';
 import { stripSensitiveFields, type TemplateFormState } from '@/modules/feedback/schemas/submit-schema';
 import { AccountSheet } from './account-sheet';
 import { TemplateSheet } from './template-sheet';
+import { OnboardingGuide } from './onboarding-guide';
+import { OnboardingCompleteDialog } from './onboarding-complete-dialog';
 import { FirstVisitDisclaimer } from '@/components/legal/first-visit-disclaimer';
 import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
 import { STORAGE_KEY as KEYS } from '@/config/storage-keys';
@@ -123,6 +125,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   const [showPreviewSheet, setShowPreviewSheet] = useState(false);
   const [showFirstVisit, setShowFirstVisit] = useState(false);
   const [showStyleSheet, setShowStyleSheet] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // QR style customization
   const {
@@ -131,6 +135,10 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     updateField: updateQrField,
     activePresetId: qrPresetId,
   } = useQrStyle();
+
+  // Onboarding: derived helper
+  const isAccountReady = !!(primaryAccount?.bankCode && primaryAccount?.accountNumber
+    && isAccountComplete(primaryAccount.bankCode, primaryAccount.accountNumber));
 
   const qrCardRef = useRef<HTMLDivElement>(null);
   const pendingShareUrlRef = useRef<string>('');
@@ -191,6 +199,22 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- accounts 故意省略
   }, [initialBankCode, isShared, accountsLoaded, form, updateAccount, addAccount]);
+
+  // Onboarding visibility — determined once when accounts first load
+  useEffect(() => {
+    if (!accountsLoaded || isSharedLink) return;
+    if (safeGetItem(KEYS.onboardingComplete)) return;
+
+    // Existing user with complete account → auto-set flag, skip onboarding
+    const ready = !!(primaryAccount?.bankCode && primaryAccount?.accountNumber
+      && isAccountComplete(primaryAccount.bankCode, primaryAccount.accountNumber));
+    if (ready) {
+      safeSetItem(KEYS.onboardingComplete, 'true');
+    } else {
+      setShowOnboarding(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run once when accounts load
+  }, [accountsLoaded]);
 
   const values = form.watch();
 
@@ -844,12 +868,24 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           </div>
         )}
 
-        {/* Unified Form */}
+        {/* Onboarding Guide or Unified Form */}
         {isLoading ? (
           <div className="space-y-6 p-1">
             <div className="h-32 rounded-xl w-full animate-shimmer" />
             <div className="h-64 rounded-xl w-full animate-shimmer" />
           </div>
+        ) : showOnboarding ? (
+          <OnboardingGuide
+            onOpenAccountSheet={() => setShowAccountSheet(true)}
+            onGenerateQr={() => {
+              if (!safeGetItem(KEYS.hasVisited)) {
+                setShowFirstVisit(true);
+              } else {
+                setShowCelebration(true);
+              }
+            }}
+            isAccountReady={isAccountReady}
+          />
         ) : (
           <UnifiedForm
             key={`unified-form-${templateId || 'default'}`}
@@ -971,8 +1007,29 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         onAccept={() => {
           safeSetItem(KEYS.hasVisited, 'true');
           setShowFirstVisit(false);
-          setShowPreviewSheet(true);
+          if (showOnboarding) {
+            setShowCelebration(true);
+          } else {
+            setShowPreviewSheet(true);
+          }
         }}
+      />
+
+      <OnboardingCompleteDialog
+        open={showCelebration}
+        onOpenChange={(open) => {
+          setShowCelebration(open);
+          if (!open) {
+            safeSetItem(KEYS.onboardingComplete, 'true');
+            setShowOnboarding(false);
+          }
+        }}
+        qrString={qrString}
+        shareUrl={currentShareUrl}
+        qrStyle={qrStyle}
+        bankName={currentBankName}
+        accountNumber={form.watch('accountNumber')}
+        onCustomizeStyle={() => setShowStyleSheet(true)}
       />
 
     </>

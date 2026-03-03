@@ -16,6 +16,7 @@ export const STORAGE_KEY = {
   useShortUrl: 'payme_use_short_url',
   lastSubMode: 'payme_last_sub_mode',
   qrStyle: 'payme_qr_style',
+  onboardingComplete: 'payme_onboarding_complete',
 } as const;
 
 /**

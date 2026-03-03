@@ -93,12 +93,18 @@ const config = {
         "shimmer": {
           "0%": { backgroundPosition: "200% 0" },
           "100%": { backgroundPosition: "-200% 0" },
-        }
+        },
+        "flow-down": {
+          "0%": { transform: "translateY(-4px)", opacity: "0.3" },
+          "50%": { transform: "translateY(4px)", opacity: "1" },
+          "100%": { transform: "translateY(-4px)", opacity: "0.3" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "shake": "shake 0.4s ease-in-out",
+        "flow-down": "flow-down 1.5s ease-in-out infinite",
       },
     },
   },
