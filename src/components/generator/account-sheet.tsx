@@ -7,6 +7,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import { BankForm } from '@/modules/core/components/bank-form';
 import type { AccountEntry } from '@/hooks/use-accounts';
 
@@ -51,6 +52,15 @@ export function AccountSheet({
             onUpdateAccount={onUpdateAccount}
             onToggleShared={onToggleShared}
           />
+          <div className="pt-4 pb-2">
+            <Button
+              type="button"
+              className="w-full h-11 bg-white/10 hover:bg-white/15 text-white font-medium"
+              onClick={() => onOpenChange(false)}
+            >
+              確定
+            </Button>
+          </div>
         </SheetBody>
       </SheetContent>
     </Sheet>
