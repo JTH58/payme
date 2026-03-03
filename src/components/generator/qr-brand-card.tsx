@@ -19,6 +19,7 @@ interface QrBrandCardProps {
   variant: 'payment' | 'share';
   qrValue: string;
   qrStyle?: QrStyleConfig;
+  onQrReady?: () => void;
   // Payment variant props
   bankName?: string;
   accountNumber?: string;
@@ -29,7 +30,7 @@ interface QrBrandCardProps {
 }
 
 export const QrBrandCard = forwardRef<HTMLDivElement, QrBrandCardProps>(
-  ({ variant, qrValue, qrStyle, bankName, accountNumber, billTitle, billTotal, memberCount }, ref) => {
+  ({ variant, qrValue, qrStyle, onQrReady, bankName, accountNumber, billTitle, billTotal, memberCount }, ref) => {
     const [hasAnimated, setHasAnimated] = useState(false);
     const effectiveStyle = qrStyle ?? DEFAULT_QR_STYLE;
 
@@ -68,7 +69,7 @@ export const QrBrandCard = forwardRef<HTMLDivElement, QrBrandCardProps>(
         )}
 
         {/* QR Code */}
-        <StyledQrCode data={qrValue} style={effectiveStyle} size={200} />
+        <StyledQrCode data={qrValue} style={effectiveStyle} size={200} onReady={onQrReady} />
 
         {/* Brand footer */}
         <p className="text-[10px] text-gray-400 tracking-widest">

@@ -86,9 +86,10 @@ interface StyledQrCodeProps {
   style: QrStyleConfig;
   size?: number;
   className?: string;
+  onReady?: () => void;
 }
 
-export function StyledQrCode({ data, style, size = 200, className }: StyledQrCodeProps) {
+export function StyledQrCode({ data, style, size = 200, className, onReady }: StyledQrCodeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<InstanceType<typeof import('qr-code-styling').default> | null>(null);
   const [ready, setReady] = useState(false);
@@ -119,6 +120,7 @@ export function StyledQrCode({ data, style, size = 200, className }: StyledQrCod
           qr.append(containerRef.current);
         }
         setReady(true);
+        onReady?.();
       } catch (err) {
         console.error('[StyledQrCode] Failed to initialize:', err);
         if (!cancelled) setError(true);

@@ -8,7 +8,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Palette, Download, Check, Settings, PartyPopper } from 'lucide-react';
+import { Palette, Download, Check, Settings, PartyPopper, Loader2 } from 'lucide-react';
 import { QrBrandCard } from './qr-brand-card';
 import type { QrStyleConfig } from '@/types/qr-style';
 
@@ -34,6 +34,7 @@ export function OnboardingCompleteDialog({
   onCustomizeStyle,
 }: OnboardingCompleteDialogProps) {
   const [revealed, setRevealed] = useState(false);
+  const [qrReady, setQrReady] = useState(false);
   const [actionState, setActionState] = useState<'idle' | 'success' | 'error'>('idle');
   const qrRef = useRef<HTMLDivElement>(null);
   const actionTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -45,6 +46,7 @@ export function OnboardingCompleteDialog({
       return () => clearTimeout(timer);
     } else {
       setRevealed(false);
+      setQrReady(false);
       setActionState('idle');
     }
   }, [open]);
@@ -83,33 +85,32 @@ export function OnboardingCompleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-sm border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl gap-0 overflow-y-auto max-h-[calc(100vh-2rem)] [&>button]:opacity-100 [&>button]:bg-white/10 [&>button]:rounded-full [&>button]:text-white/70 [&>button]:hover:text-white [&>button]:hover:bg-white/20">
         <DialogTitle className="sr-only">收款碼已產生</DialogTitle>
         <DialogDescription className="sr-only">您的專屬收款碼已成功產生</DialogDescription>
 
-        {/* Celebration header */}
-        <div className="text-center pt-2 pb-5 space-y-2">
-          <div
-            className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-1 animate-in zoom-in-50 fade-in duration-500"
-          >
-            <PartyPopper className="w-7 h-7 text-emerald-400" />
+        {/* Celebration header — icon + title on one line */}
+        <div className="flex items-center justify-center gap-3 pt-2 pb-4 animate-in fade-in duration-500">
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+            <PartyPopper className="w-5 h-5 text-emerald-400" />
           </div>
-          <h2 className="text-lg font-semibold text-white animate-in fade-in slide-in-from-bottom-2 duration-500">
-            恭喜完成！
-          </h2>
-          <p className="text-sm text-white/50 animate-in fade-in duration-500" style={{ animationDelay: '150ms', animationFillMode: 'backwards' }}>
-            您的專屬收款碼已產生
-          </p>
+          <h2 className="text-lg font-semibold text-white">恭喜完成！</h2>
         </div>
 
         {/* QR Card — delayed reveal */}
         <div
-          className="flex justify-center pb-5"
+          className="flex justify-center pb-4"
           style={{ opacity: revealed ? 1 : 0, transform: revealed ? 'scale(1)' : 'scale(0.9)', transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s' }}
         >
           <div className="relative">
             {/* Glow ring */}
             <div className="absolute -inset-3 rounded-3xl bg-gradient-to-br from-blue-500/20 via-purple-500/15 to-emerald-500/20 blur-xl" />
+            {/* Loading overlay */}
+            {!qrReady && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80 backdrop-blur-sm">
+                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+              </div>
+            )}
             <QrBrandCard
               ref={qrRef}
               variant="payment"
@@ -117,6 +118,7 @@ export function OnboardingCompleteDialog({
               qrStyle={qrStyle}
               bankName={bankName}
               accountNumber={accountNumber}
+              onQrReady={() => setQrReady(true)}
             />
           </div>
         </div>
@@ -139,6 +141,7 @@ export function OnboardingCompleteDialog({
             type="button"
             className="w-full h-11 gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium"
             onClick={handleDownloadAndCopy}
+            disabled={!qrReady}
           >
             {actionState === 'success' ? (
               <>
@@ -159,18 +162,14 @@ export function OnboardingCompleteDialog({
           )}
         </div>
 
-        {/* Tips — delayed */}
+        {/* Tip — delayed */}
         <div
-          className="border-t border-white/[0.06] pt-4 pb-1 space-y-2"
+          className="border-t border-white/[0.06] pt-3 pb-1"
           style={{ opacity: revealed ? 1 : 0, transition: 'opacity 0.4s ease-out 0.9s' }}
         >
           <div className="flex items-start gap-2 text-[11px] text-white/40 leading-relaxed">
             <Settings className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-            <span>如果將來要新增或修改帳戶資訊，可以點擊上方的齒輪。</span>
-          </div>
-          <div className="flex items-start gap-2 text-[11px] text-white/40 leading-relaxed">
-            <Download className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-            <span>可以放心關閉此視窗，隨時都可以再下載。</span>
+            <span>欲新增更多帳戶，可至首頁點擊上方齒輪</span>
           </div>
         </div>
       </DialogContent>
