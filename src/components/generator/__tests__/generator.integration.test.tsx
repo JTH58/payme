@@ -213,8 +213,6 @@ describe('Generator Integration Tests', () => {
       expect(screen.getByRole('button', { name: /多人拆帳/i })).toBeInTheDocument();
     }, { timeout: 2000 });
 
-    // 驗證帳戶設定 button 存在（已移至表單底部）
-    expect(screen.getByText('帳戶設定')).toBeInTheDocument();
   });
 
   test('當輸入金額與備註後，點擊確定應在 PreviewSheet 中顯示 QR Code', async () => {
@@ -338,10 +336,7 @@ describe('Generator Integration Tests', () => {
   describe('Multi-Account Integration', () => {
     test('Host 端：新增帳號並切換勾選，應自動同步主要帳號', async () => {
       const user = userEvent.setup();
-      render(<Generator />);
-
-      const accountTrigger = await screen.findByText('帳戶設定', {}, { timeout: 3000 });
-      await user.click(accountTrigger.closest('button')!);
+      render(<Generator accountSheetOpen />);
 
       const addBtn = await screen.findByText(/新增其他收款帳戶/i, {}, { timeout: 3000 });
       await user.click(addBtn);

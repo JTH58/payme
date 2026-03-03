@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Settings, DatabaseBackup, Palette } from 'lucide-react';
+import { Settings, DatabaseBackup, Palette, Wallet, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SettingsMenuProps {
   onBackupClick: () => void;
   onQrStyleClick?: () => void;
+  onAccountClick?: () => void;
+  onResetAllClick?: () => void;
 }
 
-export function SettingsMenu({ onBackupClick, onQrStyleClick }: SettingsMenuProps) {
+export function SettingsMenu({ onBackupClick, onQrStyleClick, onAccountClick, onResetAllClick }: SettingsMenuProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -64,6 +66,29 @@ export function SettingsMenu({ onBackupClick, onQrStyleClick }: SettingsMenuProp
             <DatabaseBackup size={14} />
             備份與還原
           </button>
+          {(onAccountClick || onResetAllClick) && (
+            <div className="border-t border-white/10 my-1" />
+          )}
+          {onAccountClick && (
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onAccountClick(); }}
+              className={MENU_ITEM_CLASS}
+            >
+              <Wallet size={14} />
+              帳戶設定
+            </button>
+          )}
+          {onResetAllClick && (
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onResetAllClick(); }}
+              className={cn(MENU_ITEM_CLASS, "text-red-400 hover:text-red-300")}
+            >
+              <Trash2 size={14} />
+              重置所有資料
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Generator } from "@/components/generator";
-import { ShieldCheck, Zap, AlertTriangle, Download } from "lucide-react";
+import { ShieldCheck, Zap, AlertTriangle, Download, Trash2 } from "lucide-react";
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { useUrlParser } from '@/hooks/use-url-parser';
@@ -15,6 +15,7 @@ import { restoreBackup, hasExistingUserData } from '@/lib/backup';
 import { cn } from '@/lib/utils';
 import type { BackupPayload } from '@/lib/backup';
 import type { CompressedData } from '@/types/bill';
+import { STORAGE_KEY } from '@/config/storage-keys';
 import {
   Dialog,
   DialogContent,
@@ -83,6 +84,8 @@ function HomeContent() {
   const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [isBackupImportOpen, setIsBackupImportOpen] = useState(false);
   const [isQrStyleOpen, setIsQrStyleOpen] = useState(false);
+  const [isAccountSheetOpen, setIsAccountSheetOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const handleDecrypted = useCallback((data: CompressedData) => {
     setDecryptedData(data);
@@ -140,6 +143,8 @@ function HomeContent() {
         )}
         onBackupClick={() => setIsBackupOpen(true)}
         onQrStyleClick={() => setIsQrStyleOpen(true)}
+        onAccountClick={() => setIsAccountSheetOpen(true)}
+        onResetAllClick={() => setIsResetConfirmOpen(true)}
       />
 
       <main className="relative z-10 flex-1 flex flex-col items-center w-full max-w-7xl mx-auto px-4 pt-12 md:pt-20 pb-20">
@@ -225,6 +230,8 @@ function HomeContent() {
                 initialBankCode={bankCode}
                 qrStyleSheetOpen={isQrStyleOpen}
                 onQrStyleSheetOpenChange={setIsQrStyleOpen}
+                accountSheetOpen={isAccountSheetOpen}
+                onAccountSheetOpenChange={setIsAccountSheetOpen}
               />
             )}
           </Suspense>
@@ -251,6 +258,36 @@ function HomeContent() {
           onClose={() => setIsBackupImportOpen(false)}
         />
       )}
+
+      {/* 重置所有資料確認 Dialog */}
+      <Dialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
+        <DialogContent className="sm:max-w-md border-red-500/20">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-red-500 mb-2">
+              <Trash2 className="h-6 w-6" />
+              <DialogTitle className="text-xl">重置所有資料</DialogTitle>
+            </div>
+            <DialogDescription className="text-left pt-2 text-base text-muted-foreground">
+              此操作將清除所有本地儲存的資料，包括帳戶設定、表單內容、QR 樣式偏好等。此操作無法復原。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 mt-4">
+            <Button variant="outline" className="flex-1" onClick={() => setIsResetConfirmOpen(false)}>
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={() => {
+                Object.values(STORAGE_KEY).forEach(k => localStorage.removeItem(k));
+                window.location.reload();
+              }}
+            >
+              確定刪除
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

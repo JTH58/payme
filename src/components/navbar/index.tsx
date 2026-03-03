@@ -31,9 +31,11 @@ interface NavbarProps {
   className?: string;
   onBackupClick?: () => void;
   onQrStyleClick?: () => void;
+  onAccountClick?: () => void;
+  onResetAllClick?: () => void;
 }
 
-export function Navbar({ className, onBackupClick, onQrStyleClick }: NavbarProps) {
+export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClick, onResetAllClick }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -118,7 +120,7 @@ export function Navbar({ className, onBackupClick, onQrStyleClick }: NavbarProps
             </a>
           </div>
 
-          {onBackupClick && <SettingsMenu onBackupClick={onBackupClick} onQrStyleClick={onQrStyleClick} />}
+          {onBackupClick && <SettingsMenu onBackupClick={onBackupClick} onQrStyleClick={onQrStyleClick} onAccountClick={onAccountClick} onResetAllClick={onResetAllClick} />}
 
           <PwaShield />
 

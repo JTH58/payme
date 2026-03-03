@@ -68,9 +68,11 @@ interface GeneratorProps {
   initialBankCode?: string | null;
   qrStyleSheetOpen?: boolean;
   onQrStyleSheetOpenChange?: (open: boolean) => void;
+  accountSheetOpen?: boolean;
+  onAccountSheetOpenChange?: (open: boolean) => void;
 }
 
-export function Generator({ initialMode, initialData, isShared = false, initialBankCode, qrStyleSheetOpen, onQrStyleSheetOpenChange }: GeneratorProps) {
+export function Generator({ initialMode, initialData, isShared = false, initialBankCode, qrStyleSheetOpen, onQrStyleSheetOpenChange, accountSheetOpen, onAccountSheetOpenChange }: GeneratorProps) {
   const {
     form,
     qrString,
@@ -861,7 +863,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
             initialBillData={billData}
             isTemplateActive={isTemplateActive}
             onShowTemplateSubmit={() => setShowTemplateSubmit(true)}
-            onShowAccountSheet={() => setShowAccountSheet(true)}
             onShowTemplateSheet={() => setShowTemplateSheet(true)}
             onConfirm={() => {
               if (!safeGetItem(KEYS.hasVisited)) {
@@ -926,8 +927,11 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
       />
 
       <AccountSheet
-        open={showAccountSheet}
-        onOpenChange={setShowAccountSheet}
+        open={showAccountSheet || !!accountSheetOpen}
+        onOpenChange={(open) => {
+          setShowAccountSheet(open);
+          onAccountSheetOpenChange?.(open);
+        }}
         accounts={accounts}
         primaryAccount={primaryAccount}
         sharedAccounts={sharedAccounts}

@@ -13,8 +13,8 @@ import { SERVICE_CHARGE_MULTIPLIER } from '@/config/constants';
 import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
 import { STORAGE_KEY } from '@/config/storage-keys';
 import {
-  Minus, Plus, RotateCcw, Trash2, User, UserPlus, X,
-  FileUp, Info, Wallet, Sparkles,
+  Minus, Plus, Trash2, User, UserPlus, X,
+  FileUp, Info, Sparkles,
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────
@@ -42,7 +42,6 @@ interface UnifiedFormProps {
   isTemplateActive?: boolean;
   onShowTemplateSubmit?: () => void;
   // Sheet triggers
-  onShowAccountSheet?: () => void;
   onShowTemplateSheet?: () => void;
   // Confirm action
   onConfirm: () => void;
@@ -149,7 +148,6 @@ export function UnifiedForm({
   isSharedMode = false,
   isTemplateActive = false,
   onShowTemplateSubmit,
-  onShowAccountSheet,
   onShowTemplateSheet,
   onConfirm,
 }: UnifiedFormProps) {
@@ -442,21 +440,6 @@ export function UnifiedForm({
   const handleConfirm = useCallback(() => {
     onConfirm();
   }, [onConfirm]);
-
-  const handleReset = () => {
-    reset();
-    setTotalAmount('');
-    setPeopleCount(2);
-    setHasServiceCharge(false);
-    setItems([{ n: '', p: 0, o: [0] }]);
-    setMembers(['我']);
-    setNewMemberName('');
-    setTitle('');
-    dirtyItemsRef.current = new Set();
-    splitCommentDirtyRef.current = false;
-    // 清除當前模式的快照，避免 reset 後切回時還原舊資料
-    delete snapshotCacheRef.current[subMode];
-  };
 
   // ─── Derived state ────────────────────────────────
   const useItemsCheckbox = inputMethod === 'items';
@@ -885,17 +868,6 @@ export function UnifiedForm({
         </Button>
 
         <div className="flex items-center gap-2">
-          {onShowAccountSheet && (
-            <button
-              type="button"
-              onClick={onShowAccountSheet}
-              className="flex-1 flex items-center justify-center gap-1 py-2 text-xs text-white/60 hover:text-white/90 border border-white/10 hover:border-white/20 rounded-lg transition-all active:scale-[0.98]"
-            >
-              <Wallet className="w-3 h-3" />
-              帳戶設定
-            </button>
-          )}
-
           {onShowTemplateSheet && (
             <button
               type="button"
@@ -924,15 +896,6 @@ export function UnifiedForm({
               投稿模板
             </button>
           )}
-
-          <button
-            type="button"
-            className="flex-1 flex items-center justify-center gap-1 py-2 text-xs text-white/60 hover:text-white/90 border border-white/10 hover:border-white/20 rounded-lg transition-all active:scale-[0.98]"
-            onClick={handleReset}
-          >
-            <RotateCcw className="w-3 h-3" />
-            清除全部
-          </button>
         </div>
       </div>}
     </div>
