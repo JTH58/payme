@@ -864,7 +864,7 @@ export function UnifiedForm({
           className="w-full bg-white text-black hover:bg-white/90 active:scale-[0.98] transition-transform font-medium"
           onClick={handleConfirm}
         >
-          確定
+          產生收款碼及連結
         </Button>
 
         <div className="flex items-center gap-2">

@@ -156,9 +156,9 @@ Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 // Helpers
 // -----------------------------------------------------------------------------
 
-/** 點擊「確定」按鈕打開 PreviewSheet */
+/** 點擊「產生收款碼及連結」按鈕打開 PreviewSheet */
 const openPreview = async (user: ReturnType<typeof userEvent.setup>) => {
-  const confirmBtn = screen.getByRole('button', { name: /確定/i });
+  const confirmBtn = screen.getByRole('button', { name: /產生收款碼及連結/i });
   await user.click(confirmBtn);
   await waitFor(() => {
     expect(screen.getByTestId('preview-sheet')).toBeInTheDocument();
