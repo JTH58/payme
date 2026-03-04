@@ -84,6 +84,32 @@ export function QrStyleSheet({
   onUpdateField,
 }: QrStyleSheetProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const hasScrolledRef = React.useRef(false);
+  const bodyRef = React.useRef<HTMLDivElement>(null);
+
+  const handleScroll = React.useCallback(() => {
+    if (!hasScrolledRef.current) {
+      hasScrolledRef.current = true;
+      setShowScrollHint(false);
+    }
+  }, []);
+
+  // Show hint when sheet opens if content overflows, reset on close
+  React.useEffect(() => {
+    if (!open) {
+      hasScrolledRef.current = false;
+      setShowScrollHint(false);
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      const el = bodyRef.current;
+      if (el && el.scrollHeight > el.clientHeight + 8) {
+        setShowScrollHint(true);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [open]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -102,7 +128,8 @@ export function QrStyleSheet({
           </div>
         )}
 
-        <SheetBody className="space-y-6">
+        <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
+        <SheetBody ref={bodyRef} onScroll={handleScroll} className="space-y-6">
           {/* Theme Presets Grid */}
           <div>
             <p className="text-sm font-medium text-white/70 mb-3">主題</p>
@@ -137,9 +164,27 @@ export function QrStyleSheet({
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full text-center text-sm text-white/40 hover:text-white/60 transition-colors py-1"
+            className="w-full flex items-center gap-3 py-2 group"
           >
-            {showAdvanced ? '收起細項調整 ▲' : '展開細項調整 ▼'}
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-xs font-medium text-white/50 group-hover:text-white/70 transition-colors flex items-center gap-1.5">
+              {showAdvanced ? '收起細項調整' : '細項調整'}
+              <svg
+                className={cn(
+                  "w-3 h-3 transition-transform duration-200",
+                  showAdvanced && "rotate-180"
+                )}
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 4.5L6 7.5L9 4.5" />
+              </svg>
+            </span>
+            <div className="flex-1 h-px bg-white/10" />
           </button>
 
           {/* Advanced Controls */}
@@ -225,6 +270,22 @@ export function QrStyleSheet({
             </div>
           )}
         </SheetBody>
+
+          {/* Scroll hint: bottom fade + text — only before first scroll */}
+          {showScrollHint && (
+            <div
+              className="absolute bottom-0 inset-x-0 flex flex-col items-center pointer-events-none animate-in fade-in duration-300"
+            >
+              <div className="h-14 w-full bg-gradient-to-t from-black/90 to-transparent" />
+              <div className="absolute bottom-2 flex items-center gap-1 animate-bounce">
+                <span className="text-[11px] text-white/50">細項調整</span>
+                <svg className="w-3 h-3 text-white/40" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6L8 10L12 6" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
       </SheetContent>
     </Sheet>
   );
