@@ -88,10 +88,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   // 導致點擊標題時遺失付款資料。偵測 Discordbot 時改寫標題提醒使用者。
   const isDiscordBot = /Discordbot/i.test(ua || '');
   const ogTitle = isDiscordBot
-    ? `⚠️ 請點擊網址，不要點這裡 | ${meta.title}`
+    ? `PayMe.TW 收款 - ⚠️ 請點擊上方網址`
     : meta.title;
   const ogDescription = isDiscordBot
-    ? `Discord 預覽連結會導致資料遺失，請直接點擊訊息中的網址開啟。`
+    ? `點擊網址開始收款！( Discord 預覽會導致資料遺失)`
     : meta.description;
 
   // Fetch the actual index.html (SPA root)
