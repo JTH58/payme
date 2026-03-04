@@ -392,7 +392,28 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
     if (qrCardRef.current) {
       try {
         const { toPng } = await import('html-to-image');
+
+        // html-to-image 的 cloneNode 會導致 canvas 內容遺失，
+        // 暫時將 canvas 替換為等尺寸 img 以確保 QR 碼被正確擷取
+        const canvas = qrCardRef.current.querySelector('canvas');
+        let tempImg: HTMLImageElement | null = null;
+
+        if (canvas) {
+          tempImg = document.createElement('img');
+          tempImg.src = canvas.toDataURL('image/png');
+          tempImg.width = canvas.width;
+          tempImg.height = canvas.height;
+          tempImg.style.cssText = canvas.style.cssText;
+          canvas.parentNode!.replaceChild(tempImg, canvas);
+        }
+
         const dataUrl = await toPng(qrCardRef.current, { cacheBust: true });
+
+        // 還原 canvas
+        if (tempImg && canvas) {
+          tempImg.parentNode!.replaceChild(canvas, tempImg);
+        }
+
         const link = document.createElement('a');
         link.download = filename;
         link.href = dataUrl;
