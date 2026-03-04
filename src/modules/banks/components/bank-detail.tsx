@@ -20,13 +20,22 @@ export function BankDetail({ bank }: BankDetailProps) {
       {/* Header */}
       <div>
         <p className="text-white/50 text-sm font-mono mb-1">{bank.code}</p>
-        <h1 className="text-2xl font-bold">{bank.name}</h1>
+        <h1 className="text-2xl font-bold">{bank.name} 搭配 PayMe.tw 使用</h1>
       </div>
 
       {/* Status */}
-      <div className={`flex items-center gap-2 ${status.color}`}>
-        <span>{status.icon}</span>
-        <span>{status.label}</span>
+      <div className="space-y-2">
+        <div className={`flex items-center gap-2 ${status.color}`}>
+          <span>TWQR 支援狀態：</span>
+          <span>{status.icon}</span>
+          <span>{status.label}</span>
+        </div>
+        <p className="text-sm text-white/60 leading-relaxed">
+          {bank.name}（{bank.code}）用戶支援 TWQR
+          掃碼轉帳，各大銀行 App
+          皆可掃描付款，搭配 PayMe.tw
+          免費產生專屬收款 QR Code，跨行互通、資料不回傳，還可以客製化專屬收款碼！
+        </p>
       </div>
 
       {/* Links Section */}

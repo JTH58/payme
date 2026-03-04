@@ -11,17 +11,25 @@ export async function generateStaticParams() {
   return getBanks().map((bank) => ({ code: bank.code }));
 }
 
+const STATUS_META_LABELS: Record<string, string> = {
+  no_reports: '未收到錯誤回報',
+  verified: '已驗證可用',
+  reported_issues: '有問題回報',
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { code } = await params;
   const bank = getBankByCode(code);
   if (!bank) return {};
 
+  const statusLabel = STATUS_META_LABELS[bank.status] ?? '未收到錯誤回報';
+
   return {
     title: `${bank.name} (${bank.code}) TWQR 掃碼轉帳 | PayMe.tw — 台灣通用收款碼`,
-    description: `${bank.name}（代碼 ${bank.code}）TWQR 掃碼轉帳支援狀態與操作指南。使用 PayMe.tw 一鍵產生${bank.shortName}收款 QR Code。`,
+    description: `${bank.name}（${bank.code}）用戶支援 TWQR 掃碼轉帳，各大銀行 App 皆可掃描付款。目前支援狀態：${statusLabel}。搭配 PayMe.tw 免費客製化您的專屬 TWQR 收款碼，收款分帳都方便！`,
     openGraph: {
-      title: `${bank.name} TWQR 支援狀態 | PayMe.tw`,
-      description: `查看 ${bank.shortName} 的 TWQR 掃碼轉帳支援狀態`,
+      title: `${bank.name} (${bank.code}) TWQR 掃碼轉帳 | PayMe.tw`,
+      description: `${bank.shortName}（${bank.code}）支援 TWQR 掃碼轉帳，搭配 PayMe.tw 免費產生專屬收款 QR Code，跨行互通、資料不回傳。`,
       url: `https://payme.tw/banks/${bank.code}`,
     },
   };
