@@ -84,6 +84,16 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const meta = routeConfig.metaGenerator(params);
   const imageUrl = new URL(meta.image, url.origin).href;
 
+  // Discord 會在 OG 預覽卡片的標題連結中移除 # hash fragment，
+  // 導致點擊標題時遺失付款資料。偵測 Discordbot 時改寫標題提醒使用者。
+  const isDiscordBot = /Discordbot/i.test(ua || '');
+  const ogTitle = isDiscordBot
+    ? `⚠️ 請點擊網址，不要點這裡 | ${meta.title}`
+    : meta.title;
+  const ogDescription = isDiscordBot
+    ? `Discord 預覽連結會導致資料遺失，請直接點擊訊息中的網址開啟。`
+    : meta.description;
+
   // Fetch the actual index.html (SPA root)
   const response = await env.ASSETS.fetch(new URL('/', request.url));
 
@@ -92,18 +102,18 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     // Title
     .on('title', {
       element(element) {
-        element.setInnerContent(meta.title);
+        element.setInnerContent(ogTitle);
       },
     })
     // Open Graph
     .on('meta[property="og:title"]', {
       element(element) {
-        element.setAttribute('content', meta.title);
+        element.setAttribute('content', ogTitle);
       },
     })
     .on('meta[property="og:description"]', {
       element(element) {
-        element.setAttribute('content', meta.description);
+        element.setAttribute('content', ogDescription);
       },
     })
     .on('meta[property="og:image"]', {
@@ -129,12 +139,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     })
     .on('meta[name="twitter:title"]', {
       element(element) {
-        element.setAttribute('content', meta.title);
+        element.setAttribute('content', ogTitle);
       },
     })
     .on('meta[name="twitter:description"]', {
       element(element) {
-        element.setAttribute('content', meta.description);
+        element.setAttribute('content', ogDescription);
       },
     })
     .on('meta[name="twitter:image"]', {
@@ -145,7 +155,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     // Standard description
     .on('meta[name="description"]', {
       element(element) {
-        element.setAttribute('content', meta.description);
+        element.setAttribute('content', ogDescription);
       },
     })
     .transform(response);
