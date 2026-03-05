@@ -1,5 +1,14 @@
 /// <reference types="@cloudflare/workers-types" />
 import { APP_ROUTES, AppRoutePrefix } from '../src/config/routes';
+import {
+  parseUserAgent,
+  extractRefererDomain,
+  generateVisitorId,
+  extractCookie,
+  parseCookieEvents,
+  buildClearCookieHeader,
+  type EventRecord,
+} from './lib/analytics-helpers';
 
 // Define Env interface for Cloudflare Pages
 interface Env {
@@ -28,41 +37,122 @@ function isBot(userAgent: string | null): boolean {
   return BOT_PATTERNS.test(userAgent);
 }
 
+/**
+ * Helper: append Set-Cookie to a response (clones if headers are immutable)
+ */
+function appendSetCookie(response: Response, setCookieValue: string): Response {
+  const newResponse = new Response(response.body, response);
+  newResponse.headers.append('Set-Cookie', setCookieValue);
+  return newResponse;
+}
+
 export const onRequest: PagesFunction<Env> = async (context) => {
   const { request, env, next, waitUntil } = context;
   const url = new URL(request.url);
   const pathParts = url.pathname.split('/').filter(Boolean);
-
-  // pathParts[0] should be the prefix (pay, bill)
   const prefix = pathParts[0] as AppRoutePrefix;
-
-  // Analytics: 僅記錄已知路由且非 Bot 的訪問
   const ua = request.headers.get('user-agent');
-  if (prefix && APP_ROUTES[prefix] && !isBot(ua)) {
+
+  // ---------------------------------------------------------------------------
+  // 1. Cookie Piggyback — process on ANY request (creator operates on /)
+  // ---------------------------------------------------------------------------
+  const cookieHeader = request.headers.get('cookie');
+  const paCookie = extractCookie(cookieHeader, '_pa');
+  let clientEvents: EventRecord[] = [];
+  let hasCookieToProcess = false;
+  if (paCookie) {
+    clientEvents = parseCookieEvents(paCookie);
+    hasCookieToProcess = true; // clear cookie even if events are empty/corrupt
+  }
+
+  // ---------------------------------------------------------------------------
+  // 2. Compute visitor_id if needed (for pageview or events)
+  // ---------------------------------------------------------------------------
+  const isKnownRoute = !!(prefix && APP_ROUTES[prefix]);
+  const needsVisitorId = (!isBot(ua) && isKnownRoute) || clientEvents.length > 0;
+  let visitorId: string | null = null;
+  if (needsVisitorId) {
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    const dateStr = new Date().toISOString().slice(0, 10);
+    try {
+      visitorId = await generateVisitorId(ip, ua || '', dateStr);
+    } catch {
+      // crypto unavailable — skip visitor_id
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Enhanced pageview INSERT (known route + non-bot)
+  // ---------------------------------------------------------------------------
+  if (isKnownRoute && !isBot(ua)) {
+    const { browser, device } = parseUserAgent(ua);
+    const refererDomain = extractRefererDomain(
+      request.headers.get('referer'),
+      url.hostname,
+    );
     const userInfo = {
-        ua,
-        country: request.headers.get('cf-ipcountry'),
-        referer: request.headers.get('referer'),
+      ua,
+      country: request.headers.get('cf-ipcountry'),
+      referer: request.headers.get('referer'),
     };
 
     waitUntil(
-        env.DB.prepare(
-            'INSERT INTO raw_analytics (path, user_info) VALUES (?, ?)'
+      env.DB.prepare(
+        'INSERT INTO raw_analytics (path, user_info, visitor_id, device_type, browser, referer_domain) VALUES (?, ?, ?, ?, ?, ?)',
+      )
+        .bind(
+          url.pathname,
+          JSON.stringify(userInfo),
+          visitorId,
+          device,
+          browser,
+          refererDomain,
         )
-        .bind(url.pathname, JSON.stringify(userInfo))
         .run()
-        .catch(err => console.error('Analytics Error:', err))
+        .catch(err => console.error('Analytics Error:', err)),
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // 4. Client events INSERT (cookie piggyback)
+  // ---------------------------------------------------------------------------
+  if (clientEvents.length > 0) {
+    waitUntil(
+      Promise.all(
+        clientEvents.map(event =>
+          env.DB.prepare(
+            'INSERT INTO events (visitor_id, event, data, event_ts) VALUES (?, ?, ?, ?)',
+          )
+            .bind(
+              visitorId,
+              event.e,
+              event.d !== undefined ? JSON.stringify(event.d) : null,
+              event.t,
+            )
+            .run(),
+        ),
+      ).catch(err => console.error('Events Error:', err)),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 5. Route handling (existing logic)
+  // ---------------------------------------------------------------------------
+
   // /backup — rewrite 回首頁，不做 OG 改寫，不記錄 analytics
   if (prefix === 'backup') {
-    return env.ASSETS.fetch(new URL('/', request.url));
+    const response = await env.ASSETS.fetch(new URL('/', request.url));
+    return hasCookieToProcess
+      ? appendSetCookie(response, buildClearCookieHeader())
+      : response;
   }
 
   // If not a recognized route prefix, just continue (serve static assets or 404)
-  if (!prefix || !APP_ROUTES[prefix]) {
-    return next();
+  if (!isKnownRoute) {
+    const response = await next();
+    return hasCookieToProcess
+      ? appendSetCookie(response, buildClearCookieHeader())
+      : response;
   }
 
   const routeConfig = APP_ROUTES[prefix];
@@ -95,10 +185,10 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     : meta.description;
 
   // Fetch the actual index.html (SPA root)
-  const response = await env.ASSETS.fetch(new URL('/', request.url));
+  const assetResponse = await env.ASSETS.fetch(new URL('/', request.url));
 
   // Apply rewrites using HTMLRewriter
-  return new HTMLRewriter()
+  let response = new HTMLRewriter()
     // Title
     .on('title', {
       element(element) {
@@ -158,5 +248,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
         element.setAttribute('content', ogDescription);
       },
     })
-    .transform(response);
+    .transform(assetResponse);
+
+  // Append Set-Cookie to clear _pa if cookie was present
+  if (hasCookieToProcess) {
+    response = appendSetCookie(response, buildClearCookieHeader());
+  }
+
+  return response;
 };

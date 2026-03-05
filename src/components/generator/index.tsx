@@ -42,6 +42,7 @@ import { OnboardingCompleteDialog } from './onboarding-complete-dialog';
 import { FirstVisitDisclaimer } from '@/components/legal/first-visit-disclaimer';
 import { safeGetItem, safeSetItem } from '@/lib/safe-storage';
 import { STORAGE_KEY as KEYS } from '@/config/storage-keys';
+import { trackEvent, setupAutoFlush } from '@/lib/analytics';
 
 function isValidTemplate(item: unknown): item is Template {
   if (typeof item !== 'object' || item === null) return false;
@@ -159,6 +160,12 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
       clearTimeout(accountCopyTimeoutRef.current);
       clearTimeout(downloadTimeoutRef.current);
     };
+  }, []);
+
+  // Analytics: auto-flush events to cookie on visibilitychange
+  useEffect(() => {
+    const cleanup = setupAutoFlush();
+    return cleanup;
   }, []);
 
   useEffect(() => {
@@ -386,6 +393,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   }, []);
 
   const handleDownload = useCallback(async () => {
+    trackEvent('download_qr');
     const { bankCode, accountNumber } = form.getValues();
     const filename = `payme-tw-${bankCode || 'unknown'}-${accountNumber || 'qr'}.png`;
 
@@ -536,6 +544,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
 
     if (navigator.share) {
       try {
+        trackEvent('share', { method: 'native' });
         await navigator.share(shareData);
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return;
@@ -543,12 +552,14 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
         await copyToClipboard();
       }
     } else {
+      trackEvent('share', { method: 'clipboard' });
       await copyToClipboard();
     }
   }, [sharePayload, form, isTemplateActive, activeTemplate, mode, billData]);
 
   const handleShare = () => {
     if (!sharePayload) return;
+    trackEvent('generate_link');
     pendingShareUrlRef.current = currentShareUrl;
     setShowShareDialog(true);
   };
@@ -568,6 +579,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   };
 
   const handleCopyAccount = async () => {
+    trackEvent('copy_account');
     const { accountNumber } = form.getValues();
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {

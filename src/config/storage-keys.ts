@@ -18,6 +18,7 @@ export const STORAGE_KEY = {
   qrStyle: 'payme_qr_style',
   onboardingComplete: 'payme_onboarding_complete',
   personalExpanded: 'payme_personal_expanded',
+  analytics: 'payme_analytics',
 } as const;
 
 /**
