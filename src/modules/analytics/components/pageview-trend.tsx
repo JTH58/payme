@@ -44,7 +44,7 @@ export function PageviewTrend({ range }: PageviewTrendProps) {
             dataKey="date"
             stroke="rgba(255,255,255,0.3)"
             fontSize={12}
-            tickFormatter={(v: string) => v.slice(5)}
+            tickFormatter={(v: string) => range === 'today' ? v.slice(11, 16) : v.slice(5)}
           />
           <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} />
           <Tooltip content={<GlassTooltip />} />

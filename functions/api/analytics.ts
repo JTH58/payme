@@ -82,12 +82,16 @@ async function querySummary(db: D1Database, range: TimeRange) {
 
 async function queryTrend(db: D1Database, range: TimeRange) {
   const filter = getRangeFilter(range);
+  const isHourly = range === 'today';
+  const groupExpr = isHourly
+    ? `strftime('%Y-%m-%d %H:00', created_at, 'unixepoch')`
+    : `DATE(created_at, 'unixepoch')`;
   const stmt = db.prepare(
-    `SELECT DATE(created_at, 'unixepoch') as date,
+    `SELECT ${groupExpr} as date,
             COUNT(*) as pageviews,
             COUNT(DISTINCT visitor_id) as visitors
      FROM raw_analytics WHERE 1=1 ${filter}
-     GROUP BY DATE(created_at, 'unixepoch')
+     GROUP BY ${groupExpr}
      ORDER BY date`,
   );
   const result = await stmt.all();
