@@ -97,9 +97,9 @@ async function queryTrend(db: D1Database, range: TimeRange) {
 async function queryDevices(db: D1Database, range: TimeRange) {
   const filter = getRangeFilter(range);
   const stmt = db.prepare(
-    `SELECT device_type as name, COUNT(*) as value
+    `SELECT COALESCE(device_type, 'unknown') as name, COUNT(*) as value
      FROM raw_analytics WHERE 1=1 ${filter}
-     GROUP BY device_type`,
+     GROUP BY COALESCE(device_type, 'unknown')`,
   );
   const result = await stmt.all();
   return { data: result.results };
@@ -108,9 +108,9 @@ async function queryDevices(db: D1Database, range: TimeRange) {
 async function queryBrowsers(db: D1Database, range: TimeRange) {
   const filter = getRangeFilter(range);
   const stmt = db.prepare(
-    `SELECT browser as name, COUNT(*) as value
+    `SELECT COALESCE(browser, 'unknown') as name, COUNT(*) as value
      FROM raw_analytics WHERE 1=1 ${filter}
-     GROUP BY browser`,
+     GROUP BY COALESCE(browser, 'unknown')`,
   );
   const result = await stmt.all();
   return { data: result.results };

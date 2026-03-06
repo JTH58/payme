@@ -42,7 +42,7 @@ export function TopPagesTable({ range }: TopPagesTableProps) {
                 key={i}
                 className="border-b border-white/5 hover:bg-white/5 transition-colors"
               >
-                <td className="px-4 py-2 text-white/80 font-mono text-xs">{page.path}</td>
+                <td className="px-4 py-2 text-white/80 font-mono text-xs">{decodeURIComponent(page.path)}</td>
                 <td className="px-4 py-2 text-right text-white">{page.pageviews.toLocaleString()}</td>
                 <td className="px-4 py-2 text-right text-white/60">{page.visitors.toLocaleString()}</td>
               </tr>
