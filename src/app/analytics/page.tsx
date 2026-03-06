@@ -12,7 +12,11 @@ export default function AnalyticsPage() {
   useEffect(() => {
     fetchAnalytics('summary', '7d')
       .then(() => setAuth(true))
-      .catch(() => setAuth(false));
+      .catch((err) => {
+        // Only show login gate on 401; other errors (500) mean session is valid but server has issues
+        const status = (err as Error & { status?: number }).status;
+        setAuth(status === 401 ? false : true);
+      });
   }, []);
 
   if (auth === null) {

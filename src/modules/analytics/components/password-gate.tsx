@@ -10,21 +10,21 @@ interface PasswordGateProps {
 
 export function PasswordGate({ onSuccess }: PasswordGateProps) {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(false);
+    setError(null);
     setLoading(true);
 
-    const ok = await login(password);
+    const result = await login(password);
     setLoading(false);
 
-    if (ok) {
+    if (result.ok) {
       onSuccess();
     } else {
-      setError(true);
+      setError(result.error || 'Login failed');
       setPassword('');
     }
   }
@@ -54,7 +54,7 @@ export function PasswordGate({ onSuccess }: PasswordGateProps) {
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-blue-500/50 transition-colors"
           />
           {error && (
-            <p className="text-red-400 text-sm">Incorrect password</p>
+            <p className="text-red-400 text-sm">{error}</p>
           )}
         </div>
 

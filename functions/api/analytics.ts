@@ -190,6 +190,16 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return jsonResponse({ error: 'Invalid range parameter' }, 400);
   }
 
-  const data = await QUERY_MAP[type](env.DB, range);
-  return jsonResponse(data);
+  if (!env.DB) {
+    console.error('D1 database binding "DB" is not configured');
+    return jsonResponse({ error: 'D1 database not bound. Add DB binding in Cloudflare Pages → Settings → Functions → D1 Database Bindings.' }, 500);
+  }
+
+  try {
+    const data = await QUERY_MAP[type](env.DB, range);
+    return jsonResponse(data);
+  } catch (err) {
+    console.error('Analytics query error:', err);
+    return jsonResponse({ error: `Query failed: ${(err as Error).message}` }, 500);
+  }
 };

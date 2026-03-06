@@ -50,6 +50,11 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return jsonResponse({ error: 'Invalid JSON' }, 400);
   }
 
+  if (!env.ANALYTICS_PASSWORD) {
+    console.error('ANALYTICS_PASSWORD env var is not set');
+    return jsonResponse({ error: 'Server misconfigured' }, 500);
+  }
+
   if (!body.password || body.password !== env.ANALYTICS_PASSWORD) {
     return jsonResponse({ error: 'Unauthorized' }, 401);
   }
