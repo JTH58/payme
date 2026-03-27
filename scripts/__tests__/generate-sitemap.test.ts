@@ -1,4 +1,4 @@
-const { generateSitemapXml } = require('../generate-sitemap');
+const { generateSitemapXml, BANK_TOPIC_SLUGS } = require('../generate-sitemap');
 
 describe('Sitemap Generator', () => {
   const xml = generateSitemapXml();
@@ -38,13 +38,19 @@ describe('Sitemap Generator', () => {
     expect(bankUrlCount).toBe(266);
   });
 
+  it('should include bank topic pages', () => {
+    for (const slug of BANK_TOPIC_SLUGS) {
+      expect(xml).toContain(`<loc>https://payme.tw/banks/topic/${slug}</loc>`);
+    }
+  });
+
   it('should include specific bank pages', () => {
     expect(xml).toContain('<loc>https://payme.tw/banks/004</loc>');
     expect(xml).toContain('<loc>https://payme.tw/banks/812</loc>');
   });
 
-  it('should have total of 272 URLs (home + banks listing + twqr + features + safety + guide + 266 banks)', () => {
+  it('should have total of 277 URLs (6 static + 5 bank topics + 266 banks)', () => {
     const totalUrls = (xml.match(/<url>/g) || []).length;
-    expect(totalUrls).toBe(272);
+    expect(totalUrls).toBe(277);
   });
 });

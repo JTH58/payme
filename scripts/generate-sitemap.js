@@ -3,6 +3,13 @@ const path = require('path');
 const banks = require('../src/data/banks.json');
 
 const BASE_URL = 'https://payme.tw';
+const BANK_TOPIC_SLUGS = [
+  'popular-banks',
+  'state-owned-and-major-banks',
+  'regional-and-credit-cooperatives',
+  'payments-and-digital-wallets',
+  'verified-banks',
+];
 
 function generateSitemapXml() {
   const urls = [
@@ -12,6 +19,11 @@ function generateSitemapXml() {
     { loc: `${BASE_URL}/features`, priority: '0.7', changefreq: 'monthly' },
     { loc: `${BASE_URL}/safety`, priority: '0.7', changefreq: 'monthly' },
     { loc: `${BASE_URL}/guide`, priority: '0.7', changefreq: 'monthly' },
+    ...BANK_TOPIC_SLUGS.map((slug) => ({
+      loc: `${BASE_URL}/banks/topic/${slug}`,
+      priority: '0.7',
+      changefreq: 'monthly',
+    })),
     ...banks.map((bank) => ({
       loc: `${BASE_URL}/banks/${bank.code}`,
       priority: '0.6',
@@ -34,11 +46,11 @@ ${urls
 }
 
 // Export for testing
-module.exports = { generateSitemapXml };
+module.exports = { generateSitemapXml, BANK_TOPIC_SLUGS };
 
 // CLI entry point
 if (require.main === module) {
   const xml = generateSitemapXml();
   fs.writeFileSync(path.join(__dirname, '../public/sitemap.xml'), xml, 'utf-8');
-  console.log(`✅ Sitemap generated with ${banks.length + 6} URLs`);
+  console.log(`✅ Sitemap generated with ${banks.length + 6 + BANK_TOPIC_SLUGS.length} URLs`);
 }

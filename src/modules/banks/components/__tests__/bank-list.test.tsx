@@ -1,14 +1,25 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BankList } from '../bank-list';
-import { BankExtended } from '../../types';
+import { BankExtended, BankSeoContent } from '../../types';
+
+const baseSeo: BankSeoContent = {
+  seoIntro: '測試摘要',
+  usageNotes: ['提示 1'],
+  faqs: [{ question: 'FAQ？', answer: '答案' }],
+  relatedBankCodes: ['004', '012', '013'],
+  lastReviewedAt: '2026-03-27',
+  statusSummary: '測試狀態摘要',
+  scanFeatureHint: '掃碼轉帳',
+  officialGuideLabel: '官方教學',
+};
 
 const mockBanks: BankExtended[] = [
-  { code: '004', name: '臺灣銀行', shortName: '臺灣銀行', status: 'no_reports' },
-  { code: '012', name: '台北富邦商業銀行', shortName: '富邦銀行', status: 'verified' },
-  { code: '013', name: '國泰世華商業銀行', shortName: '國泰世華', status: 'no_reports' },
-  { code: '812', name: '台新國際商業銀行', shortName: '台新銀行', status: 'verified' },
-  { code: '822', name: '中國信託商業銀行', shortName: '中國信託', status: 'reported_issues' },
+  { code: '004', name: '臺灣銀行', shortName: '臺灣銀行', status: 'no_reports', seo: baseSeo },
+  { code: '012', name: '台北富邦商業銀行', shortName: '富邦銀行', status: 'verified', seo: baseSeo },
+  { code: '013', name: '國泰世華商業銀行', shortName: '國泰世華', status: 'no_reports', seo: baseSeo },
+  { code: '812', name: '台新國際商業銀行', shortName: '台新銀行', status: 'verified', seo: baseSeo },
+  { code: '822', name: '中國信託商業銀行', shortName: '中國信託', status: 'reported_issues', seo: baseSeo },
 ];
 
 describe('BankList', () => {

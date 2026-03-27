@@ -1,16 +1,8 @@
-import banksRaw from '@/data/banks.json';
-import { BankExtended, BankStatus } from '../types';
-
-// 將 raw JSON 轉為 BankExtended（加入預設 status）
-function toBankExtended(raw: typeof banksRaw): BankExtended[] {
-  return raw.map((b) => ({
-    ...b,
-    status: (b as any).status ?? 'no_reports',
-  }));
-}
+import { getBanks } from '../utils/get-banks';
+import { BankStatus } from '../types';
 
 describe('Banks Data Layer', () => {
-  const banks = toBankExtended(banksRaw);
+  const banks = getBanks();
 
   it('should have 266 bank entries', () => {
     expect(banks).toHaveLength(266);
@@ -45,6 +37,9 @@ describe('Banks Data Layer', () => {
       if (bank.customerServicePhone !== undefined) {
         expect(typeof bank.customerServicePhone).toBe('string');
       }
+      expect(bank.seo.seoIntro).toBeTruthy();
+      expect(bank.seo.usageNotes.length).toBeGreaterThan(0);
+      expect(bank.seo.faqs.length).toBeGreaterThan(0);
     }
   });
 

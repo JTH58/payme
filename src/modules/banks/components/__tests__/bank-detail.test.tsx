@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { BankDetail } from '../bank-detail';
-import { BankExtended } from '../../types';
+import { BankExtended, BankSeoContent } from '../../types';
 
 // Mock ResizeObserver for Radix Dialog (BankFeedbackButton)
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -8,6 +8,20 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
+
+const baseSeo: BankSeoContent = {
+  seoIntro: '這是一段測試用 SEO 摘要。',
+  usageNotes: ['測試提示 1', '測試提示 2'],
+  faqs: [
+    { question: '測試 FAQ 1？', answer: '測試答案 1' },
+    { question: '測試 FAQ 2？', answer: '測試答案 2' },
+  ],
+  relatedBankCodes: ['004', '013', '822'],
+  lastReviewedAt: '2026-03-27',
+  statusSummary: '這是一段測試用狀態摘要。',
+  scanFeatureHint: '請在 App 中尋找掃碼轉帳。',
+  officialGuideLabel: '官方教學',
+};
 
 const verifiedBank: BankExtended = {
   code: '812',
@@ -18,6 +32,10 @@ const verifiedBank: BankExtended = {
   appStoreUrl: 'https://apps.apple.com/example',
   playStoreUrl: 'https://play.google.com/example',
   customerServicePhone: '0800-000-123',
+  seo: {
+    ...baseSeo,
+    verificationDate: '2026-03-01',
+  },
 };
 
 const noReportsBank: BankExtended = {
@@ -25,6 +43,7 @@ const noReportsBank: BankExtended = {
   name: '臺灣銀行',
   shortName: '臺灣銀行',
   status: 'no_reports',
+  seo: baseSeo,
 };
 
 const reportedBank: BankExtended = {
@@ -32,31 +51,36 @@ const reportedBank: BankExtended = {
   name: '中國信託商業銀行',
   shortName: '中國信託',
   status: 'reported_issues',
+  seo: {
+    ...baseSeo,
+    issueSummary: '測試中的問題摘要',
+    issueUpdatedAt: '2026-03-27',
+  },
 };
 
 describe('BankDetail', () => {
   it('should display bank name and code', () => {
     render(<BankDetail bank={verifiedBank} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('台新國際商業銀行');
-    expect(screen.getByText('812')).toBeInTheDocument();
+    expect(screen.getAllByText('812').length).toBeGreaterThan(0);
   });
 
   it('should display correct status indicator for verified bank', () => {
     render(<BankDetail bank={verifiedBank} />);
-    expect(screen.getByText('✅')).toBeInTheDocument();
-    expect(screen.getByText(/已驗證/)).toBeInTheDocument();
+    expect(screen.getAllByText('✅').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/已有使用回報/).length).toBeGreaterThan(0);
   });
 
   it('should display correct status indicator for no_reports bank', () => {
     render(<BankDetail bank={noReportsBank} />);
-    expect(screen.getByText('🏦')).toBeInTheDocument();
-    expect(screen.getByText(/未收到錯誤回報/)).toBeInTheDocument();
+    expect(screen.getAllByText('🏦').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/未收到錯誤回報/).length).toBeGreaterThan(0);
   });
 
   it('should display correct status indicator for reported_issues bank', () => {
     render(<BankDetail bank={reportedBank} />);
-    expect(screen.getByText('⚠️')).toBeInTheDocument();
-    expect(screen.getByText(/有問題回報/)).toBeInTheDocument();
+    expect(screen.getAllByText('⚠️').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/有問題回報/).length).toBeGreaterThan(0);
   });
 
   it('should show official guide link when available', () => {
@@ -67,7 +91,7 @@ describe('BankDetail', () => {
 
   it('should NOT show official guide link when not available', () => {
     render(<BankDetail bank={noReportsBank} />);
-    expect(screen.queryByText(/官方教學/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /官方教學/ })).not.toBeInTheDocument();
   });
 
   it('should show app download links when available', () => {
@@ -111,8 +135,21 @@ describe('BankDetail', () => {
   it('should render TWQR 介紹 card with /twqr link and bank name', () => {
     render(<BankDetail bank={verifiedBank} />);
     expect(screen.getByText('什麼是 TWQR？')).toBeInTheDocument();
-    expect(screen.getByText(/讓各家銀行 App 都能掃描/)).toBeInTheDocument();
+    expect(screen.getByText(/不同銀行 App 能掃描同一張 QR Code/)).toBeInTheDocument();
     const link = screen.getByText('了解 TWQR 標準 →');
     expect(link.closest('a')).toHaveAttribute('href', '/twqr');
+  });
+
+  it('should render faq section and usage guide', () => {
+    render(<BankDetail bank={verifiedBank} />);
+    expect(screen.getByText(/台新銀行 TWQR 常見問題/)).toBeInTheDocument();
+    expect(screen.getByText('測試 FAQ 1？')).toBeInTheDocument();
+    expect(screen.getByText(/如何用 台新銀行 掃 TWQR/)).toBeInTheDocument();
+  });
+
+  it('should render issue summary when bank has reported issues', () => {
+    render(<BankDetail bank={reportedBank} />);
+    expect(screen.getByText(/已知問題摘要/)).toBeInTheDocument();
+    expect(screen.getByText(/測試中的問題摘要/)).toBeInTheDocument();
   });
 });
