@@ -85,7 +85,7 @@ export function OnboardingCompleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm border-white/10 bg-[#0a0f1e]/95 backdrop-blur-2xl gap-0 overflow-y-auto max-h-[calc(100vh-2rem)] [&>button]:opacity-100 [&>button]:bg-white/10 [&>button]:rounded-full [&>button]:text-white/70 [&>button]:hover:text-white [&>button]:hover:bg-white/20">
+      <DialogContent className="sm:max-w-sm gap-0 overflow-y-auto max-h-[calc(100vh-2rem)] [&>button]:opacity-100 [&>button]:bg-white/55 [&>button]:rounded-full [&>button]:text-slate-500 [&>button]:hover:text-slate-900 [&>button]:hover:bg-white/80">
         <DialogTitle className="sr-only">收款碼已產生</DialogTitle>
         <DialogDescription className="sr-only">您的專屬收款碼已成功產生</DialogDescription>
 
@@ -94,7 +94,7 @@ export function OnboardingCompleteDialog({
           <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
             <PartyPopper className="w-5 h-5 text-emerald-400" />
           </div>
-          <h2 className="text-lg font-semibold text-white">恭喜完成！</h2>
+          <h2 className="text-lg font-semibold text-slate-900">恭喜完成！</h2>
         </div>
 
         {/* QR Card — delayed reveal */}
@@ -131,7 +131,7 @@ export function OnboardingCompleteDialog({
           <Button
             type="button"
             variant="outline"
-            className="w-full border-white/10 hover:border-white/20 hover:bg-white/5 text-white/80 h-11 gap-2"
+            className="w-full border-white/75 hover:border-slate-300 hover:bg-white text-slate-800 h-11 gap-2"
             onClick={onCustomizeStyle}
           >
             <Palette className="w-4 h-4" />
@@ -164,10 +164,10 @@ export function OnboardingCompleteDialog({
 
         {/* Tip — delayed */}
         <div
-          className="border-t border-white/[0.06] pt-3 pb-1"
+          className="border-t border-slate-200 pt-3 pb-1"
           style={{ opacity: revealed ? 1 : 0, transition: 'opacity 0.4s ease-out 0.9s' }}
         >
-          <div className="flex items-start gap-2 text-[11px] text-white/40 leading-relaxed">
+          <div className="flex items-start gap-2 text-[11px] text-slate-500 leading-relaxed">
             <Settings className="w-3.5 h-3.5 mt-0.5 shrink-0" />
             <span>欲新增更多帳戶，可至首頁點擊上方齒輪</span>
           </div>

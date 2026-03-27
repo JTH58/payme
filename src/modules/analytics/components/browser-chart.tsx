@@ -24,26 +24,26 @@ export function BrowserChart({ range }: BrowserChartProps) {
   const { data, isLoading } = useAnalytics<ListResponse<NameValueItem>>('browsers', range);
 
   if (isLoading) {
-    return <div className="h-[300px] bg-white/5 border border-white/10 rounded-xl animate-pulse" />;
+    return <div className="h-[300px] marketing-card animate-pulse" />;
   }
 
   const items = data?.data ?? [];
 
   if (items.length === 0) {
     return (
-      <div className="h-[300px] bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-white/40">
+      <div className="h-[300px] marketing-card flex items-center justify-center text-slate-400">
         No data
       </div>
     );
   }
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-      <h3 className="text-white/60 text-sm mb-4">Browsers</h3>
+    <div className="marketing-card p-4">
+      <h3 className="text-slate-500 text-sm mb-4">Browsers</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={items}>
-          <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={12} />
-          <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} />
+          <XAxis dataKey="name" stroke="rgba(100,116,139,0.8)" fontSize={12} />
+          <YAxis stroke="rgba(100,116,139,0.8)" fontSize={12} />
           <Tooltip content={<GlassTooltip />} />
           <Bar dataKey="value" name="Views" radius={[4, 4, 0, 0]}>
             {items.map((item, i) => (

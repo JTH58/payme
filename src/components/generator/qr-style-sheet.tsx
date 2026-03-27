@@ -44,7 +44,7 @@ function ThemePreviewDot({ preset }: { preset: typeof THEME_PRESETS[number] }) {
 
   return (
     <div
-      className="w-full aspect-square rounded-lg border border-white/10 flex items-center justify-center relative overflow-hidden"
+      className="w-full aspect-square rounded-lg border border-slate-200 flex items-center justify-center relative overflow-hidden"
       style={{ backgroundColor: s.backgroundColor }}
     >
       {/* Simplified visual representation */}
@@ -121,7 +121,7 @@ export function QrStyleSheet({
 
         {/* Live Preview — 固定在頂部不捲動 */}
         {qrPreviewData && (
-          <div className="flex-shrink-0 flex justify-center py-4 border-b border-white/10">
+          <div className="flex-shrink-0 flex justify-center py-4 border-b border-slate-200/70">
             <div className="bg-white rounded-xl p-2.5 shadow-lg">
               <StyledQrCode data={qrPreviewData} style={style} size={140} />
             </div>
@@ -132,7 +132,7 @@ export function QrStyleSheet({
         <SheetBody ref={bodyRef} onScroll={handleScroll} className="space-y-6">
           {/* Theme Presets Grid */}
           <div>
-            <p className="text-sm font-medium text-white/70 mb-3">主題</p>
+            <p className="text-sm font-medium text-slate-700 mb-3">主題</p>
             <div className="grid grid-cols-3 gap-3">
               {THEME_PRESETS.map(preset => (
                 <button
@@ -142,8 +142,8 @@ export function QrStyleSheet({
                   className={cn(
                     "flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all duration-200",
                     activePresetId === preset.id
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-white/10 hover:border-white/30 bg-white/5"
+                      ? "border-blue-400 bg-blue-50"
+                      : "border-slate-200 hover:border-slate-300 bg-white/70"
                   )}
                 >
                   <div className="relative w-full">
@@ -154,7 +154,7 @@ export function QrStyleSheet({
                       </div>
                     )}
                   </div>
-                  <span className="text-xs text-white/60">{preset.name}</span>
+                  <span className="text-xs text-slate-600">{preset.name}</span>
                 </button>
               ))}
             </div>
@@ -166,8 +166,8 @@ export function QrStyleSheet({
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="w-full flex items-center gap-3 py-2 group"
           >
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-xs font-medium text-white/50 group-hover:text-white/70 transition-colors flex items-center gap-1.5">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors flex items-center gap-1.5">
               {showAdvanced ? '收起細項調整' : '細項調整'}
               <svg
                 className={cn(
@@ -184,7 +184,7 @@ export function QrStyleSheet({
                 <path d="M3 4.5L6 7.5L9 4.5" />
               </svg>
             </span>
-            <div className="flex-1 h-px bg-white/10" />
+            <div className="flex-1 h-px bg-slate-200" />
           </button>
 
           {/* Advanced Controls */}
@@ -276,10 +276,10 @@ export function QrStyleSheet({
             <div
               className="absolute bottom-0 inset-x-0 flex flex-col items-center pointer-events-none animate-in fade-in duration-300"
             >
-              <div className="h-14 w-full bg-gradient-to-t from-black/90 to-transparent" />
+              <div className="h-14 w-full bg-gradient-to-t from-white/95 to-transparent" />
               <div className="absolute bottom-2 flex items-center gap-1 animate-bounce">
-                <span className="text-[11px] text-white/50">細項調整</span>
-                <svg className="w-3 h-3 text-white/40" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <span className="text-[11px] text-slate-500">細項調整</span>
+                <svg className="w-3 h-3 text-slate-400" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 6L8 10L12 6" />
                 </svg>
               </div>
@@ -296,7 +296,7 @@ export function QrStyleSheet({
 function OptionGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-white/50">{label}</p>
+      <p className="text-xs font-medium text-slate-500">{label}</p>
       {children}
     </div>
   );
@@ -310,8 +310,8 @@ function ChipButton({ label, active, onClick }: { label: string; active: boolean
       className={cn(
         "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150",
         active
-          ? "bg-white text-black"
-          : "bg-white/10 text-white/60 hover:bg-white/20"
+          ? "bg-white text-slate-900 border border-slate-200"
+          : "bg-white/70 text-slate-600 hover:bg-white border border-slate-200"
       )}
     >
       {label}
@@ -322,7 +322,7 @@ function ChipButton({ label, active, onClick }: { label: string; active: boolean
 function ColorInput({ value, onChange, label }: { value: string; onChange: (c: string) => void; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="relative w-8 h-8 rounded-lg border border-white/20 overflow-hidden cursor-pointer">
+      <label className="relative w-8 h-8 rounded-lg border border-slate-200 overflow-hidden cursor-pointer">
         <input
           type="color"
           value={value}
@@ -351,18 +351,18 @@ function GradientEditor({ gradient, onChange }: { gradient: DotGradient; onChang
     <div className="space-y-3">
       <div className="flex gap-3">
         <div className="space-y-1">
-          <span className="text-[10px] text-white/40">色 1</span>
+          <span className="text-[10px] text-slate-500">色 1</span>
           <ColorInput value={gradient.color1} onChange={c => onChange({ ...gradient, color1: c })} label="色碼 1" />
         </div>
         <div className="space-y-1">
-          <span className="text-[10px] text-white/40">色 2</span>
+          <span className="text-[10px] text-slate-500">色 2</span>
           <ColorInput value={gradient.color2} onChange={c => onChange({ ...gradient, color2: c })} label="色碼 2" />
         </div>
       </div>
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-white/40">角度</span>
-          <span className="text-[10px] text-white/40 font-mono">{gradient.angle}°</span>
+          <span className="text-[10px] text-slate-500">角度</span>
+          <span className="text-[10px] text-slate-500 font-mono">{gradient.angle}°</span>
         </div>
         <input
           type="range"
@@ -371,7 +371,7 @@ function GradientEditor({ gradient, onChange }: { gradient: DotGradient; onChang
           step={15}
           value={gradient.angle}
           onChange={e => onChange({ ...gradient, angle: Number(e.target.value) })}
-          className="w-full h-1 bg-white/10 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
+          className="w-full h-1 bg-slate-200 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-slate-700 [&::-webkit-slider-thumb]:cursor-pointer"
         />
       </div>
       {/* Gradient preview bar */}

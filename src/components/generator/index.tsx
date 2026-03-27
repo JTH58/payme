@@ -646,15 +646,6 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
   if (isSharedLink) {
     return (
       <>
-        <div
-          className={`fixed inset-0 z-[9999] bg-[#020617]/60 backdrop-blur-3xl flex items-center justify-center transition-opacity duration-1000 ease-out ${isInitialLoad ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        >
-          <div className="text-center space-y-4">
-            <h1 className="text-5xl md:text-7xl font-bold text-white tracking-[0.2em] animate-pulse">PayMe.TW</h1>
-            <p className="text-white/40 text-sm tracking-widest uppercase">Secure . Private . Fast</p>
-          </div>
-        </div>
-
         <div className="w-full max-w-4xl mx-auto space-y-6 animate-accordion-down">
           {/* 全域銀行資訊區塊 */}
           {!isInitialLoad && (
@@ -673,9 +664,9 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
           )}
 
           {/* Shared link header */}
-          <div className="w-full max-w-md mx-auto bg-white/10 p-1 rounded-full flex items-center justify-between relative backdrop-blur-md">
+          <div className="w-full max-w-md mx-auto bg-white/85 border border-slate-200 p-1 rounded-full flex items-center justify-between relative shadow-sm shadow-sky-100/70">
             <div className="w-full flex items-center justify-between px-4 py-2">
-              <span className="text-sm text-white/60">
+              <span className="text-sm text-slate-600">
                 ✨ 這是 {mode === 'bill' ? '分帳' : '收款'} 連結 (唯讀模式)
               </span>
               <button
@@ -721,7 +712,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
             </div>
 
             {/* 右側：QR 預覽區 (guest) */}
-            <div className="flex flex-col items-center justify-center min-h-0 md:min-h-[550px] relative overflow-hidden rounded-xl border border-white/10 bg-black/20 p-4 sm:p-8">
+            <div className="flex flex-col items-center justify-center min-h-0 md:min-h-[550px] relative overflow-hidden rounded-xl border border-slate-200 bg-white/80 shadow-sm shadow-sky-100/80 p-4 sm:p-8">
               {/* 多帳號切換器 */}
               {initialData?.ac && (
                 <AccountSwitcher
@@ -733,8 +724,8 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
               )}
 
               <div className="mb-6 text-center space-y-1">
-                <h3 className="text-xl font-medium text-white/90">TWQR 預覽</h3>
-                <p className="text-sm text-white/50">
+                <h3 className="text-xl font-medium text-slate-900">TWQR 預覽</h3>
+                <p className="text-sm text-slate-600">
                   {mode === 'bill' && !qrString
                     ? "👈 請先在左側選擇您的名字"
                     : (qrString
@@ -801,7 +792,7 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
                   <div className="space-y-1">
                     <Button
                       variant="outline"
-                      className="w-full border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 text-white/80 h-10 gap-2"
+                      className="w-full border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 h-10 gap-2"
                       onClick={handleCopyAccount}
                     >
                       {isAccountCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -880,22 +871,13 @@ export function Generator({ initialMode, initialData, isShared = false, initialB
 
   return (
     <>
-      <div
-        className={`fixed inset-0 z-[9999] bg-[#020617]/60 backdrop-blur-3xl flex items-center justify-center transition-opacity duration-1000 ease-out ${isInitialLoad ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-      >
-        <div className="text-center space-y-4">
-          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-[0.2em] animate-pulse">PayMe.TW</h1>
-          <p className="text-white/40 text-sm tracking-widest uppercase">Secure . Private . Fast</p>
-        </div>
-      </div>
-
       <div className="w-full max-w-lg mx-auto space-y-6 animate-accordion-down">
         {/* Template Attribution Badge */}
         {isTemplateActive && activeTemplate?.author && (
           <div className="flex justify-center">
-            <div className="bg-white/5 border border-white/10 px-3 py-1 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700">
-              <p className="text-[10px] text-white/50 tracking-wider">
-                TEMPLATE BY <span className="text-white/90 font-medium ml-1">{activeTemplate.author.name}</span>
+            <div className="bg-white/75 border border-slate-200 px-3 py-1 rounded-full backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700 shadow-sm shadow-sky-100/60">
+              <p className="text-[10px] text-slate-500 tracking-wider">
+                TEMPLATE BY <span className="text-slate-900 font-medium ml-1">{activeTemplate.author.name}</span>
               </p>
             </div>
           </div>

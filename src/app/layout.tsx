@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#020617",
+  themeColor: "#f6fbff",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // Critical for env(safe-area-inset-*)
@@ -48,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW" className="dark">
+    <html lang="zh-TW">
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <script
@@ -67,7 +67,7 @@ export default function RootLayout({
           }) }}
         />
       </head>
-      <body className={cn("font-sans min-h-screen antialiased overflow-x-hidden selection:bg-blue-500/20 bg-[#020617] text-white")}>
+      <body className={cn("font-sans min-h-screen antialiased overflow-x-hidden selection:bg-blue-500/20 text-slate-900")}>
         {children}
       </body>
     </html>

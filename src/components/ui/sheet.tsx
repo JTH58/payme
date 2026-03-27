@@ -65,7 +65,7 @@ const SheetOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-slate-900/22 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -125,7 +125,7 @@ const SheetContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={mergedRef}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-2xl bg-black/90 backdrop-blur-xl border-t border-white/10 shadow-lg pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom",
+          "fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-[1.75rem] bg-white/82 backdrop-blur-[28px] border-t border-white/80 shadow-[0_-16px_50px_rgba(148,163,184,0.18)] ring-1 ring-white/45 pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom",
           closedAnimClass,
           className
         )}
@@ -157,7 +157,7 @@ const SheetContent = React.forwardRef<
         <button
           type="button"
           onClick={() => swipe.dismiss()}
-          className="absolute right-2 top-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-white/60"
+          className="absolute right-2 top-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full opacity-80 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-slate-500 hover:bg-white/55"
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
@@ -179,7 +179,7 @@ const SheetHeader = ({
   return (
     <div
       className={cn(
-        "flex-shrink-0 flex flex-col items-center space-y-3 text-center px-6 pt-6 pb-4 border-b border-white/10",
+        "flex-shrink-0 flex flex-col items-center space-y-3 text-center px-6 pt-6 pb-4 border-b border-slate-200/70",
         className
       )}
       {...props}
@@ -189,7 +189,7 @@ const SheetHeader = ({
       <div
         className={cn(
           "w-10 h-1 rounded-full transition-colors",
-          swipeCtx?.isDragging ? "bg-white/60" : "bg-white/20"
+          swipeCtx?.isDragging ? "bg-slate-400" : "bg-slate-300/70"
         )}
       />
       {children && <div className="w-full space-y-1.5">{children}</div>}
@@ -223,7 +223,7 @@ const SheetTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight text-white",
+      "text-lg font-semibold leading-none tracking-tight text-slate-900",
       className
     )}
     {...props}
@@ -237,7 +237,7 @@ const SheetDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-white/50", className)}
+    className={cn("text-sm text-slate-600", className)}
     {...props}
   />
 ))

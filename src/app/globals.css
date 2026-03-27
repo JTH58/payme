@@ -4,36 +4,36 @@
 
 @layer base {
   :root {
-    /* 基礎色調：深色卻不全黑，帶有科技感的藍灰 */
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    /* 基礎色調：明亮冷白底，保留藍色科技感 */
+    --background: 210 100% 98%;
+    --foreground: 222 47% 11%;
 
-    /* 玻璃卡片背景色：極低透明度的白 */
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
+    /* 玻璃卡片背景色：偏亮霧面白 */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
  
-    --popover: 224 71% 4%;
-    --popover-foreground: 215 20.2% 65.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
  
-    /* 主色調：清新的藍紫色，像 iOS 的預設桌布色調 */
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* 主色調：更乾淨的亮藍 */
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
  
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
  
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
  
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 212 100% 97%;
+    --accent-foreground: 222 47% 11%;
  
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
  
-    /* 邊框與輸入框：極淡的線條 */
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    /* 邊框與輸入框：偏亮的霧面藍灰 */
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
     --ring: 224.3 76.3% 48%;
  
     --radius: 1rem; /* iOS 風格的大圓角 */
@@ -52,26 +52,45 @@
   }
   body {
     @apply bg-background text-foreground;
-    /* 加入背景流動光暈 */
-    background: radial-gradient(circle at 50% 0%, #1a2c4e 0%, #020617 100%);
+    /* 加入更明亮的品牌光暈 */
+    background:
+      radial-gradient(circle at top, rgba(96, 165, 250, 0.28), transparent 38%),
+      radial-gradient(circle at 85% 18%, rgba(125, 211, 252, 0.2), transparent 26%),
+      linear-gradient(180deg, #f6fbff 0%, #edf6ff 48%, #e9f1fb 100%);
     min-height: 100vh;
     min-height: 100dvh;
   }
 }
 
 @layer components {
+  .marketing-card {
+    @apply rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm shadow-sky-100/70;
+  }
+
+  .marketing-card-subtle {
+    @apply rounded-2xl border border-slate-200/80 bg-slate-50/80;
+  }
+
+  .marketing-muted {
+    @apply text-slate-700;
+  }
+
+  .marketing-faint {
+    @apply text-slate-600;
+  }
+
   /* 核心樣式：毛玻璃面板 */
   .glass-panel {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl;
+    @apply bg-white/80 backdrop-blur-2xl border border-white/70 shadow-[0_18px_60px_rgba(125,211,252,0.18)] ring-1 ring-white/50;
   }
   
   /* 互動元素：更強的玻璃質感 */
   .glass-input {
-    @apply bg-black/20 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:border-white/40 transition-all duration-300;
+    @apply bg-white/70 border border-white/75 text-slate-900 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-blue-500/25 focus-visible:border-blue-200 transition-all duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)];
   }
 
   .glass-button {
-    @apply bg-white/10 hover:bg-white/20 active:scale-[0.98] transition-all duration-200 border border-white/10 text-white font-medium backdrop-blur-md;
+    @apply bg-white/60 hover:bg-white/80 active:scale-[0.98] transition-all duration-200 border border-white/70 text-slate-800 font-medium backdrop-blur-xl shadow-[0_8px_24px_rgba(148,163,184,0.12)];
   }
 
   /* Shimmer 骨架屏效果 */

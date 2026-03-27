@@ -55,7 +55,7 @@ export function AccountSheet({
           <div className="pt-4 pb-2">
             <Button
               type="button"
-              className="w-full h-11 bg-white/10 hover:bg-white/15 text-white font-medium"
+              className="w-full h-11 bg-white/70 hover:bg-white text-slate-900 font-medium border border-white/75"
               onClick={() => onOpenChange(false)}
             >
               確定

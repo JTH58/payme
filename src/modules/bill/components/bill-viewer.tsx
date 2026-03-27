@@ -45,12 +45,12 @@ export function BillViewer({ form, billData }: BillViewerProps) {
   }, [selectedMemberIndex, billData, setValue, form]);
 
   return (
-    <Card className="h-fit border-l-4 border-l-purple-500 bg-white/5 border-white/10">
+    <Card className="h-fit border-l-4 border-l-purple-500 bg-white/85 border-slate-200 shadow-sm shadow-sky-100/70">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-purple-400">
            <span>🧾</span> 帳單明細 (唯讀)
         </CardTitle>
-        <p className="text-sm text-white/50">
+        <p className="text-sm text-slate-600">
            {billData.t || '未命名帳單'}
         </p>
       </CardHeader>
@@ -60,7 +60,7 @@ export function BillViewer({ form, billData }: BillViewerProps) {
         <div className="space-y-3">
            <div className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-500/20 text-xs font-bold text-purple-400">1</span>
-              <h4 className="font-medium text-white">請問您是哪一位？</h4>
+              <h4 className="font-medium text-slate-900">請問您是哪一位？</h4>
            </div>
            
            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -72,7 +72,7 @@ export function BillViewer({ form, billData }: BillViewerProps) {
                     "flex items-center justify-center gap-2 p-3 rounded-lg border transition-all text-sm font-medium",
                     selectedMemberIndex === idx
                       ? "bg-purple-500 text-white border-purple-500 shadow-glow-purple active:scale-[0.98]"
-                      : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:border-white/30 hover:scale-[1.02] active:scale-[0.98]"
+                      : "bg-white/80 text-slate-600 border-slate-200 hover:bg-white hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98]"
                   )}
                 >
                   {selectedMemberIndex === idx ? <Check size={16} /> : <User size={16} />}
@@ -83,10 +83,10 @@ export function BillViewer({ form, billData }: BillViewerProps) {
         </div>
 
         {/* 2. 帳單明細預覽 */}
-        <div className="space-y-3 pt-4 border-t border-white/10 opacity-75">
+        <div className="space-y-3 pt-4 border-t border-slate-200 opacity-90">
            <div className="flex items-center gap-2 mb-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/50">2</span>
-              <h4 className="font-medium text-white/70 text-sm">消費內容</h4>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-500">2</span>
+              <h4 className="font-medium text-slate-700 text-sm">消費內容</h4>
            </div>
            
            <div className="space-y-2 text-sm">
@@ -98,16 +98,16 @@ export function BillViewer({ form, billData }: BillViewerProps) {
                     isMine ? "bg-purple-500/10" : "transparent"
                   )}>
                     <div className="flex items-center gap-2">
-                       <span className="text-white/80">{item.n}</span>
+                       <span className="text-slate-800">{item.n}</span>
                        {isMine && <Badge variant="secondary" className="text-[10px] h-4 px-1">我也有份</Badge>}
                     </div>
-                    <span className="font-mono text-white/60">${item.p}</span>
+                    <span className="font-mono text-slate-600">${item.p}</span>
                   </div>
                 )
              })}
              
              {billData.s && (
-               <div className="flex justify-between items-center p-2 text-white/50 italic">
+               <div className="flex justify-between items-center p-2 text-slate-500 italic">
                  <span>+ 10% 服務費</span>
                </div>
              )}
@@ -116,12 +116,12 @@ export function BillViewer({ form, billData }: BillViewerProps) {
 
         {/* 3. 應付金額 */}
         {selectedMemberIndex !== null && (
-           <div className="pt-4 border-t border-white/10 text-center animate-in fade-in slide-in-from-bottom-2">
+           <div className="pt-4 border-t border-slate-200 text-center animate-in fade-in slide-in-from-bottom-2">
               <p className="text-sm text-purple-300 mb-1">您應支付的金額</p>
-              <p className="text-4xl font-bold text-white">
+              <p className="text-4xl font-bold text-slate-900">
                  ${form.watch('amount')}
               </p>
-              <p className="text-xs text-white/40 mt-2">
+              <p className="text-xs text-slate-500 mt-2">
                  右側 QR Code 已自動更新
               </p>
            </div>

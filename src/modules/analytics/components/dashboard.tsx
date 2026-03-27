@@ -17,7 +17,7 @@ export function Dashboard() {
   return (
     <div className="max-w-6xl mx-auto w-full px-4 py-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
         <TimeRangeFilter value={range} onChange={setRange} />
       </div>
 

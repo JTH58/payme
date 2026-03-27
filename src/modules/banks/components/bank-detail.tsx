@@ -3,9 +3,9 @@ import { BankExtended, BankStatus } from '../types';
 import { BankFeedbackButton } from './bank-feedback-button';
 
 const STATUS_CONFIG: Record<BankStatus, { icon: string; label: string; color: string }> = {
-  no_reports: { icon: '🏦', label: '未收到錯誤回報', color: 'text-white/60' },
-  verified: { icon: '✅', label: '已驗證可用', color: 'text-green-400' },
-  reported_issues: { icon: '⚠️', label: '有問題回報', color: 'text-yellow-400' },
+  no_reports: { icon: '🏦', label: '未收到錯誤回報', color: 'text-slate-600' },
+  verified: { icon: '✅', label: '已驗證可用', color: 'text-green-600' },
+  reported_issues: { icon: '⚠️', label: '有問題回報', color: 'text-amber-600' },
 };
 
 interface BankDetailProps {
@@ -19,8 +19,8 @@ export function BankDetail({ bank }: BankDetailProps) {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <p className="text-white/50 text-sm font-mono mb-1">{bank.code}</p>
-        <h1 className="text-2xl font-bold">{bank.name} 搭配 PayMe.tw 使用</h1>
+        <p className="text-slate-500 text-sm font-mono mb-1">{bank.code}</p>
+        <h1 className="text-2xl font-bold text-slate-900">{bank.name} 搭配 PayMe.tw 使用</h1>
       </div>
 
       {/* Status */}
@@ -30,7 +30,7 @@ export function BankDetail({ bank }: BankDetailProps) {
           <span>{status.icon}</span>
           <span>{status.label}</span>
         </div>
-        <p className="text-sm text-white/60 leading-relaxed">
+        <p className="text-sm text-slate-600 leading-relaxed">
           {bank.name}（{bank.code}）用戶支援 TWQR
           掃碼轉帳，各大銀行 App
           皆可掃描付款，搭配 PayMe.tw
@@ -45,7 +45,7 @@ export function BankDetail({ bank }: BankDetailProps) {
             href={bank.officialGuideUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+            className="block px-4 py-3 rounded-lg bg-white/80 hover:bg-white border border-slate-200 transition-colors shadow-sm shadow-sky-100/60"
           >
             📖 官方教學
           </a>
@@ -56,7 +56,7 @@ export function BankDetail({ bank }: BankDetailProps) {
             href={bank.appStoreUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+            className="block px-4 py-3 rounded-lg bg-white/80 hover:bg-white border border-slate-200 transition-colors shadow-sm shadow-sky-100/60"
           >
             🍎 App Store
           </a>
@@ -67,44 +67,44 @@ export function BankDetail({ bank }: BankDetailProps) {
             href={bank.playStoreUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+            className="block px-4 py-3 rounded-lg bg-white/80 hover:bg-white border border-slate-200 transition-colors shadow-sm shadow-sky-100/60"
           >
             🤖 Google Play
           </a>
         )}
 
         {bank.customerServicePhone && (
-          <div className="px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/70">
+          <div className="px-4 py-3 rounded-lg bg-white/80 border border-slate-200 text-slate-600 shadow-sm shadow-sky-100/60">
             📞 客服電話：{bank.customerServicePhone}
           </div>
         )}
       </div>
 
       {/* PayMe.tw 介紹 */}
-      <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4 space-y-2">
-        <h2 className="text-sm font-semibold text-blue-400">關於 PayMe.tw</h2>
-        <p className="text-xs text-white/50 leading-relaxed">
+      <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-blue-700">關於 PayMe.tw</h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
           PayMe.tw 是免費、開源的台灣通用收款碼產生器。支援全台 266 間金融機構，
           隱私優先、資料不回傳，一鍵產生 TWQR 收款 QR Code。
         </p>
         <Link
           href="/features"
-          className="inline-block text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          className="inline-block text-xs text-blue-700 hover:text-blue-800 transition-colors"
         >
           了解更多功能 →
         </Link>
       </div>
 
       {/* TWQR 介紹 */}
-      <div className="rounded-lg border border-purple-500/20 bg-purple-500/5 p-4 space-y-2">
-        <h2 className="text-sm font-semibold text-purple-400">什麼是 TWQR？</h2>
-        <p className="text-xs text-white/50 leading-relaxed">
+      <div className="rounded-lg border border-indigo-200 bg-indigo-50/80 p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-indigo-700">什麼是 TWQR？</h2>
+        <p className="text-xs text-slate-600 leading-relaxed">
           TWQR 是台灣共用支付碼標準，讓各家銀行 App 都能掃描同一張 QR Code 完成轉帳，
           跨行互通、安全免費。
         </p>
         <Link
           href="/twqr"
-          className="inline-block text-xs text-purple-400 hover:text-purple-300 transition-colors"
+          className="inline-block text-xs text-indigo-700 hover:text-indigo-800 transition-colors"
         >
           了解 TWQR 標準 →
         </Link>
@@ -124,7 +124,7 @@ export function BankDetail({ bank }: BankDetailProps) {
       {/* Back link */}
       <Link
         href="/banks"
-        className="block text-center text-white/50 hover:text-white/80 transition-colors text-sm"
+        className="block text-center text-slate-500 hover:text-slate-800 transition-colors text-sm"
       >
         ← 返回銀行列表
       </Link>

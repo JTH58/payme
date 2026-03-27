@@ -36,9 +36,9 @@ export function HelpDialog({ open, onOpenChange, scenarioId }: HelpDialogProps) 
         </DialogHeader>
 
         {/* GIF Preview */}
-        <div className="rounded-lg overflow-hidden bg-white/5">
+        <div className="rounded-lg overflow-hidden bg-slate-50 border border-slate-200">
           {gifError ? (
-            <div className="flex flex-col items-center justify-center py-8 text-white/40">
+            <div className="flex flex-col items-center justify-center py-8 text-slate-400">
               <ImageOff size={32} className="mb-2" />
               <p className="text-sm">圖片載入失敗</p>
             </div>

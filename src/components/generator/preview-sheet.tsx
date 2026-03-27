@@ -139,7 +139,7 @@ export function PreviewSheet({
               <button
                 type="button"
                 onClick={onOpenStyleSheet}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-sm text-white/70 hover:text-white transition-all duration-150"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/70 hover:bg-white border border-white/75 text-sm text-slate-700 hover:text-slate-900 transition-all duration-150 shadow-sm shadow-sky-100/60"
               >
                 <Palette className="w-3.5 h-3.5" />
                 自訂樣式
@@ -150,7 +150,7 @@ export function PreviewSheet({
           {/* Share + Download buttons */}
           <div className="grid grid-cols-2 gap-3">
             <Button
-              className="w-full bg-white/10 hover:bg-white/20 border-white/10 text-white active:scale-[0.96] transition-transform"
+              className="w-full bg-white/70 hover:bg-white border border-white/75 text-slate-900 active:scale-[0.96] transition-transform shadow-sm shadow-sky-100/60"
               onClick={onShare}
               disabled={!hasQr}
             >

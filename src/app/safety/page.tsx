@@ -57,7 +57,7 @@ export default function SafetyPage() {
       />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <h1 className="text-3xl font-bold mb-2">防詐資訊</h1>
-        <p className="text-white/60 mb-10">
+        <p className="marketing-muted mb-10">
           安全使用 QR Code 轉帳，保護自己也保護他人
         </p>
 
@@ -67,22 +67,22 @@ export default function SafetyPage() {
             return (
               <section
                 key={section.id}
-                className="bg-white/5 border border-white/10 rounded-xl p-6"
+                className="marketing-card p-6"
               >
                 <div className="flex items-center gap-3 mb-3">
                   {Icon && <Icon size={22} className={section.iconColor} />}
                   <h2 className="text-xl font-semibold">{section.title}</h2>
                 </div>
-                <p className="text-white/50 text-sm mb-4">
+                <p className="marketing-muted text-sm mb-4">
                   {section.description}
                 </p>
                 <ul className="space-y-3">
                   {section.items.map((item) => (
                     <li key={item.title}>
-                      <p className="text-white/90 font-medium text-sm">
+                      <p className="text-slate-900 font-medium text-sm">
                         {item.title}
                       </p>
-                      <p className="text-white/50 text-sm leading-relaxed">
+                      <p className="marketing-muted text-sm leading-relaxed">
                         {item.content}
                       </p>
                     </li>
@@ -95,14 +95,14 @@ export default function SafetyPage() {
 
         {/* 165 專線 Callout */}
         <div className="mt-10 bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
-          <p className="text-white/60 text-sm mb-2">{hotline.description}</p>
+          <p className="marketing-muted text-sm mb-2">{hotline.description}</p>
           <a
             href={`tel:${hotline.number}`}
             className="text-4xl font-bold text-red-400 hover:text-red-300 transition-colors"
           >
             {hotline.number}
           </a>
-          <p className="text-white/70 text-sm mt-2">
+          <p className="text-slate-600 text-sm mt-2">
             {hotline.label}（{hotline.hours}）
           </p>
         </div>

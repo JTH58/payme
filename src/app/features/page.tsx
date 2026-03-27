@@ -68,7 +68,7 @@ export default function FeaturesPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         {/* Hero */}
         <h1 className="text-3xl font-bold mb-2">{hero.title}</h1>
-        <p className="text-white/60 mb-12">{hero.subtitle}</p>
+        <p className="marketing-muted mb-12">{hero.subtitle}</p>
 
         {/* Highlights Grid */}
         <div className="grid md:grid-cols-2 gap-4 mb-16">
@@ -77,13 +77,13 @@ export default function FeaturesPage() {
             return (
               <div
                 key={item.id}
-                className="bg-white/5 border border-white/10 rounded-xl p-6"
+                className="marketing-card p-6"
               >
                 <div className="flex items-center gap-3 mb-3">
                   {Icon && <Icon size={22} className={item.iconColor} />}
                   <h2 className="text-lg font-semibold">{item.title}</h2>
                 </div>
-                <p className="text-white/50 text-sm leading-relaxed">
+                <p className="marketing-muted text-sm leading-relaxed">
                   {item.description}
                 </p>
               </div>
@@ -94,24 +94,24 @@ export default function FeaturesPage() {
         {/* Tutorial Steps */}
         <section className="mb-16">
           <h2 className="text-2xl font-bold mb-2">{tutorial.title}</h2>
-          <p className="text-white/60 text-sm mb-8">{tutorial.subtitle}</p>
+          <p className="marketing-muted text-sm mb-8">{tutorial.subtitle}</p>
           <div className="space-y-4">
             {tutorial.steps.map((step) => {
               const Icon = ICON_MAP[step.icon];
               return (
                 <div
                   key={step.step}
-                  className="flex items-start gap-4 bg-white/5 border border-white/10 rounded-xl p-5"
+                  className="marketing-card flex items-start gap-4 p-5"
                 >
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-sm">
                     {step.step}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      {Icon && <Icon size={16} className="text-white/40" />}
+                      {Icon && <Icon size={16} className="text-slate-400" />}
                       <h3 className="font-semibold">{step.title}</h3>
                     </div>
-                    <p className="text-white/50 text-sm leading-relaxed">
+                    <p className="marketing-muted text-sm leading-relaxed">
                       {step.description}
                     </p>
                   </div>
@@ -128,13 +128,13 @@ export default function FeaturesPage() {
             {faq.items.map((item, idx) => (
               <details
                 key={idx}
-                className="group bg-white/5 border border-white/10 rounded-xl"
+                className="marketing-card group"
               >
-                <summary className="cursor-pointer px-6 py-4 text-sm font-medium text-white/90 list-none flex items-center justify-between">
+                <summary className="cursor-pointer px-6 py-4 text-sm font-medium text-slate-900 list-none flex items-center justify-between">
                   {item.question}
-                  <span className="text-white/30 group-open:rotate-45 transition-transform duration-200 text-lg">+</span>
+                  <span className="text-slate-400 group-open:rotate-45 transition-transform duration-200 text-lg">+</span>
                 </summary>
-                <div className="px-6 pb-4 text-sm text-white/50 leading-relaxed">
+                <div className="px-6 pb-4 text-sm text-slate-600 leading-relaxed">
                   {item.answer}
                 </div>
               </details>
@@ -145,7 +145,7 @@ export default function FeaturesPage() {
         {/* CTA */}
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-8 text-center">
           <h2 className="text-xl font-bold mb-2">{cta.title}</h2>
-          <p className="text-white/60 text-sm mb-6">{cta.description}</p>
+          <p className="marketing-muted text-sm mb-6">{cta.description}</p>
           <Link
             href={cta.buttonHref}
             className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white font-medium px-6 py-3 rounded-full transition-colors"

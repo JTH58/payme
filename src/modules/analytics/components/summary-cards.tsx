@@ -23,16 +23,16 @@ export function SummaryCards({ range }: SummaryCardsProps) {
       {CARDS.map(({ key, label, icon: Icon, color }) => (
         <div
           key={key}
-          className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2"
+          className="marketing-card p-4 space-y-2"
         >
           <div className="flex items-center gap-2">
             <Icon className={`w-4 h-4 ${color}`} />
-            <span className="text-white/60 text-sm">{label}</span>
+            <span className="text-slate-500 text-sm">{label}</span>
           </div>
           {isLoading ? (
-            <div className="h-8 w-20 bg-white/10 rounded animate-pulse" />
+            <div className="h-8 w-20 bg-slate-100 rounded animate-pulse" />
           ) : (
-            <p className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-slate-900">
               {(data?.[key] ?? 0).toLocaleString()}
             </p>
           )}

@@ -7,7 +7,7 @@ export default function TwqrLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col">
+    <div className="min-h-screen bg-transparent text-slate-900 flex flex-col">
       <Navbar />
       <div className="flex-1">
         {children}

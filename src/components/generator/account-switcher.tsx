@@ -29,7 +29,7 @@ export function AccountSwitcher({
 
   return (
     <div className="w-full space-y-2 mb-6">
-       <div className="text-xs text-white/40 text-center" id="account-switcher-label">選擇轉入帳戶</div>
+       <div className="text-xs text-slate-500 text-center" id="account-switcher-label">選擇轉入帳戶</div>
        <div className="flex flex-wrap justify-center gap-2" role="radiogroup" aria-labelledby="account-switcher-label">
           {accounts.map((acc) => {
              const bankName = shortNameMap.get(acc.b) || acc.b;
@@ -44,13 +44,13 @@ export function AccountSwitcher({
                  className={cn(
                    "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all active:scale-[0.98]",
                    isSelected
-                     ? "bg-blue-500/20 border-blue-500/50 text-blue-100 shadow-glow-blue"
-                     : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10"
+                     ? "bg-blue-100 border-blue-300 text-blue-800 shadow-sm shadow-blue-100"
+                     : "bg-white/80 border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300"
                  )}
                >
                  <span className="font-bold">{bankName}</span>
                  <span className="font-mono text-xs opacity-70">*{acc.a.slice(-4)}</span>
-                 {isSelected && <Check size={14} className="text-blue-400" />}
+                 {isSelected && <Check size={14} className="text-blue-600" />}
                </button>
              );
           })}

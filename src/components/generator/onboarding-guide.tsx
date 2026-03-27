@@ -14,20 +14,20 @@ export function OnboardingGuide({ onOpenAccountSheet, onGenerateQr, isAccountRea
   const [showStep1Hint, setShowStep1Hint] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 space-y-5">
+    <div className="rounded-2xl border border-slate-200 bg-white/85 shadow-sm shadow-sky-100/80 p-6 space-y-5">
       {/* Title */}
       <div className="text-center space-y-1">
-        <h2 className="text-lg font-semibold text-white">PayMe.TW 快速上手！</h2>
-        <p className="text-sm text-white/50">兩步驟擁有個人專屬收款碼</p>
+        <h2 className="text-lg font-semibold text-slate-900">PayMe.TW 快速上手！</h2>
+        <p className="text-sm text-slate-600">兩步驟擁有個人專屬收款碼</p>
       </div>
 
       {/* Step 1 */}
       <div className="space-y-2">
-        <p className="text-xs text-white/40 font-medium tracking-wider">STEP 1</p>
+        <p className="text-xs text-slate-500 font-medium tracking-wider">STEP 1</p>
         <Button
           type="button"
           variant="outline"
-          className="w-full justify-between border-white/10 hover:border-white/20 hover:bg-white/5 text-white/80 h-12 px-4"
+          className="w-full justify-between border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 h-12 px-4"
           onClick={onOpenAccountSheet}
         >
           <span className="flex items-center gap-2">
@@ -42,12 +42,12 @@ export function OnboardingGuide({ onOpenAccountSheet, onGenerateQr, isAccountRea
 
       {/* Flow Arrow */}
       <div className="flex justify-center">
-        <ChevronDown className="w-5 h-5 text-white/30 animate-flow-down" />
+        <ChevronDown className="w-5 h-5 text-slate-400 animate-flow-down" />
       </div>
 
       {/* Step 2 */}
       <div className="space-y-2">
-        <p className="text-xs text-white/40 font-medium tracking-wider">STEP 2</p>
+        <p className="text-xs text-slate-500 font-medium tracking-wider">STEP 2</p>
         <Button
           type="button"
           className="w-full h-12 gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium disabled:opacity-40"

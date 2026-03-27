@@ -38,7 +38,7 @@ export function SettingsMenu({ onBackupClick, onQrStyleClick, onAccountClick, on
         ref={buttonRef}
         onClick={() => setOpen(!open)}
         aria-label="設定"
-        className="flex items-center text-white/60 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/5"
+        className="flex items-center text-slate-500 hover:text-slate-900 transition-colors p-1.5 rounded-full hover:bg-white/70"
       >
         <Settings size={14} />
       </button>
@@ -46,7 +46,7 @@ export function SettingsMenu({ onBackupClick, onQrStyleClick, onAccountClick, on
       {open && (
         <div
           ref={menuRef}
-          className="absolute right-0 top-full mt-2 w-40 rounded-xl bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 shadow-lg shadow-black/30 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50"
+          className="absolute right-0 top-full mt-2 w-40 rounded-xl bg-white/92 backdrop-blur-xl border border-slate-200 shadow-lg shadow-sky-100/80 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50"
         >
           {onQrStyleClick && (
             <button
@@ -96,5 +96,5 @@ export function SettingsMenu({ onBackupClick, onQrStyleClick, onAccountClick, on
 }
 
 const MENU_ITEM_CLASS = cn(
-  "flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+  "flex items-center gap-2.5 w-full px-3.5 py-2.5 text-xs text-slate-700 hover:text-slate-900 hover:bg-sky-50 transition-colors"
 );

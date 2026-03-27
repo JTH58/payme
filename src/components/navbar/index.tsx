@@ -23,9 +23,9 @@ function ThreadsIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-const NAV_LINK_CLASS = "relative text-xs font-medium text-white/60 hover:text-white transition-colors px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-4/5 after:h-px after:bg-white/40 after:transition-all after:duration-300 after:rounded-full";
+const NAV_LINK_CLASS = "relative text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors px-3 py-1.5 rounded-full hover:bg-white/70 border border-transparent hover:border-slate-200 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-4/5 after:h-px after:bg-blue-500/50 after:transition-all after:duration-300 after:rounded-full";
 
-const MOBILE_LINK_CLASS = "flex items-center gap-3 text-sm text-white/70 hover:text-white transition-colors px-4 py-3 rounded-lg hover:bg-white/5";
+const MOBILE_LINK_CLASS = "flex items-center gap-3 text-sm text-slate-600 hover:text-slate-900 transition-colors px-4 py-3 rounded-lg hover:bg-sky-50";
 
 interface NavbarProps {
   className?: string;
@@ -61,12 +61,12 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
 
   return (
     <nav className={cn(
-      "relative z-50 w-full border-b border-white/5 bg-[#020617]/50 backdrop-blur-md pt-[env(safe-area-inset-top)]",
+      "relative z-50 w-full border-b border-slate-200/70 bg-white/65 backdrop-blur-xl pt-[env(safe-area-inset-top)] shadow-[0_1px_0_rgba(255,255,255,0.7)]",
       className
     )}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3">
-          <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg shadow-blue-500/10">
+          <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-slate-200 shadow-lg shadow-sky-200/70">
             <Image
               src="/logo.png"
               alt="PayMe.TW Logo"
@@ -74,24 +74,24 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
               className="object-cover"
             />
           </div>
-          <span className="text-white font-semibold tracking-tight text-lg">
-            PayMe<span className="text-blue-400">.tw</span>
+          <span className="text-slate-900 font-semibold tracking-tight text-lg">
+            PayMe<span className="text-blue-600">.tw</span>
           </span>
         </Link>
 
         <div className="flex items-center gap-4">
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/banks" className={cn(NAV_LINK_CLASS, isActive('/banks') && 'text-white/90 after:w-4/5')}>
+            <Link href="/banks" className={cn(NAV_LINK_CLASS, isActive('/banks') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
               支援銀行
             </Link>
-            <Link href="/twqr" className={cn(NAV_LINK_CLASS, isActive('/twqr') && 'text-white/90 after:w-4/5')}>
+            <Link href="/twqr" className={cn(NAV_LINK_CLASS, isActive('/twqr') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
               TWQR 標準
             </Link>
-            <Link href="/features" className={cn(NAV_LINK_CLASS, isActive('/features') && 'text-white/90 after:w-4/5')}>
+            <Link href="/features" className={cn(NAV_LINK_CLASS, isActive('/features') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
               功能特色
             </Link>
-            <Link href="/safety" className={cn(NAV_LINK_CLASS, isActive('/safety') && 'text-white/90 after:w-4/5')}>
+            <Link href="/safety" className={cn(NAV_LINK_CLASS, isActive('/safety') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
               防詐資訊
             </Link>
             {/* TODO: 使用教學暫時隱藏，待內容完善後恢復
@@ -130,7 +130,7 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? '關閉選單' : '開啟選單'}
-            className="md:hidden flex items-center text-white/60 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/5"
+            className="md:hidden flex items-center text-slate-500 hover:text-slate-900 transition-colors p-1.5 rounded-full hover:bg-slate-100/80"
           >
             {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -139,32 +139,32 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
 
       {/* Mobile dropdown menu */}
       {isMenuOpen && (
-        <div ref={menuRef} className="md:hidden absolute left-0 right-0 top-full border-t border-white/5 bg-[#020617]/95 backdrop-blur-md shadow-lg shadow-black/20 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div ref={menuRef} className="md:hidden absolute left-0 right-0 top-full border-t border-slate-200/70 bg-white/90 backdrop-blur-xl shadow-lg shadow-sky-100/80 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col gap-1">
             <Link
               href="/banks"
-              className={cn(MOBILE_LINK_CLASS, isActive('/banks') && 'text-white bg-white/5 border-l-2 border-blue-400')}
+              className={cn(MOBILE_LINK_CLASS, isActive('/banks') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               支援銀行
             </Link>
             <Link
               href="/twqr"
-              className={cn(MOBILE_LINK_CLASS, isActive('/twqr') && 'text-white bg-white/5 border-l-2 border-blue-400')}
+              className={cn(MOBILE_LINK_CLASS, isActive('/twqr') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               TWQR 標準
             </Link>
             <Link
               href="/features"
-              className={cn(MOBILE_LINK_CLASS, isActive('/features') && 'text-white bg-white/5 border-l-2 border-blue-400')}
+              className={cn(MOBILE_LINK_CLASS, isActive('/features') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               功能特色
             </Link>
             <Link
               href="/safety"
-              className={cn(MOBILE_LINK_CLASS, isActive('/safety') && 'text-white bg-white/5 border-l-2 border-blue-400')}
+              className={cn(MOBILE_LINK_CLASS, isActive('/safety') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               防詐資訊

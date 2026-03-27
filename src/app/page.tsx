@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Generator } from "@/components/generator";
-import { Zap, AlertTriangle, Download, Trash2 } from "lucide-react";
+import { Zap, AlertTriangle, Download, Trash2, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { useUrlParser } from '@/hooks/use-url-parser';
@@ -24,6 +24,81 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+
+function HomeIntroSection() {
+  return (
+    <section className="w-full max-w-5xl mt-12 md:mt-16">
+      <div className="glass-panel rounded-[2rem] p-6 sm:p-8 md:p-10">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start max-w-4xl mx-auto">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1 text-xs font-medium text-blue-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              PayMe.TW 是什麼？
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">
+                把台灣銀行帳號，快速變成可分享的 TWQR 收款碼
+              </h2>
+              <p className="text-sm sm:text-base leading-7 text-slate-600 max-w-2xl">
+                PayMe.TW 是一個以隱私為前提設計的收款工具。你只要設定銀行帳戶，就能在瀏覽器裡直接產生符合
+                TWQR 規格的 QR Code，也能建立平均分帳或多人拆帳連結，分享給朋友直接付款。
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+                <p className="text-sm font-medium text-slate-900">適合誰用</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  聚餐分帳、社團收款、活動報名、小店收款、朋友轉帳都很適合。
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+                <p className="text-sm font-medium text-slate-900">你會得到什麼</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  一個可掃碼、可分享、可離線使用，而且不用把資料交給伺服器的收款入口。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            {[
+              {
+                icon: ShieldCheck,
+                title: '資料留在本機',
+                description: '帳號、金額與備註主要在瀏覽器端處理，降低敏感資料外流風險。',
+              },
+              {
+                icon: Smartphone,
+                title: '銀行 App 可直接掃',
+                description: '依 TWQR 規則產生內容，讓使用者能用熟悉的台灣銀行 App 完成付款。',
+              },
+              {
+                icon: Sparkles,
+                title: '不只收款，也能分帳',
+                description: '從個人收款到多人拆帳，用同一個入口完成建立、分享與付款流程。',
+              },
+            ].map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="rounded-2xl border border-white/80 bg-gradient-to-br from-white to-sky-50/70 p-4 shadow-sm shadow-sky-100/70"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-blue-100 p-2 text-blue-700">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-900">{title}</p>
+                    <p className="text-sm leading-6 text-slate-600">{description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function BackupImportConfirm({
   backupData,
@@ -110,29 +185,29 @@ function HomeContent() {
       {/* 0. The Curtain (Loading Overlay) - 解決閃爍問題的核心 */}
       <div
         className={cn(
-          "fixed inset-0 z-[60] bg-[#020617] flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out", // z-[60] = Z_INDEX.LOADING_CURTAIN — 需在 Navbar(z-50) 之上
+          "fixed inset-0 z-[60] bg-[#f4f9ff] flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out", // z-[60] = Z_INDEX.LOADING_CURTAIN — 需在 Navbar(z-50) 之上
           isMounted ? "opacity-0 pointer-events-none" : "opacity-100"
         )}
       >
         <div className="flex flex-col items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon-splash-128.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} />
-          <p className="text-white/40 tracking-[0.2em] text-sm font-medium uppercase animate-pulse">Loading PayMe.tw</p>
+          <p className="text-slate-500 tracking-[0.2em] text-sm font-medium uppercase animate-pulse">Loading PayMe.tw</p>
         </div>
       </div>
 
       {/* 1. Background Layer */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#020617] to-[#0b1121]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f8fbff] via-[#eef6ff] to-[#e8f1fb]"></div>
         <GridPattern
           width={50}
           height={50}
           x={-1}
           y={-1}
-          className="stroke-white/[0.03] [mask-image:linear-gradient(to_bottom,white,transparent_80%)]"
+          className="stroke-slate-400/[0.12] [mask-image:linear-gradient(to_bottom,white,transparent_80%)]"
         />
-        {/* Subtle Glow */}
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-500/10 blur-[120px] rounded-full mix-blend-screen pointer-events-none"></div>
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-sky-300/25 blur-[120px] rounded-full mix-blend-multiply pointer-events-none"></div>
+        <div className="absolute right-[-120px] top-[180px] h-[360px] w-[360px] rounded-full bg-cyan-200/30 blur-[110px] pointer-events-none"></div>
       </div>
 
       {/* 2. Navbar - Safe Area Adapted */}
@@ -157,10 +232,10 @@ function HomeContent() {
 
           {/* Main Title */}
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/40 pb-2">
+            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-blue-800 to-slate-500 pb-2">
               台灣TWQR • 通用收款/分帳工具
             </h1>
-            <div className="text-sm text-white/40 max-w-lg mx-auto grid grid-cols-2 sm:grid-cols-3 gap-x-3 sm:gap-x-6 gap-y-1">
+            <div className="text-sm text-slate-500 max-w-lg mx-auto grid grid-cols-2 sm:grid-cols-3 gap-x-3 sm:gap-x-6 gap-y-1">
               <span>• 符合 TWQR 規則</span>
               <span>• 本地運算不上傳</span>
               <span>• 支援多帳戶分享</span>
@@ -233,6 +308,13 @@ function HomeContent() {
           </Suspense>
         </div>
 
+        <div className={cn(
+          "w-full transition-all duration-1000 delay-700 transform",
+          isMounted ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
+        )}>
+          <HomeIntroSection />
+        </div>
+
       </main>
 
       {/* 5. Footer - Safe Area Adapted */}
@@ -291,11 +373,11 @@ function HomeContent() {
 export default function Home() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-[#f4f9ff] flex flex-col items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon-splash-128.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} />
-          <p className="text-white/40 tracking-[0.2em] text-sm font-medium uppercase animate-pulse">
+          <p className="text-slate-500 tracking-[0.2em] text-sm font-medium uppercase animate-pulse">
             Loading PayMe.tw
           </p>
         </div>

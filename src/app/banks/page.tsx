@@ -37,11 +37,11 @@ export default function BanksPage() {
       />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <h1 className="text-3xl font-bold mb-2">支援銀行列表</h1>
-        <p className="text-white/60 mb-8">
+        <p className="marketing-muted mb-8">
           全台 {banks.length} 間金融機構 TWQR 掃碼轉帳支援狀態
         </p>
 
-        <div className="mb-8 p-4 rounded-lg bg-white/5 border border-white/10 text-sm text-white/70 space-y-1">
+        <div className="marketing-card-subtle mb-8 p-4 text-sm text-slate-600 space-y-1">
           <p>🏦 未收到錯誤回報　✅ 已驗證可用　⚠️ 有問題回報</p>
           <p>如遇到掃碼問題，請開啟您的銀行 App 的「掃碼轉帳」功能後再次嘗試。</p>
         </div>

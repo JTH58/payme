@@ -46,7 +46,7 @@ export function TrustShield() {
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-[10px] text-white/50 hover:text-white/70 cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-white/75 hover:bg-white transition-colors text-[10px] text-slate-600 hover:text-slate-900 cursor-pointer shadow-sm shadow-sky-100/60"
           aria-label="開源透明校驗"
         >
           <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor}`} />
@@ -55,14 +55,14 @@ export function TrustShield() {
         </button>
       </PopoverTrigger>
       <PopoverContent side="top" className="w-64 text-xs space-y-2">
-        <div className="font-medium text-white/80 flex items-center gap-1.5">
+        <div className="font-medium text-slate-800 flex items-center gap-1.5">
           <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
           {config.label}
         </div>
-        <p className="text-white/50 leading-relaxed">{config.description}</p>
+        <p className="text-slate-600 leading-relaxed">{config.description}</p>
         {sha && (
-          <div className="space-y-1 text-white/40">
-            <div>SHA: <span className="font-mono text-white/60">{sha.slice(0, 7)}</span></div>
+          <div className="space-y-1 text-slate-500">
+            <div>SHA: <span className="font-mono text-slate-700">{sha.slice(0, 7)}</span></div>
             {buildTime && <div>建構時間: {buildTime}</div>}
             {commitUrl && (
               <a

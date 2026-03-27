@@ -33,7 +33,7 @@ export function PasswordGate({ onSuccess }: PasswordGateProps) {
     <div className="flex-1 flex items-center justify-center p-4">
       <form
         onSubmit={handleSubmit}
-        className={`w-full max-w-sm bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 space-y-6 ${
+        className={`w-full max-w-sm bg-white/85 backdrop-blur-md border border-slate-200 rounded-2xl p-8 space-y-6 shadow-sm shadow-sky-100/80 ${
           error ? 'animate-shake' : ''
         }`}
       >
@@ -41,7 +41,7 @@ export function PasswordGate({ onSuccess }: PasswordGateProps) {
           <div className="p-3 rounded-full bg-blue-500/10">
             <Lock className="w-6 h-6 text-blue-400" />
           </div>
-          <h1 className="text-xl font-semibold text-white">Analytics</h1>
+          <h1 className="text-xl font-semibold text-slate-900">Analytics</h1>
         </div>
 
         <div className="space-y-2">
@@ -51,7 +51,7 @@ export function PasswordGate({ onSuccess }: PasswordGateProps) {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             autoFocus
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:border-blue-500/50 transition-colors"
+            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500/50 transition-colors"
           />
           {error && (
             <p className="text-red-400 text-sm">{error}</p>

@@ -61,7 +61,7 @@ export default function GuidePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         {/* Hero */}
         <h1 className="text-3xl font-bold mb-2">{hero.title}</h1>
-        <p className="text-white/60 mb-12">{hero.subtitle}</p>
+        <p className="marketing-muted mb-12">{hero.subtitle}</p>
 
         {/* Scenario Sections */}
         <div className="space-y-16">
@@ -73,14 +73,14 @@ export default function GuidePage() {
                   {Icon && <Icon size={22} className={scenario.iconColor} />}
                   <h2 className="text-xl font-bold">{scenario.title}</h2>
                 </div>
-                <p className="text-white/50 text-sm mb-6">{scenario.description}</p>
+                <p className="marketing-muted text-sm mb-6">{scenario.description}</p>
 
                 {/* Steps */}
                 <div className="grid md:grid-cols-2 gap-4">
                   {scenario.steps.map((step, idx) => (
                     <div
                       key={idx}
-                      className="bg-white/5 border border-white/10 rounded-xl p-5"
+                      className="marketing-card p-5"
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-sm">
@@ -88,13 +88,13 @@ export default function GuidePage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold mb-1">{step.title}</h3>
-                          <p className="text-white/50 text-sm leading-relaxed">
+                          <p className="marketing-muted text-sm leading-relaxed">
                             {step.description}
                           </p>
                         </div>
                       </div>
                       {/* Step image with error fallback */}
-                      <div className="mt-3 rounded-lg overflow-hidden bg-white/5">
+                      <div className="mt-3 rounded-lg overflow-hidden bg-slate-100">
                         <GuideImage src={step.image} alt={step.title} />
                       </div>
                     </div>
@@ -108,7 +108,7 @@ export default function GuidePage() {
         {/* CTA */}
         <div className="mt-16 bg-blue-500/10 border border-blue-500/30 rounded-xl p-8 text-center">
           <h2 className="text-xl font-bold mb-2">{cta.title}</h2>
-          <p className="text-white/60 text-sm mb-6">{cta.description}</p>
+          <p className="marketing-muted text-sm mb-6">{cta.description}</p>
           <Link
             href={cta.buttonHref}
             className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white font-medium px-6 py-3 rounded-full transition-colors"
