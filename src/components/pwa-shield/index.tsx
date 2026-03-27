@@ -17,7 +17,7 @@ function InstallGuide({ platform }: { platform: Platform }) {
   const { icon: Icon, text } = guides[platform];
 
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 flex items-start gap-2">
+    <div className="marketing-card-subtle rounded-lg p-2 flex items-start gap-2">
       <Icon size={14} className="text-slate-500 mt-0.5 shrink-0" />
       <span className="text-slate-600 leading-relaxed">{text}</span>
     </div>
@@ -44,7 +44,7 @@ export function PwaShield() {
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button
-          className="relative flex items-center text-slate-500 hover:text-slate-900 transition-colors p-1.5 rounded-full hover:bg-white/70"
+          className="theme-icon-button relative"
           aria-label="PWA 安裝狀態"
         >
           {isInstalled ? (
@@ -83,7 +83,7 @@ export function PwaShield() {
             {canPromptInstall ? (
               <button
                 onClick={promptInstall}
-                className="w-full mt-1 px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors font-medium"
+                className="w-full mt-1 px-3 py-1.5 rounded-lg bg-blue-500/15 text-blue-600 hover:bg-blue-500/20 dark:text-blue-300 transition-colors font-medium"
               >
                 安裝 PayMe.TW
               </button>

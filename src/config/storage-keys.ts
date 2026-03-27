@@ -19,6 +19,7 @@ export const STORAGE_KEY = {
   onboardingComplete: 'payme_onboarding_complete',
   personalExpanded: 'payme_personal_expanded',
   analytics: 'payme_analytics',
+  theme: 'payme_theme',
 } as const;
 
 /**

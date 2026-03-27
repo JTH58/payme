@@ -46,7 +46,7 @@ export function TrustShield() {
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-white/75 hover:bg-white transition-colors text-[10px] text-slate-600 hover:text-slate-900 cursor-pointer shadow-sm shadow-sky-100/60"
+          className="theme-float inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] text-slate-600 hover:text-slate-900 cursor-pointer transition-colors"
           aria-label="開源透明校驗"
         >
           <span className={`w-1.5 h-1.5 rounded-full ${config.dotColor}`} />
@@ -69,7 +69,7 @@ export function TrustShield() {
                 href={commitUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                className="text-blue-600 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200 underline underline-offset-2"
               >
                 查看原始碼 →
               </a>

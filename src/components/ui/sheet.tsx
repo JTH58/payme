@@ -62,10 +62,10 @@ const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn(
-      "fixed inset-0 z-50 bg-slate-900/22 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+    <DialogPrimitive.Overlay
+      ref={ref}
+      className={cn(
+      "theme-overlay-scrim fixed inset-0 z-50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -125,7 +125,7 @@ const SheetContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={mergedRef}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-[1.75rem] bg-white/82 backdrop-blur-[28px] border-t border-white/80 shadow-[0_-16px_50px_rgba(148,163,184,0.18)] ring-1 ring-white/45 pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom",
+          "glass-panel-strong fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-[1.75rem] border-t pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom",
           closedAnimClass,
           className
         )}
@@ -157,7 +157,7 @@ const SheetContent = React.forwardRef<
         <button
           type="button"
           onClick={() => swipe.dismiss()}
-          className="absolute right-2 top-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full opacity-80 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none text-slate-500 hover:bg-white/55"
+          className="theme-icon-button absolute right-2 top-2 min-w-[44px] min-h-[44px] opacity-80 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
@@ -189,7 +189,7 @@ const SheetHeader = ({
       <div
         className={cn(
           "w-10 h-1 rounded-full transition-colors",
-          swipeCtx?.isDragging ? "bg-slate-400" : "bg-slate-300/70"
+          swipeCtx?.isDragging ? "bg-slate-500" : "bg-slate-400/70"
         )}
       />
       {children && <div className="w-full space-y-1.5">{children}</div>}

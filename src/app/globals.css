@@ -4,59 +4,117 @@
 
 @layer base {
   :root {
-    /* 基礎色調：明亮冷白底，保留藍色科技感 */
     --background: 210 100% 98%;
     --foreground: 222 47% 11%;
-
-    /* 玻璃卡片背景色：偏亮霧面白 */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
- 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
- 
-    /* 主色調：更乾淨的亮藍 */
     --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
- 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
- 
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
- 
     --accent: 212 100% 97%;
     --accent-foreground: 222 47% 11%;
- 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
- 
-    /* 邊框與輸入框：偏亮的霧面藍灰 */
     --border: 214 32% 88%;
     --input: 214 32% 88%;
     --ring: 224.3 76.3% 48%;
- 
-    --radius: 1rem; /* iOS 風格的大圓角 */
+    --radius: 1rem;
+
+    --body-background: radial-gradient(circle at top, rgba(96, 165, 250, 0.28), transparent 38%),
+      radial-gradient(circle at 85% 18%, rgba(125, 211, 252, 0.2), transparent 26%),
+      linear-gradient(180deg, #f6fbff 0%, #edf6ff 48%, #e9f1fb 100%);
+    --shell-surface: rgba(255, 255, 255, 0.68);
+    --shell-border: rgba(226, 232, 240, 0.72);
+    --shell-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+    --surface-glass: rgba(255, 255, 255, 0.82);
+    --surface-glass-strong: rgba(255, 255, 255, 0.9);
+    --surface-glass-subtle: rgba(248, 250, 252, 0.84);
+    --surface-border: rgba(255, 255, 255, 0.74);
+    --surface-border-soft: rgba(226, 232, 240, 0.8);
+    --surface-ring: rgba(255, 255, 255, 0.52);
+    --surface-shadow: 0 18px 60px rgba(125, 211, 252, 0.18);
+    --surface-shadow-soft: 0 10px 30px rgba(148, 163, 184, 0.12);
+    --surface-shadow-strong: 0 20px 52px rgba(148, 163, 184, 0.18);
+    --input-surface: rgba(255, 255, 255, 0.74);
+    --input-border: rgba(255, 255, 255, 0.78);
+    --input-placeholder: rgb(148 163 184);
+    --scrim: rgba(15, 23, 42, 0.22);
+    --interactive-surface: rgba(255, 255, 255, 0.66);
+    --interactive-surface-hover: rgba(255, 255, 255, 0.86);
+    --interactive-border: rgba(255, 255, 255, 0.72);
+    --interactive-shadow: 0 8px 24px rgba(148, 163, 184, 0.12);
+    --badge-surface: rgba(239, 246, 255, 0.88);
+    --badge-border: rgba(191, 219, 254, 0.88);
+    --badge-foreground: rgb(29 78 216);
+    --brand-gradient: linear-gradient(180deg, rgb(15 23 42) 0%, rgb(30 64 175) 52%, rgb(100 116 139) 100%);
   }
- 
+
   .dark {
     --background: 224 71% 4%;
     --foreground: 213 31% 91%;
-    /* ... (保持一致，我們預設做成深色模式更有質感) ... */
+    --card: 224 47% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 224 47% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 224 71% 4%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 70% 48%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 27% 18%;
+    --input: 215 27% 18%;
+    --ring: 217 91% 60%;
+
+    --body-background: radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 28%),
+      radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.12), transparent 22%),
+      linear-gradient(180deg, #020617 0%, #07111f 44%, #0f172a 100%);
+    --shell-surface: rgba(2, 6, 23, 0.74);
+    --shell-border: rgba(148, 163, 184, 0.14);
+    --shell-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+    --surface-glass: rgba(2, 6, 23, 0.82);
+    --surface-glass-strong: rgba(9, 17, 34, 0.9);
+    --surface-glass-subtle: rgba(15, 23, 42, 0.84);
+    --surface-border: rgba(148, 163, 184, 0.14);
+    --surface-border-soft: rgba(148, 163, 184, 0.12);
+    --surface-ring: rgba(59, 130, 246, 0.12);
+    --surface-shadow: 0 24px 70px rgba(2, 6, 23, 0.42);
+    --surface-shadow-soft: 0 10px 32px rgba(2, 6, 23, 0.3);
+    --surface-shadow-strong: 0 24px 64px rgba(2, 6, 23, 0.42);
+    --input-surface: rgba(15, 23, 42, 0.82);
+    --input-border: rgba(148, 163, 184, 0.18);
+    --input-placeholder: rgb(100 116 139);
+    --scrim: rgba(2, 6, 23, 0.56);
+    --interactive-surface: rgba(15, 23, 42, 0.76);
+    --interactive-surface-hover: rgba(30, 41, 59, 0.88);
+    --interactive-border: rgba(148, 163, 184, 0.16);
+    --interactive-shadow: 0 12px 28px rgba(2, 6, 23, 0.22);
+    --badge-surface: rgba(30, 41, 59, 0.8);
+    --badge-border: rgba(59, 130, 246, 0.22);
+    --badge-foreground: rgb(147 197 253);
+    --brand-gradient: linear-gradient(180deg, rgb(248 250 252) 0%, rgb(125 211 252) 45%, rgb(148 163 184) 100%);
   }
-}
- 
-@layer base {
+
   * {
     @apply border-border;
   }
+
+  html {
+    color-scheme: light;
+  }
+
   body {
     @apply bg-background text-foreground;
-    /* 加入更明亮的品牌光暈 */
-    background:
-      radial-gradient(circle at top, rgba(96, 165, 250, 0.28), transparent 38%),
-      radial-gradient(circle at 85% 18%, rgba(125, 211, 252, 0.2), transparent 26%),
-      linear-gradient(180deg, #f6fbff 0%, #edf6ff 48%, #e9f1fb 100%);
+    background: var(--body-background);
     min-height: 100vh;
     min-height: 100dvh;
   }
@@ -64,36 +122,168 @@
 
 @layer components {
   .marketing-card {
-    @apply rounded-2xl border border-slate-200/80 bg-white/80 shadow-sm shadow-sky-100/70;
+    @apply rounded-2xl;
+    background: var(--surface-glass);
+    border: 1px solid var(--surface-border-soft);
+    box-shadow: var(--surface-shadow-soft);
   }
 
   .marketing-card-subtle {
-    @apply rounded-2xl border border-slate-200/80 bg-slate-50/80;
+    @apply rounded-2xl;
+    background: var(--surface-glass-subtle);
+    border: 1px solid var(--surface-border-soft);
   }
 
   .marketing-muted {
-    @apply text-slate-700;
+    color: hsl(var(--foreground) / 0.8);
   }
 
   .marketing-faint {
-    @apply text-slate-600;
+    color: hsl(var(--foreground) / 0.65);
   }
 
-  /* 核心樣式：毛玻璃面板 */
   .glass-panel {
-    @apply bg-white/80 backdrop-blur-2xl border border-white/70 shadow-[0_18px_60px_rgba(125,211,252,0.18)] ring-1 ring-white/50;
+    @apply backdrop-blur-2xl ring-1;
+    background: var(--surface-glass);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--surface-shadow);
+    --tw-ring-color: var(--surface-ring);
   }
-  
-  /* 互動元素：更強的玻璃質感 */
+
+  .glass-panel-strong {
+    @apply backdrop-blur-[28px] ring-1;
+    background: var(--surface-glass-strong);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--surface-shadow-strong);
+    --tw-ring-color: var(--surface-ring);
+  }
+
   .glass-input {
-    @apply bg-white/70 border border-white/75 text-slate-900 placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-blue-500/25 focus-visible:border-blue-200 transition-all duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)];
+    @apply transition-all duration-300;
+    background: var(--input-surface);
+    border: 1px solid var(--input-border);
+    color: hsl(var(--foreground));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  }
+
+  .glass-input::placeholder {
+    color: var(--input-placeholder);
   }
 
   .glass-button {
-    @apply bg-white/60 hover:bg-white/80 active:scale-[0.98] transition-all duration-200 border border-white/70 text-slate-800 font-medium backdrop-blur-xl shadow-[0_8px_24px_rgba(148,163,184,0.12)];
+    @apply active:scale-[0.98] transition-all duration-200 font-medium backdrop-blur-xl;
+    background: var(--interactive-surface);
+    border: 1px solid var(--interactive-border);
+    color: hsl(var(--foreground) / 0.88);
+    box-shadow: var(--interactive-shadow);
   }
 
-  /* Shimmer 骨架屏效果 */
+  .glass-button:hover {
+    background: var(--interactive-surface-hover);
+  }
+
+  .theme-shell {
+    @apply backdrop-blur-xl;
+    background: var(--shell-surface);
+    border-color: var(--shell-border);
+    box-shadow: var(--shell-shadow);
+  }
+
+  .theme-float {
+    @apply backdrop-blur-xl;
+    background: var(--surface-glass-strong);
+    border: 1px solid var(--surface-border-soft);
+    box-shadow: var(--surface-shadow-soft);
+  }
+
+  .theme-icon-button {
+    @apply flex items-center justify-center rounded-full p-1.5 transition-colors;
+    background: var(--interactive-surface);
+    border: 1px solid var(--interactive-border);
+    color: hsl(var(--foreground) / 0.66);
+    box-shadow: var(--interactive-shadow);
+  }
+
+  .theme-icon-button:hover {
+    background: var(--interactive-surface-hover);
+    color: hsl(var(--foreground));
+  }
+
+  .theme-badge {
+    background: var(--badge-surface);
+    border: 1px solid var(--badge-border);
+    color: var(--badge-foreground);
+  }
+
+  .theme-title-gradient {
+    background-image: var(--brand-gradient);
+    @apply bg-clip-text text-transparent;
+  }
+
+  .theme-page-curtain {
+    background: hsl(var(--background));
+  }
+
+  .theme-page-background {
+    background: var(--body-background);
+  }
+
+  .theme-overlay-scrim {
+    background: var(--scrim);
+  }
+
+  .dark .text-slate-900 {
+    color: rgb(241 245 249);
+  }
+
+  .dark .text-slate-800,
+  .dark .text-slate-700 {
+    color: rgb(226 232 240);
+  }
+
+  .dark .text-slate-600,
+  .dark .text-slate-500 {
+    color: rgb(148 163 184);
+  }
+
+  .dark .text-slate-400,
+  .dark .text-slate-300 {
+    color: rgb(100 116 139);
+  }
+
+  .dark .border-slate-200,
+  .dark .border-slate-200\/70,
+  .dark .border-slate-200\/80,
+  .dark .border-slate-300 {
+    border-color: rgba(148, 163, 184, 0.16);
+  }
+
+  .dark .bg-slate-50,
+  .dark .bg-slate-100 {
+    background-color: rgba(15, 23, 42, 0.82);
+  }
+
+  .dark .bg-white,
+  .dark .bg-white\/90,
+  .dark .bg-white\/88,
+  .dark .bg-white\/85,
+  .dark .bg-white\/82,
+  .dark .bg-white\/80,
+  .dark .bg-white\/75,
+  .dark .bg-white\/70,
+  .dark .bg-white\/65,
+  .dark .bg-white\/60 {
+    background-color: rgba(2, 6, 23, 0.82);
+  }
+
+  .dark .shadow-sky-100,
+  .dark .shadow-sky-100\/60,
+  .dark .shadow-sky-100\/70,
+  .dark .shadow-sky-100\/80,
+  .dark .shadow-sky-200\/70 {
+    --tw-shadow-color: rgba(2, 6, 23, 0.26);
+  }
+
   .animate-shimmer {
     background: linear-gradient(
       90deg,
@@ -105,11 +295,11 @@
     animation: shimmer 2s infinite linear;
   }
 
-  /* 解密進度條 — 不確定進度動畫 */
   @keyframes indeterminate {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(250%); }
   }
+
   .animate-indeterminate {
     animation: indeterminate 1.5s ease-in-out infinite;
     width: 40%;
@@ -122,6 +312,7 @@
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
   }
+
   .animate-shake {
     animation: shake 0.4s ease-in-out;
   }

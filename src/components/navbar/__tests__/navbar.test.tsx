@@ -6,7 +6,7 @@ import { Navbar } from '../index';
 jest.mock('next/image', () => ({
   __esModule: true,
   // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
-  default: (props: any) => <img {...props} />,
+  default: ({ fill: _fill, ...props }: any) => <img {...props} />,
 }));
 
 // Mock next/navigation
@@ -44,10 +44,9 @@ describe('Navbar', () => {
     expect(safetyLinks[0].closest('a')).toHaveAttribute('href', '/safety');
   });
 
-  it('should have a link to /guide (使用教學)', () => {
+  it('should render theme toggle button', () => {
     render(<Navbar />);
-    const guideLinks = screen.getAllByText(/使用教學/);
-    expect(guideLinks[0].closest('a')).toHaveAttribute('href', '/guide');
+    expect(screen.getByRole('button', { name: /切換為深色模式/ })).toBeInTheDocument();
   });
 
   it('should have a GitHub link', () => {

@@ -31,7 +31,7 @@ function HomeIntroSection() {
       <div className="glass-panel rounded-[2rem] p-6 sm:p-8 md:p-10">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start max-w-4xl mx-auto">
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-3 py-1 text-xs font-medium text-blue-700">
+            <div className="theme-badge inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium">
               <Sparkles className="h-3.5 w-3.5" />
               PayMe.TW 是什麼？
             </div>
@@ -80,10 +80,10 @@ function HomeIntroSection() {
             ].map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-white/80 bg-gradient-to-br from-white to-sky-50/70 p-4 shadow-sm shadow-sky-100/70"
+                className="marketing-card rounded-2xl p-4"
               >
                 <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-blue-100 p-2 text-blue-700">
+                  <div className="theme-badge rounded-2xl p-2">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="space-y-1">
@@ -129,7 +129,7 @@ function BackupImportConfirm({
           {existingData && (
             <div className="flex items-start gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
               <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-yellow-200/70">
+              <p className="text-sm text-yellow-700 dark:text-yellow-200/80">
                 本地已有資料，匯入將覆蓋現有的表單設定和帳戶資料。
               </p>
             </div>
@@ -185,7 +185,7 @@ function HomeContent() {
       {/* 0. The Curtain (Loading Overlay) - 解決閃爍問題的核心 */}
       <div
         className={cn(
-          "fixed inset-0 z-[60] bg-[#f4f9ff] flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out", // z-[60] = Z_INDEX.LOADING_CURTAIN — 需在 Navbar(z-50) 之上
+          "theme-page-curtain fixed inset-0 z-[60] flex flex-col items-center justify-center transition-opacity duration-700 ease-in-out", // z-[60] = Z_INDEX.LOADING_CURTAIN — 需在 Navbar(z-50) 之上
           isMounted ? "opacity-0 pointer-events-none" : "opacity-100"
         )}
       >
@@ -198,7 +198,7 @@ function HomeContent() {
 
       {/* 1. Background Layer */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#f8fbff] via-[#eef6ff] to-[#e8f1fb]"></div>
+        <div className="theme-page-background absolute inset-0"></div>
         <GridPattern
           width={50}
           height={50}
@@ -232,7 +232,7 @@ function HomeContent() {
 
           {/* Main Title */}
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-slate-900 via-blue-800 to-slate-500 pb-2">
+            <h1 className="theme-title-gradient text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight pb-2">
               台灣TWQR • 通用收款/分帳工具
             </h1>
             <div className="text-sm text-slate-500 max-w-lg mx-auto grid grid-cols-2 sm:grid-cols-3 gap-x-3 sm:gap-x-6 gap-y-1">
@@ -257,8 +257,8 @@ function HomeContent() {
               <div className="flex items-start gap-4">
                 <AlertTriangle className="text-red-400 shrink-0 mt-0.5" size={22} />
                 <div className="space-y-2">
-                  <p className="text-white/90 font-medium">連結無法開啟</p>
-                  <p className="text-white/50 text-sm leading-relaxed">{error}</p>
+                  <p className="text-slate-900 font-medium">連結無法開啟</p>
+                  <p className="text-slate-600 text-sm leading-relaxed">{error}</p>
                 </div>
               </div>
             </div>
@@ -271,7 +271,7 @@ function HomeContent() {
           isMounted ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
         )}>
           <Suspense fallback={
-            <div className="w-full max-w-4xl h-[500px] mx-auto flex flex-col gap-4 items-center justify-center text-white/30 glass-panel rounded-3xl border border-white/5">
+            <div className="w-full max-w-4xl h-[500px] mx-auto flex flex-col gap-4 items-center justify-center text-slate-500 glass-panel rounded-3xl">
               <Zap className="animate-pulse" size={32} />
               <span className="text-sm tracking-widest uppercase">Loading App...</span>
             </div>
@@ -285,10 +285,10 @@ function HomeContent() {
               />
             ) : error && isShareLink ? (
               <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center gap-6 py-16">
-                <p className="text-white/40 text-sm">或者，你可以建立自己的收款碼</p>
+                <p className="text-slate-500 text-sm">或者，你可以建立自己的收款碼</p>
                 <a
                   href="/"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-colors font-medium text-sm"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500/15 border border-blue-500/20 text-blue-600 hover:bg-blue-500/20 dark:text-blue-300 transition-colors font-medium text-sm"
                 >
                   建立我的收款碼
                 </a>
@@ -373,7 +373,7 @@ function HomeContent() {
 export default function Home() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#f4f9ff] flex flex-col items-center justify-center">
+      <div className="theme-page-curtain min-h-screen flex flex-col items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon-splash-128.png" alt="PayMe.tw" className="w-16 h-16 rounded-2xl animate-bounce" width={64} height={64} />

@@ -8,6 +8,7 @@ import { Github, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PwaShield } from '@/components/pwa-shield';
 import { SettingsMenu } from './settings-menu';
+import { ThemeToggle } from './theme-toggle';
 
 function ThreadsIcon({ size = 14 }: { size?: number }) {
   return (
@@ -23,9 +24,9 @@ function ThreadsIcon({ size = 14 }: { size?: number }) {
   );
 }
 
-const NAV_LINK_CLASS = "relative text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors px-3 py-1.5 rounded-full hover:bg-white/70 border border-transparent hover:border-slate-200 after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-4/5 after:h-px after:bg-blue-500/50 after:transition-all after:duration-300 after:rounded-full";
+const NAV_LINK_CLASS = "relative text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors px-3 py-1.5 rounded-full border border-transparent after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-0 hover:after:w-4/5 after:h-px after:bg-blue-500/50 after:transition-all after:duration-300 after:rounded-full";
 
-const MOBILE_LINK_CLASS = "flex items-center gap-3 text-sm text-slate-600 hover:text-slate-900 transition-colors px-4 py-3 rounded-lg hover:bg-sky-50";
+const MOBILE_LINK_CLASS = "flex items-center gap-3 text-sm text-slate-600 hover:text-slate-900 transition-colors px-4 py-3 rounded-lg";
 
 interface NavbarProps {
   className?: string;
@@ -61,7 +62,7 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
 
   return (
     <nav className={cn(
-      "relative z-50 w-full border-b border-slate-200/70 bg-white/65 backdrop-blur-xl pt-[env(safe-area-inset-top)] shadow-[0_1px_0_rgba(255,255,255,0.7)]",
+      "theme-shell relative z-50 w-full border-b pt-[env(safe-area-inset-top)]",
       className
     )}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -82,16 +83,16 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
         <div className="flex items-center gap-4">
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/banks" className={cn(NAV_LINK_CLASS, isActive('/banks') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
+            <Link href="/banks" className={cn(NAV_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)] hover:border-[var(--surface-border-soft)]", isActive('/banks') && 'text-slate-900 bg-[var(--interactive-surface)] border-[var(--surface-border-soft)] after:w-4/5')}>
               支援銀行
             </Link>
-            <Link href="/twqr" className={cn(NAV_LINK_CLASS, isActive('/twqr') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
+            <Link href="/twqr" className={cn(NAV_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)] hover:border-[var(--surface-border-soft)]", isActive('/twqr') && 'text-slate-900 bg-[var(--interactive-surface)] border-[var(--surface-border-soft)] after:w-4/5')}>
               TWQR 標準
             </Link>
-            <Link href="/features" className={cn(NAV_LINK_CLASS, isActive('/features') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
+            <Link href="/features" className={cn(NAV_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)] hover:border-[var(--surface-border-soft)]", isActive('/features') && 'text-slate-900 bg-[var(--interactive-surface)] border-[var(--surface-border-soft)] after:w-4/5')}>
               功能特色
             </Link>
-            <Link href="/safety" className={cn(NAV_LINK_CLASS, isActive('/safety') && 'text-slate-900 bg-white/70 border-slate-200 after:w-4/5')}>
+            <Link href="/safety" className={cn(NAV_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)] hover:border-[var(--surface-border-soft)]", isActive('/safety') && 'text-slate-900 bg-[var(--interactive-surface)] border-[var(--surface-border-soft)] after:w-4/5')}>
               防詐資訊
             </Link>
             {/* TODO: 使用教學暫時隱藏，待內容完善後恢復
@@ -120,6 +121,8 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
             </a>
           </div>
 
+          <ThemeToggle />
+
           {onBackupClick && <SettingsMenu onBackupClick={onBackupClick} onQrStyleClick={onQrStyleClick} onAccountClick={onAccountClick} onResetAllClick={onResetAllClick} />}
 
           <PwaShield />
@@ -130,7 +133,7 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label={isMenuOpen ? '關閉選單' : '開啟選單'}
-            className="md:hidden flex items-center text-slate-500 hover:text-slate-900 transition-colors p-1.5 rounded-full hover:bg-slate-100/80"
+            className="md:hidden theme-icon-button"
           >
             {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -139,32 +142,32 @@ export function Navbar({ className, onBackupClick, onQrStyleClick, onAccountClic
 
       {/* Mobile dropdown menu */}
       {isMenuOpen && (
-        <div ref={menuRef} className="md:hidden absolute left-0 right-0 top-full border-t border-slate-200/70 bg-white/90 backdrop-blur-xl shadow-lg shadow-sky-100/80 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div ref={menuRef} className="theme-float md:hidden absolute left-0 right-0 top-full border-t animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col gap-1">
             <Link
               href="/banks"
-              className={cn(MOBILE_LINK_CLASS, isActive('/banks') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
+              className={cn(MOBILE_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)]", isActive('/banks') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               支援銀行
             </Link>
             <Link
               href="/twqr"
-              className={cn(MOBILE_LINK_CLASS, isActive('/twqr') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
+              className={cn(MOBILE_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)]", isActive('/twqr') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               TWQR 標準
             </Link>
             <Link
               href="/features"
-              className={cn(MOBILE_LINK_CLASS, isActive('/features') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
+              className={cn(MOBILE_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)]", isActive('/features') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               功能特色
             </Link>
             <Link
               href="/safety"
-              className={cn(MOBILE_LINK_CLASS, isActive('/safety') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
+              className={cn(MOBILE_LINK_CLASS, "hover:bg-[var(--interactive-surface-hover)]", isActive('/safety') && 'text-blue-900 bg-blue-100 border-l-2 border-blue-600')}
               onClick={() => setIsMenuOpen(false)}
             >
               防詐資訊

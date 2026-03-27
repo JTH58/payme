@@ -12,7 +12,7 @@ interface FooterProps {
 export function Footer({ className, onFeedbackClick }: FooterProps) {
   return (
     <footer className={cn(
-      "border-t border-slate-200/70 bg-white/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl",
+      "theme-shell border-t pb-[env(safe-area-inset-bottom)]",
       className
     )}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6">

@@ -19,7 +19,7 @@ const PopoverContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-white/80 bg-white/88 p-4 text-popover-foreground shadow-[0_18px_45px_rgba(148,163,184,0.18)] outline-none backdrop-blur-[24px] ring-1 ring-white/45 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        "glass-panel-strong z-50 w-72 max-w-[calc(100vw-2rem)] rounded-2xl p-4 text-popover-foreground outline-none backdrop-blur-[24px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         className
       )}
       onWheel={(e) => { e.stopPropagation(); onWheel?.(e); }}

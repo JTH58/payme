@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { DARK_THEME_COLOR, DEFAULT_THEME, LIGHT_THEME_COLOR } from "@/lib/theme";
+import { STORAGE_KEY } from "@/config/storage-keys";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://payme.tw"),
@@ -36,11 +38,34 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6fbff",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: LIGHT_THEME_COLOR },
+    { media: "(prefers-color-scheme: dark)", color: DARK_THEME_COLOR },
+  ],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // Critical for env(safe-area-inset-*)
 };
+
+const themeInitScript = `
+  (function () {
+    try {
+      var storageKey = '${STORAGE_KEY.theme}';
+      var storedTheme = localStorage.getItem(storageKey);
+      var theme = storedTheme === 'dark' ? 'dark' : '${DEFAULT_THEME}';
+      var root = document.documentElement;
+      root.classList.toggle('dark', theme === 'dark');
+      root.style.colorScheme = theme;
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', theme === 'dark' ? '${DARK_THEME_COLOR}' : '${LIGHT_THEME_COLOR}');
+      }
+    } catch (error) {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = '${DEFAULT_THEME}';
+    }
+  })();
+`;
 
 export default function RootLayout({
   children,
@@ -48,9 +73,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-TW">
+    <html lang="zh-TW" suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -67,7 +93,7 @@ export default function RootLayout({
           }) }}
         />
       </head>
-      <body className={cn("font-sans min-h-screen antialiased overflow-x-hidden selection:bg-blue-500/20 text-slate-900")}>
+      <body className={cn("font-sans min-h-screen antialiased overflow-x-hidden selection:bg-blue-500/20 text-foreground")}>
         {children}
       </body>
     </html>
