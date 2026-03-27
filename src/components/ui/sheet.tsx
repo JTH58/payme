@@ -125,7 +125,7 @@ const SheetContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={mergedRef}
         className={cn(
-          "glass-panel-strong fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-[1.75rem] border-t pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom",
+          "sheet-panel fixed inset-x-0 bottom-0 z-50 max-h-[85vh] flex flex-col overflow-hidden rounded-t-[1.75rem] border-t pb-[env(safe-area-inset-bottom)] duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom",
           closedAnimClass,
           className
         )}
