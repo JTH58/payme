@@ -909,7 +909,8 @@ export function UnifiedForm({
       {!isSharedMode && <div className={cn("space-y-3", (subMode !== 'personal' || personalExpanded || isSharedMode) && "border-t border-slate-200 pt-4")}>
         <Button
           type="button"
-          className="w-full h-11 gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-medium active:scale-[0.98] transition-transform"
+          variant="default"
+          className="w-full h-11 gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white hover:text-white font-medium active:scale-[0.98] transition-transform"
           onClick={handleConfirm}
         >
           產生收款碼及連結
