@@ -81,30 +81,30 @@ export function BankDetail({ bank }: BankDetailProps) {
       </div>
 
       {/* PayMe.tw 介紹 */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-4 space-y-2">
-        <h2 className="text-sm font-semibold text-blue-700">關於 PayMe.tw</h2>
+      <div className="marketing-card-subtle p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-slate-900">關於 PayMe.tw</h2>
         <p className="text-xs text-slate-600 leading-relaxed">
           PayMe.tw 是免費、開源的台灣通用收款碼產生器。支援全台 266 間金融機構，
           隱私優先、資料不回傳，一鍵產生 TWQR 收款 QR Code。
         </p>
         <Link
           href="/features"
-          className="inline-block text-xs text-blue-700 hover:text-blue-800 transition-colors"
+          className="inline-block text-xs text-blue-600 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200 transition-colors"
         >
           了解更多功能 →
         </Link>
       </div>
 
       {/* TWQR 介紹 */}
-      <div className="rounded-lg border border-indigo-200 bg-indigo-50/80 p-4 space-y-2">
-        <h2 className="text-sm font-semibold text-indigo-700">什麼是 TWQR？</h2>
+      <div className="marketing-card-subtle p-4 space-y-2">
+        <h2 className="text-sm font-semibold text-slate-900">什麼是 TWQR？</h2>
         <p className="text-xs text-slate-600 leading-relaxed">
           TWQR 是台灣共用支付碼標準，讓各家銀行 App 都能掃描同一張 QR Code 完成轉帳，
           跨行互通、安全免費。
         </p>
         <Link
           href="/twqr"
-          className="inline-block text-xs text-indigo-700 hover:text-indigo-800 transition-colors"
+          className="inline-block text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-300 dark:hover:text-indigo-200 transition-colors"
         >
           了解 TWQR 標準 →
         </Link>

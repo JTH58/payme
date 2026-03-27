@@ -37,7 +37,7 @@ const reportedBank: BankExtended = {
 describe('BankDetail', () => {
   it('should display bank name and code', () => {
     render(<BankDetail bank={verifiedBank} />);
-    expect(screen.getByText(/台新國際商業銀行/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('台新國際商業銀行');
     expect(screen.getByText('812')).toBeInTheDocument();
   });
 

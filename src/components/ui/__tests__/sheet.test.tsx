@@ -110,7 +110,7 @@ describe('Sheet', () => {
 
   // --- New tests for swipe-to-dismiss integration ---
 
-  test('should render drag handle with default bg-white/20 style', () => {
+  test('should render drag handle with default resting style', () => {
     render(
       <Sheet open={true} onOpenChange={() => {}}>
         <SheetContent>
@@ -126,8 +126,7 @@ describe('Sheet', () => {
       el.classList.contains('w-10') && el.classList.contains('h-1')
     );
     expect(dragHandle).toBeTruthy();
-    // Default state: should have bg-white/20 (not dragging)
-    expect(dragHandle!.classList.contains('bg-white/20')).toBe(true);
+    expect(dragHandle!.classList.contains('bg-slate-400/70')).toBe(true);
   });
 
   test('SheetBody should accept and forward ref', () => {

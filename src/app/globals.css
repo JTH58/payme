@@ -32,14 +32,14 @@
     --shell-border: rgba(226, 232, 240, 0.72);
     --shell-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
     --surface-glass: rgba(255, 255, 255, 0.82);
-    --surface-glass-strong: rgba(255, 255, 255, 0.9);
+    --surface-glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.84) 54%, rgba(240, 249, 255, 0.78) 100%);
     --surface-glass-subtle: rgba(248, 250, 252, 0.84);
     --surface-border: rgba(255, 255, 255, 0.74);
     --surface-border-soft: rgba(226, 232, 240, 0.8);
     --surface-ring: rgba(255, 255, 255, 0.52);
     --surface-shadow: 0 18px 60px rgba(125, 211, 252, 0.18);
     --surface-shadow-soft: 0 10px 30px rgba(148, 163, 184, 0.12);
-    --surface-shadow-strong: 0 20px 52px rgba(148, 163, 184, 0.18);
+    --surface-shadow-strong: 0 24px 64px rgba(148, 163, 184, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.72);
     --input-surface: rgba(255, 255, 255, 0.74);
     --input-border: rgba(255, 255, 255, 0.78);
     --input-placeholder: rgb(148 163 184);
@@ -82,14 +82,14 @@
     --shell-border: rgba(148, 163, 184, 0.14);
     --shell-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
     --surface-glass: rgba(2, 6, 23, 0.82);
-    --surface-glass-strong: rgba(9, 17, 34, 0.9);
+    --surface-glass-strong: linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, rgba(9, 17, 34, 0.9) 56%, rgba(2, 6, 23, 0.84) 100%);
     --surface-glass-subtle: rgba(15, 23, 42, 0.84);
     --surface-border: rgba(148, 163, 184, 0.14);
     --surface-border-soft: rgba(148, 163, 184, 0.12);
     --surface-ring: rgba(59, 130, 246, 0.12);
     --surface-shadow: 0 24px 70px rgba(2, 6, 23, 0.42);
     --surface-shadow-soft: 0 10px 32px rgba(2, 6, 23, 0.3);
-    --surface-shadow-strong: 0 24px 64px rgba(2, 6, 23, 0.42);
+    --surface-shadow-strong: 0 24px 64px rgba(2, 6, 23, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
     --input-surface: rgba(15, 23, 42, 0.82);
     --input-border: rgba(148, 163, 184, 0.18);
     --input-placeholder: rgb(100 116 139);
@@ -156,6 +156,7 @@
     border: 1px solid var(--surface-border);
     box-shadow: var(--surface-shadow-strong);
     --tw-ring-color: var(--surface-ring);
+    backdrop-filter: blur(32px) saturate(180%);
   }
 
   .glass-input {
